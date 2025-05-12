@@ -8,8 +8,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.functions import func
 from datetime import datetime
 
-from app.config.main_config import DbConfig
-
 
 convention = {
     "ix": "ix__%(column_0_label)s",

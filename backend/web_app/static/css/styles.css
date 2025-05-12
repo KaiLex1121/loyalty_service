@@ -1,0 +1,409 @@
+/* --- GLOBAL & RESET --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    background-color: #F4F6F8; /* Light gray background */
+    color: #333;
+    line-height: 1.6;
+}
+
+a {
+    color: #007BFF;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+h1, h2 {
+    margin-bottom: 0.75em;
+    font-weight: 600;
+}
+
+/* --- AUTH PAGE (SHARED STYLES FOR PAGE 1 & 3) --- */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.auth-card {
+    background-color: #FFFFFF;
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.auth-card h1 {
+    font-size: 24px;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.auth-subtitle {
+    font-size: 14px;
+    color: #7f8c8d;
+    margin-bottom: 30px;
+}
+
+.auth-form .form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.auth-form label {
+    display: block;
+    font-size: 14px;
+    color: #34495e;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.auth-form input[type="text"],
+.auth-form input[type="tel"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+    background-color: #F8F9FA;
+    font-size: 15px;
+    color: #333;
+}
+.auth-form input[type="text"]::placeholder,
+.auth-form input[type="tel"]::placeholder {
+    color: #adb5bd;
+}
+
+/* Specific for SMS code input placeholder */
+#sms-code {
+    text-align: center;
+    font-size: 18px; /* Make placeholder XXXX larger if needed */
+    letter-spacing: 0.3em; /* Spacing for XXXX */
+}
+#sms-code::placeholder {
+    letter-spacing: 0.3em; /* Spacing for XXXX */
+    text-align: center;
+}
+
+
+.form-group-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 25px;
+}
+
+.form-group-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #FF7F6B; /* Color for the checkbox itself */
+}
+
+.form-group-checkbox .checkbox-label {
+    font-size: 14px;
+    color: #34495e;
+    margin-bottom: 0; /* Override default label margin */
+    font-weight: normal;
+}
+
+.btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-primary {
+    background-color: #FF7F6B; /* Coral/Salmon */
+    color: #FFFFFF;
+    width: 100%;
+}
+
+.btn-primary:hover {
+    background-color: #e66a5a; /* Darker shade on hover */
+}
+
+.auth-footer-link {
+    margin-top: 25px;
+    font-size: 13px;
+    color: #7f8c8d;
+}
+.auth-footer-link a {
+    color: #007BFF; /* Standard blue link */
+    font-weight: 500;
+}
+
+/* --- DASHBOARD PAGE (PAGE 2) --- */
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 240px;
+    background-color: #FFFFFF;
+    border-right: 1px solid #EAECEE;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px 0;
+}
+
+.sidebar-nav ul,
+.sidebar-footer ul {
+    list-style: none;
+}
+
+.sidebar-nav li a,
+.sidebar-footer li a {
+    display: block;
+    padding: 12px 25px;
+    color: #566573;
+    font-size: 15px;
+    font-weight: 500;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sidebar-nav li a:hover,
+.sidebar-footer li a:hover {
+    background-color: #F4F6F8;
+    color: #FF7F6B;
+    text-decoration: none;
+}
+
+.sidebar-nav li a.active {
+    color: #FF7F6B; /* Active link color */
+    /* background-color: #FFF2F0; /* Optional: very light background for active */
+    font-weight: 600; /* Make active link bolder */
+    border-right: 3px solid #FF7F6B; /* Active indicator */
+    padding-right: 22px; /* Adjust padding for border */
+}
+
+
+.sidebar-footer {
+    padding-top: 20px;
+    border-top: 1px solid #EAECEE;
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 25px 30px;
+    background-color: #F4F6F8; /* Main content area background */
+}
+
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    background-color: #FFFFFF;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.filters {
+    display: flex;
+    gap: 15px;
+}
+
+.filter-item {
+    padding: 8px 15px;
+    background-color: #F8F9FA;
+    border: 1px solid #E0E0E0;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #566573;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+.filter-item .dropdown-arrow {
+    font-size: 10px;
+    margin-left: 8px;
+    color: #888;
+}
+
+
+.btn-apply {
+    background-color: #FF7F6B;
+    color: #FFFFFF;
+    padding: 10px 20px;
+}
+.btn-apply:hover {
+    background-color: #e66a5a;
+}
+
+
+.stats-section h2,
+.history-section h2 {
+    font-size: 20px;
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.stats-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+.cashback-stats-grid {
+     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* Adjust for 2 cards to be wider */
+}
+
+
+.stat-card {
+    background-color: #FFFFFF;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.stat-title {
+    font-size: 13px;
+    color: #7f8c8d;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+}
+
+.stat-change {
+    font-size: 12px;
+}
+
+.stat-change.positive {
+    color: #28A745; /* Green */
+}
+.stat-change.negative {
+    color: #DC3545; /* Red */
+}
+
+.history-section {
+    margin-top: 30px;
+}
+
+.table-container {
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    overflow-x: auto; /* For responsive tables */
+    padding: 5px; /* Small padding around table */
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 12px 15px;
+    text-align: left;
+    font-size: 14px;
+    border-bottom: 1px solid #EAEEF3; /* Lighter border for rows */
+}
+
+.data-table th {
+    background-color: #F8F9FA; /* Light gray for header */
+    color: #495057;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase; /* Optional: uppercase headers */
+    letter-spacing: 0.5px;
+}
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tbody tr:hover {
+    background-color: #F8F9FA; /* Slight hover effect for rows */
+}
+
+/* Responsive adjustments (Example) */
+@media (max-width: 768px) {
+    .dashboard-layout {
+        flex-direction: column;
+    }
+    .sidebar {
+        width: 100%;
+        height: auto;
+        flex-direction: row; /* Or keep column but make it collapsible */
+        padding: 10px;
+        justify-content: center;
+        border-right: none;
+        border-bottom: 1px solid #EAECEE;
+    }
+    .sidebar-nav ul, .sidebar-footer ul {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .sidebar-nav li a, .sidebar-footer li a {
+        padding: 8px 15px;
+    }
+    .sidebar-nav li a.active {
+        border-right: none;
+        border-bottom: 3px solid #FF7F6B;
+        padding-right: 15px;
+    }
+    .sidebar-footer {
+        border-top: none;
+        padding-top: 0;
+    }
+
+
+    .main-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    .filters {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .stats-cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+    .stat-value {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 25px 20px;
+    }
+    .stats-cards-grid {
+        grid-template-columns: 1fr; /* Stack cards on very small screens */
+    }
+     .cashback-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .main-content {
+        padding: 15px;
+    }
+    .data-table th,
+    .data-table td {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+}

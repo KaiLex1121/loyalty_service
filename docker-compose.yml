@@ -1,16 +1,16 @@
-version: '3'
-
 services:
 
-  bot:
-    image: "alert_bot"
+  web:
+    image: "backend:latest"
     stop_signal: SIGINT
+    ports:
+      - "8000:8000"
     build:
       context: .
     working_dir: "/app"
     volumes:
       - .:/app
-    command: python3 -m src.bot
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
     restart: always
     env_file:
       - ".env"

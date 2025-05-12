@@ -1,73 +1,103 @@
-from dataclasses import dataclass
-from environs import Env
-from typing import Optional
+from pathlib import Path
+from typing import Optional, List
+from functools import lru_cache # Для кэширования экземпляра настроек
+
+from pydantic import AnyHttpUrl, PostgresDsn, computed_field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent # -> . (корень проекта)
 
 
-@dataclass
-class DbConfig:
-    password: str
-    user: str
-    database: str
-    host: str = "localhost"
-    port: int = 5432
+class ServerSettings(BaseSettings):
+    HOST: str
+    PORT: int
+    RELOAD: bool
 
-    def create_uri(
-        self, driver: str = "asyncpg", host: str = None, port: int = None
-    ) -> str:
-        if not host:
-            host = self.host
-        if not port:
-            port = self.port
+    model_config = SettingsConfigDict(env_prefix='SERVER_')
 
-        uri = f"postgresql+{driver}://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
 
-        return uri
+class DatabaseSettings(BaseSettings):
+    USER: str
+    PASSWORD: str
+    HOST: str
+    PORT: int
+    DB: str
+    TYPE: str
+    ASYNC_DRIVER: str
 
-    @staticmethod
-    def load_from_env(env: Env):
-        host = env.str("DB_HOST")
-        password = env.str("POSTGRES_PASSWORD")
-        user = env.str("POSTGRES_USER")
-        database = env.str("POSTGRES_DB")
-        port = env.int("DB_PORT", 5432)
-
-        return DbConfig(
-            host=host, password=password, user=user, database=database, port=port
+    @computed_field
+    @property
+    def DATABASE_URI(self) -> PostgresDsn:
+        return PostgresDsn.build(
+            scheme=f"{self.TYPE}+{self.ASYNC_DRIVER}",
+            username=self.USER,
+            password=self.PASSWORD,
+            host=self.HOST,
+            port=self.PORT,
+            path=self.DB,
         )
 
-
-@dataclass
-class RedisConfig:
-    redis_pass: Optional[str]
-    redis_port: Optional[int]
-    redis_host: Optional[str]
-
-    def create_uri(self) -> str:
-        return f"redis://{self.redis_host}:{self.redis_port}/1"
-
-    @staticmethod
-    def load_from_env(env: Env):
-        redis_pass = env.str("REDIS_PASSWORD")
-        redis_port = env.int("REDIS_PORT")
-        redis_host = env.str("REDIS_HOST")
-
-        return RedisConfig(
-            redis_pass=redis_pass, redis_port=redis_port, redis_host=redis_host
-        )
+    model_config = SettingsConfigDict(env_prefix='POSTGRES_')
 
 
-@dataclass
-class Config:
-    db: Optional[DbConfig] = None
-    redis: Optional[RedisConfig] = None
+class RedisSettings(BaseSettings):
+    HOST: str
+    PORT: int
+    PASSWORD: str
+    DB: int
+
+    model_config = SettingsConfigDict(env_prefix='REDIS_')
 
 
-def load_config(path: str | None) -> Config:
-    env: Env = Env()
-    env.read_env(path=path)
-    config = Config(
-        redis=RedisConfig.load_from_env(env),
-        db=DbConfig.load_from_env(env),
+class ApiSettings(BaseSettings):
+    NAME: str
+    PREFIX: str
+    DEBUG: bool
+    DOCS_URL: Optional[AnyHttpUrl]
+    OPENAPI_URL: Optional[AnyHttpUrl]
+    REDOC_URL: Optional[AnyHttpUrl]
+
+    model_config = SettingsConfigDict(env_prefix='API_')
+
+
+class SecuritySettings(BaseSettings):
+    SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+
+    model_config = SettingsConfigDict(env_prefix='SECURITY_')
+
+
+class WebAppSettings(BaseSettings):
+    BASE_URL: AnyHttpUrl = "http://localhost:8000"
+    TEMPLATES_DIR: Path = BASE_DIR / "backend" / "web_app" / "templates"
+    STATIC_DIR: Path = BASE_DIR / "backend" / "web_app" / "static"
+
+
+class AppSettings(BaseSettings):
+    API: ApiSettings
+    SECURITY: SecuritySettings
+    SERVER: ServerSettings
+    DB: DatabaseSettings
+    WEB_APP: WebAppSettings
+    REDIS: RedisSettings
+
+    model_config = SettingsConfigDict(
+        env_file='.env',
+        env_file_encoding='utf-8',
+        extra='ignore',
     )
 
-    return config
+@lru_cache()
+def get_config() -> AppSettings:
+    return AppSettings(
+        API=ApiSettings(),
+        SECURITY=SecuritySettings(),
+        SERVER=ServerSettings(),
+        DB=DatabaseSettings(),
+        WEB_APP=WebAppSettings(),
+        REDIS=RedisSettings(),
+    )
+
+
+settings = get_config()
