@@ -11,17 +11,15 @@ class User(Base):
     __tablename__ = "users"
     __mapper_args__ = {"eager_defaults": True}
 
-class User(Base):
-    __tablename__ = "users"
-
-    id: Mapped[int_pk]
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     phone_number: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False) # Основной идентификатор для входа
     email: Mapped[str | None] = mapped_column(String(255), unique=True, index=True, nullable=True) # Может быть опциональным
     hashed_password: Mapped[str | None] = mapped_column(String, nullable=True)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
     otp_code: Mapped[str | None] = mapped_column(String(10), nullable=True) # Хешированный OTP или сам OTP (если короткоживущий)
-    otp_expires_at: Mapped[datetime | None] = mapped_column(DateTime, default=func.now(), nullable=True) # Время жизни OTP
+    otp_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
     profile: Mapped["BusinessPartnerProfile"] = relationship(back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     def __repr__(self):

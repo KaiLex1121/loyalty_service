@@ -64,6 +64,7 @@ class SecuritySettings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
+    OTP_EXPIRE_MINUTES: int
 
     model_config = SettingsConfigDict(env_prefix='SECURITY_')
 
@@ -98,6 +99,3 @@ def get_config() -> AppSettings:
         WEB_APP=WebAppSettings(),
         REDIS=RedisSettings(),
     )
-
-
-settings = get_config()

@@ -1,0 +1,85 @@
+<aside class="sidebar">
+    <div class="sidebar-header">
+        {# Можно добавить логотип или название компании партнера #}
+        {# {% if current_user and current_user.profile and current_user.profile.company %}
+            <h5 class="text-white p-3">{{ current_user.profile.company.name }}</h5>
+        {% else %}
+            <h5 class="text-white p-3">Меню</h5>
+        {% endif %} #}
+        <a href="{{ url_for('dashboard_home') }}" class="sidebar-brand">
+            <!-- Можете вставить SVG лого или текст -->
+            Лого/Название
+        </a>
+    </div>
+    <nav class="sidebar-nav">
+        <ul>
+            {# request.url.path содержит текущий путь запроса #}
+            {# Мы можем использовать это для выделения активного пункта меню #}
+            <li>
+                <a href="{{ url_for('dashboard_home') }}"
+                   class="{% if request.url.path == url_for('dashboard_home') %}active{% endif %}">
+                   Статистика
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('dashboard_company_profile') }}"
+                   class="{% if request.url.path.startswith(url_for('dashboard_company_profile')) %}active{% endif %}">
+                   Моя компания
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('dashboard_requisites') }}"
+                   class="{% if request.url.path == url_for('dashboard_requisites') %}active{% endif %}">
+                   Реквизиты
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('dashboard_employees_list') }}"
+                   class="{% if request.url.path.startswith(url_for('dashboard_employees_list')) %}active{% endif %}">
+                   Сотрудники
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('dashboard_outlets_list') }}"
+                   class="{% if request.url.path.startswith(url_for('dashboard_outlets_list')) %}active{% endif %}">
+                   Торговые точки
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('dashboard_cashback_rules_list') }}"
+                   class="{% if request.url.path.startswith(url_for('dashboard_cashback_rules_list')) %}active{% endif %}">
+                   Правила кэшбэка (Акции)
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('dashboard_newsletters_list') }}"
+                   class="{% if request.url.path.startswith(url_for('dashboard_newsletters_list')) %}active{% endif %}">
+                   Рассылки
+                </a>
+            </li>
+             <li>
+                <a href="{{ url_for('dashboard_transactions_list') }}"
+                   class="{% if request.url.path.startswith(url_for('dashboard_transactions_list')) %}active{% endif %}">
+                   История операций
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('dashboard_feedback_list') }}"
+                   class="{% if request.url.path.startswith(url_for('dashboard_feedback_list')) %}active{% endif %}">
+                   Обратная связь
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <div class="sidebar-footer">
+        <ul>
+            <li>
+                <a href="{{ url_for('dashboard_user_profile') }}"
+                   class="{% if request.url.path == url_for('dashboard_user_profile') %}active{% endif %}">
+                   Настройки аккаунта
+                </a>
+            </li>
+            <li><a href="{{ url_for('web_logout') }}">Выход</a></li>
+        </ul>
+    </div>
+</aside>

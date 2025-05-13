@@ -31,7 +31,7 @@ class BaseDAO(Generic[Model]):
         result = await self.session.execute(select(func.count(self.model.id)))
         return result.scalar_one()
 
-    def save(self, obj: Model):
+    def add(self, obj: Model):
         self.session.add(obj)
 
     async def commit(self):
@@ -39,3 +39,6 @@ class BaseDAO(Generic[Model]):
 
     async def flush(self, *objects):
         await self.session.flush(objects)
+
+    async def refresh(self, obj: Model):
+        await self.session.refresh(obj)

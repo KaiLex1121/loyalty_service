@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.dao.user import UserDAO
+
 
 @dataclass
 class HolderDAO:
