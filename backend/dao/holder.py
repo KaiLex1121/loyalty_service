@@ -6,8 +6,7 @@ from backend.dao.user import UserDAO
 
 @dataclass
 class HolderDAO:
-    session: AsyncSession
     user: UserDAO = field(init=False)
 
     def __post_init__(self):
-        self.user = UserDAO(self.session)
+        self.user = UserDAO()

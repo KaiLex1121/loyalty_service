@@ -50,7 +50,7 @@ class RedisSettings(BaseSettings):
 
 
 class ApiSettings(BaseSettings):
-    NAME: str
+    TITLE: str
     PREFIX: str
     DEBUG: bool
     DOCS_URL: Optional[AnyHttpUrl]
@@ -65,6 +65,7 @@ class SecuritySettings(BaseSettings):
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     OTP_EXPIRE_MINUTES: int
+    OTP_LENGTH: int
 
     model_config = SettingsConfigDict(env_prefix='SECURITY_')
 
@@ -90,7 +91,7 @@ class AppSettings(BaseSettings):
     )
 
 @lru_cache()
-def get_config() -> AppSettings:
+def get_settings() -> AppSettings:
     return AppSettings(
         API=ApiSettings(),
         SECURITY=SecuritySettings(),
@@ -99,3 +100,6 @@ def get_config() -> AppSettings:
         WEB_APP=WebAppSettings(),
         REDIS=RedisSettings(),
     )
+
+
+settings = get_settings()
