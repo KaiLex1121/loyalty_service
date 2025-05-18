@@ -6,7 +6,6 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
-
 from src.database.dao.holder import HolderDAO
 from src.dto.user import User
 from src.keyboards.main_menu import MainMenuKeyboards

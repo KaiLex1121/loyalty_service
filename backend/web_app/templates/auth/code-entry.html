@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Авторизация - Код из СМС{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h1>Авторизация</h1>
+        <p class="auth-subtitle">
+            Пожалуйста, введите код из СМС, отправленный на номер
+            <strong>{{ phone_number | default('ваш номер') }}</strong>.
+        </p>
+
+        {% if error %}
+            <p class="auth-error-message" style="color: red; margin-bottom: 15px;">{{ error }}</p>
+        {% endif %}
+
+        <form class="auth-form" method="POST" action="{{ url_for('handle_verify_otp_page') }}">
+            <input type="hidden" name="phone_number" value="{{ phone_number }}">
+
+            <div class="form-group">
+                <label for="otp-code">Код из СМС</label>
+                <input type="text" id="otp-code" name="otp_code" placeholder="XXXX" pattern="[0-9]{4,6}" title="Введите 4-6 цифр кода" required autofocus>
+            </div>
+            <button type="submit" class="btn btn-primary">Подтвердить</button>
+        </form>
+        <p class="auth-resend-info">
+            Не пришел код? <a href="#">Отправить повторно</a>
+        </p>
+        <p class="auth-footer-link">
+            Проблемы со входом? <a href="#">Напишите нам</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

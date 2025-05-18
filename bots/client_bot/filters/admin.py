@@ -1,6 +1,5 @@
 from aiogram.filters import BaseFilter
 from aiogram.types import Message
-
 from src.config.main_config import Config
 
 

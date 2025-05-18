@@ -10,17 +10,11 @@ from aiogram.types import BotCommand
 from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-
 from src.config.main_config import Config
 from src.core.context import AppContext
-from src.handlers import (
-    admin,
-    main_menu,
-    reminder_creation,
-    reminder_management,
-    test_handlers,
-    view_created_reminders,
-)
+from src.handlers import (admin, main_menu, reminder_creation,
+                          reminder_management, test_handlers,
+                          view_created_reminders)
 from src.middlewares.config import ConfigMiddleware
 from src.middlewares.data_loader import LoadDataMiddleware
 from src.middlewares.database import DBMiddleware

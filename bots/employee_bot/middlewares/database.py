@@ -3,7 +3,6 @@ from typing import Any, Awaitable, Callable
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-
 from src.database.dao.holder import HolderDAO
 
 

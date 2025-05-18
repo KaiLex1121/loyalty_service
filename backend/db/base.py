@@ -1,13 +1,12 @@
-from sqlalchemy import MetaData
-from sqlalchemy.engine import make_url
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase
-
-from sqlalchemy.dialects.postgresql import TIMESTAMP
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.sql.functions import func
 from datetime import datetime
 
+from sqlalchemy import MetaData
+from sqlalchemy.dialects.postgresql import TIMESTAMP
+from sqlalchemy.engine import make_url
+from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
+                                    create_async_engine)
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.sql.functions import func
 
 convention = {
     "ix": "ix__%(column_0_label)s",
@@ -21,12 +20,7 @@ meta = MetaData(naming_convention=convention)
 
 class Base(DeclarativeBase):
     metadata = meta
-    created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP,
-        server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP,
-        server_default=func.now(),
-        onupdate=func.now()
+        TIMESTAMP, server_default=func.now(), onupdate=func.now()
     )

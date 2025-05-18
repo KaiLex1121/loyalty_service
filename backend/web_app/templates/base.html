@@ -3,22 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>{% block title %}{% endblock %}</title>
+    <title>{% block title %}Мой Проект{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', path='css/styles.css') }}">
-
-    <!-- Дополнительные стили для конкретных страниц -->
-    {% block head_styles %}{% endblock %}
+    {% block head_extra %}{% endblock %}
 </head>
 <body>
-    <div class="dashboard-layout">
-        {% block sidebar %}
-            {% include "sidebar.html" %}
-        {% endblock %}>
-        <main class="main-content">
-            {% block main_content %}
-            {% endblock %}
-        </main>
-    </div>
+    {% block content %}
+    {% endblock %}
+
+    {% block scripts %}{% endblock %}
 </body>
 </html>

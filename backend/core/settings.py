@@ -1,11 +1,11 @@
+from functools import lru_cache  # Для кэширования экземпляра настроек
 from pathlib import Path
-from typing import Optional, List
-from functools import lru_cache # Для кэширования экземпляра настроек
+from typing import List, Optional
 
 from pydantic import AnyHttpUrl, PostgresDsn, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent # -> . (корень проекта)
+BASE_DIR = Path(__file__).resolve().parent.parent.parent  # -> . (корень проекта)
 
 
 class ServerSettings(BaseSettings):
@@ -13,7 +13,7 @@ class ServerSettings(BaseSettings):
     PORT: int
     RELOAD: bool
 
-    model_config = SettingsConfigDict(env_prefix='SERVER_')
+    model_config = SettingsConfigDict(env_prefix="SERVER_")
 
 
 class DatabaseSettings(BaseSettings):
@@ -37,7 +37,7 @@ class DatabaseSettings(BaseSettings):
             path=self.DB,
         )
 
-    model_config = SettingsConfigDict(env_prefix='POSTGRES_')
+    model_config = SettingsConfigDict(env_prefix="POSTGRES_")
 
 
 class RedisSettings(BaseSettings):
@@ -46,18 +46,18 @@ class RedisSettings(BaseSettings):
     PASSWORD: str
     DB: int
 
-    model_config = SettingsConfigDict(env_prefix='REDIS_')
+    model_config = SettingsConfigDict(env_prefix="REDIS_")
 
 
 class ApiSettings(BaseSettings):
     TITLE: str
-    PREFIX: str
+    VERSION: str
     DEBUG: bool
-    DOCS_URL: Optional[AnyHttpUrl]
-    OPENAPI_URL: Optional[AnyHttpUrl]
-    REDOC_URL: Optional[AnyHttpUrl]
+    DOCS_URL: str
+    OPENAPI_URL: str
+    REDOC_URL: str
 
-    model_config = SettingsConfigDict(env_prefix='API_')
+    model_config = SettingsConfigDict(env_prefix="API_")
 
 
 class SecuritySettings(BaseSettings):
@@ -67,7 +67,7 @@ class SecuritySettings(BaseSettings):
     OTP_EXPIRE_MINUTES: int
     OTP_LENGTH: int
 
-    model_config = SettingsConfigDict(env_prefix='SECURITY_')
+    model_config = SettingsConfigDict(env_prefix="SECURITY_")
 
 
 class WebAppSettings(BaseSettings):
@@ -85,10 +85,11 @@ class AppSettings(BaseSettings):
     REDIS: RedisSettings
 
     model_config = SettingsConfigDict(
-        env_file='.env',
-        env_file_encoding='utf-8',
-        extra='ignore',
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
     )
+
 
 @lru_cache()
 def get_settings() -> AppSettings:

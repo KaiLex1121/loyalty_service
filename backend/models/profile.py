@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from datetime import datetime
 
 from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, String, func
@@ -7,11 +8,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.db.base import Base
 
 
-
 class BusinessPartnerProfile(Base):
     __tablename__ = "business_partner_profiles"
 
-    id: Mapped[int_pk]
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
     full_name: Mapped[str | None] = mapped_column(String(255))
     user: Mapped["User"] = relationship(back_populates="profile")

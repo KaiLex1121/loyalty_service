@@ -1,10 +1,10 @@
+from typing import Generic, List, Type, TypeVar
+
 from sqlalchemy import delete, func
-from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, TypeVar, Type, Generic
+from sqlalchemy.future import select
 
 from backend.db.base import Base
-
 
 Model = TypeVar("Model", Base, Base)
 
@@ -13,15 +13,12 @@ class BaseDAO(Generic[Model]):
     def __init__(self, model: Type[Model]):
         self.model = model
 
-
     async def get_all(self, session) -> List[Model]:
         result = await session.execute(select(self.model))
         return result.all()
 
     async def get_by_id(self, session, id_: int) -> Model:
-        result = await session.execute(
-            select(self.model).where(self.model.id == id_)
-        )
+        result = await session.execute(select(self.model).where(self.model.id == id_))
         return result.scalar_one()
 
     async def delete_all(self):

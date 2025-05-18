@@ -1,8 +1,8 @@
-"""Base models has been created
+"""New model
 
-Revision ID: aad813265027
-Revises:
-Create Date: 2025-05-12 22:17:03.604890
+Revision ID: 8afa02a38a1e
+Revises: fca05e7f4985
+Create Date: 2025-05-18 00:17:41.618119
 
 """
 
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "aad813265027"
-down_revision: Union[str, None] = None
+revision: str = "8afa02a38a1e"
+down_revision: Union[str, None] = "fca05e7f4985"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

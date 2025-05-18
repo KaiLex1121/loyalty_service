@@ -4,7 +4,6 @@ from aiogram import Bot, F, Router
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
-
 from src.database.dao.holder import HolderDAO
 from src.database.models.user import User
 from src.dto.reminder import CreateReminderDTO
@@ -12,12 +11,10 @@ from src.keyboards.reminder_creation import ReminderCreationKeyboards
 from src.services.reminder import ReminderService
 from src.services.scheduler import SchedulerService
 from src.states.general import ReminderCreateStates
-from src.text.formatters.reminder_creation import get_formateed_confirmation_text
-from src.utils.datetime_utils import (
-    convert_dt_to_russian,
-    parse_frequency,
-    parse_start_time,
-)
+from src.text.formatters.reminder_creation import \
+    get_formateed_confirmation_text
+from src.utils.datetime_utils import (convert_dt_to_russian, parse_frequency,
+                                      parse_start_time)
 
 router: Router = Router()
 

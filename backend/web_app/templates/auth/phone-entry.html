@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Авторизация - Номер телефона{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h1>Авторизация</h1>
+        <p class="auth-subtitle">Пожалуйста, введите ваш номер телефона</p>
+
+        <form class="auth-form" method="POST" action="{{ url_for('handle_phone_entry_page') }}">
+            <div class="form-group">
+                <label for="phone-number">Номер телефона</label>
+                <input type="tel" id="phone-number" name="phone_number" placeholder="+7 999 999 9999" value="{{ phone_number | default('') }}" required>
+            </div>
+
+            <div class="form-group form-group-checkbox">
+                <input type="checkbox" id="remember-me" name="remember_me" {{ 'checked' if remember_me }}>
+                <label for="remember-me" class="checkbox-label">Запомнить меня</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Подтвердить</button>
+        </form>
+
+        <p class="auth-footer-link">
+            Проблемы со входом? <a href="https://t.me/lsha228">Напишите нам</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

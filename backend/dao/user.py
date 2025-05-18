@@ -1,16 +1,20 @@
-import select
 from typing import Optional
+
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.dao.base import BaseDAO
 from backend.models.user import User
 from backend.schemas.user import UserCreate, UserUpdate
 
+
 class UserDAO(BaseDAO[User]):
     def __init__(self):
         super().__init__(User)
 
-    async def get_by_phone_number(self, db: AsyncSession, *, phone_number: str) -> Optional[User]:
+    async def get_by_phone_number(
+        self, db: AsyncSession, *, phone_number: str
+    ) -> Optional[User]:
         statement = select(User).where(User.phone_number == phone_number)
         result = await db.execute(statement)
         return result.scalar_one_or_none()
@@ -32,6 +36,7 @@ class UserDAO(BaseDAO[User]):
     async def update(
         self, db: AsyncSession, *, db_obj: User, obj_in: UserUpdate | dict
     ) -> User:
+        print(obj_in)
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:

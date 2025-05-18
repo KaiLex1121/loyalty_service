@@ -1,24 +1,29 @@
-from contextlib import asynccontextmanager
 import logging
-from pathlib import Path
-from fastapi import Depends, FastAPI, APIRouter, Request
+from contextlib import asynccontextmanager
+
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from backend.core.settings import get_config
+
+from backend.api.v1.api import api_router_v1
 from backend.core.dependencies import get_jinja_templates
+from backend.core.settings import settings
 from backend.dao.holder import HolderDAO
 from backend.db.session import create_pool
-from backend.core.settings import settings
-from backend.api.v1.api import api_router_v1
+from backend.web_app.routes.web_app import web_app_router
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(filename)s:%(lineno)d #%(levelname)-8s [%(asctime)s] - %(name)s - %(message)s",
+)
 logger = logging.getLogger(__name__)
+logger.level = logging.INFO
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Application startup: Creating database tables if they don't exist...")
+    logger.info("Application startup")
     yield
     logger.info("Application shutdown")
 
@@ -29,15 +34,15 @@ def create_app():
     dao = HolderDAO()
     app = FastAPI(
         title=settings.API.TITLE,
-        openapi_prefix=settings.API.PREFIX,
+        openapi_url=settings.API.OPENAPI_URL,
         docs_url=settings.API.DOCS_URL,
         redoc_url=settings.API.REDOC_URL,
         version=settings.API.VERSION,
-        openapi_url=settings.API.OPENAPI_URL,
         debug=settings.API.DEBUG,
-        lifespan=lifespan
+        lifespan=lifespan,
     )
     app.include_router(api_router_v1, prefix="/api/v1")
+    app.include_router(web_app_router)
     app.state.dao = dao
     app.state.pool = pool
     app.state.templates = templates
@@ -50,14 +55,14 @@ def create_app():
     return app
 
 
-
 app = create_app()
 
 
-
-@app.get("/", response_class=HTMLResponse, tags=["Root"])
-async def read_root(request: Request, templates: Jinja2Templates = Depends(get_jinja_templates) ):
+@app.get("/", response_class=HTMLResponse, name="index_page")
+async def read_root(
+    request: Request, templates: Jinja2Templates = Depends(get_jinja_templates)
+):
     return templates.TemplateResponse(
         "index.html",
-        {"request": request, "message": "Добро пожаловать в сервис лояльности!"}
+        {"request": request, "message": "Добро пожаловать в сервис лояльности!"},
     )

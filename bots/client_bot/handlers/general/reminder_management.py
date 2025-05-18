@@ -5,7 +5,6 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.redis import Redis
 from aiogram.types import CallbackQuery, Message
-
 from src.database.dao.holder import HolderDAO
 from src.keyboards.reminder_management import ReminderManagementKeyboards
 from src.services.reminder import ReminderService
