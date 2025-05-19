@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import MetaData
+from sqlalchemy import BigInteger, MetaData
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
@@ -20,6 +20,7 @@ meta = MetaData(naming_convention=convention)
 
 class Base(DeclarativeBase):
     metadata = meta
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, server_default=func.now(), onupdate=func.now()
