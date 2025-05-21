@@ -1,3 +1,4 @@
+# app/models/notification.py
 import datetime
 from typing import TYPE_CHECKING, Optional
 
@@ -5,35 +6,36 @@ from sqlalchemy import DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
-from backend.db.base import Base  # Ваш базовый класс
+from backend.db.base import Base
 
 if TYPE_CHECKING:
     from .company import Company
-    from .user import User
+    from .user_role import UserRole
 
 
 class NotificationMessage(Base):
     __tablename__ = "notification_messages"
 
-    title: Mapped[str] = mapped_column(String)
-    body: Mapped[str] = mapped_column(Text)  # Text для длинных сообщений
-    target_segment: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    target_segment: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     sent_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-    status: Mapped[str] = mapped_column(String, default="pending")
+    status: Mapped[str] = mapped_column(String(50), default="pending", nullable=False)
 
     company_id: Mapped[int] = mapped_column(
-        ForeignKey("companies.id", ondelete="CASCADE")
+        ForeignKey("companies.id", ondelete="CASCADE"), nullable=False
     )
-    created_by_user_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    created_by_user_role_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("user_roles.id", ondelete="SET NULL"), nullable=True
     )
 
-    # Связи
-    company: Mapped["Company"] = relationship(back_populates="notification_messages")
-    created_by_user: Mapped[Optional["User"]] = relationship(
-        back_populates="created_notifications"
+    company: Mapped["Company"] = relationship(
+        "Company", back_populates="notification_messages"
+    )
+    created_by_user_role: Mapped[Optional["UserRole"]] = relationship(
+        "UserRole", back_populates="created_notifications"
     )
 
     def __repr__(self) -> str:

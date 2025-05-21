@@ -20,8 +20,12 @@ meta = MetaData(naming_convention=convention)
 
 class Base(DeclarativeBase):
     metadata = meta
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
+    id: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True, autoincrement=True, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=func.now()
+    )
     updated_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, server_default=func.now(), onupdate=func.now()
+        TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now()
     )

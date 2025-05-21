@@ -1,46 +1,40 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table
-from sqlalchemy.orm import relationship
+from typing import TYPE_CHECKING, List, Optional
 
-from backend.db.base import Base  # Base для ассоциативной таблицы
+from sqlalchemy import Boolean, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-# Ассоциативная таблица для связи многие-ко-многим Employee <-> Outlet
-employee_outlet_association = Table(
-    "employee_outlet_association",
-    Base.metadata,
-    Column(
-        "employee_id",
-        Integer,
-        ForeignKey("employees.id", ondelete="CASCADE"),
-        primary_key=True,
-    ),
-    Column(
-        "outlet_id",
-        Integer,
-        ForeignKey("outlets.id", ondelete="CASCADE"),
-        primary_key=True,
-    ),
-)
+from backend.db.base import Base
+
+# Ассоциативная таблица employee_role_outlet_association импортируется из employee_role.py
+
+if TYPE_CHECKING:
+    from .company import Company
+    from .employee_role import EmployeeRole  # Импорт ассоциативной таблицы
+    from .employee_role import employee_role_outlet_association
+    from .transaction import Transaction
 
 
 class Outlet(Base):
     __tablename__ = "outlets"
 
-    name = Column(String, nullable=False)
-    address = Column(String, nullable=False)
-    is_active = Column(Boolean, default=True, nullable=False)
-    company_id = Column(
-        Integer, ForeignKey("companies.id", ondelete="CASCADE"), nullable=False
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    address: Mapped[str] = mapped_column(String(500), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    company_id: Mapped[int] = mapped_column(
+        ForeignKey("companies.id", ondelete="CASCADE"), nullable=False
     )
 
-    # Связи
-    company = relationship("Company", back_populates="outlets")
+    company: Mapped["Company"] = relationship("Company", back_populates="outlets")
 
-    # Связь многие-ко-многим с Employee через ассоциативную таблицу
-    employees = relationship(
-        "Employee", secondary=employee_outlet_association, back_populates="outlets"
+    assigned_employee_roles: Mapped[List["EmployeeRole"]] = relationship(
+        "EmployeeRole",
+        secondary="employee_role_outlet_association",  # Имя таблицы из employee_role.py
+        back_populates="assigned_outlets",
     )
 
-    transactions = relationship("Transaction", back_populates="outlet")
+    transactions: Mapped[List["Transaction"]] = relationship(
+        "Transaction", back_populates="outlet"
+    )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Outlet(id={self.id}, name='{self.name}')>"

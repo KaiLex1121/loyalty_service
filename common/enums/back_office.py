@@ -1,26 +1,121 @@
+# app/core/enums.py
 import enum
 
 
-class UserRole(enum.Enum):
-    ADMIN = "admin"
-    BUSINESS_OWNER = "business_owner"
-    STAFF = "staff"
-    CLIENT = "client"
+class CompanyStatusEnum(str, enum.Enum):
+    """Статус компании."""
+
+    DRAFT = "draft"  # Черновик
+    ACTIVE = "active"  # Активна и работает
+    PENDING_VERIFICATION = "pending_verification"  # Ожидает проверки данных
+    SUSPENDED = "suspended"  # Временно приостановлена (например, за неуплату)
+    ARCHIVED = "archived"  # Перенесена в архив, неактивна
 
 
-class TransactionType(enum.Enum):
-    CASHBACK_ACCRUAL = "cashback_accrual"
-    CASHBACK_WITHDRAWAL = "cashback_withdrawal"
+class OutletStatusEnum(str, enum.Enum):
+    """Статус торговой точки."""
+
+    ACTIVE = "active"  # Активна и работает
+    ARCHIVED = "archived"  # Закрыта навсегда (архивирована)
 
 
-class BroadcastStatus(enum.Enum):
-    DRAFT = "draft"
-    SCHEDULED = "scheduled"
-    SENT = "sent"
-    FAILED = "failed"
+class PromotionStatusEnum(str, enum.Enum):
+    """Статус акции."""
+
+    DRAFT = "draft"  # Черновик, не видна пользователям
+    SCHEDULED = "scheduled"  # Запланирована к запуску
+    ACTIVE = "active"  # Активна и действует
+    PAUSED = "paused"  # Временно приостановлена
+    EXPIRED = "expired"  # Срок действия истек
+    ARCHIVED = "archived"  # Перенесена в архив
 
 
-class FeedbackStatus(enum.Enum):
-    NEW = "new"
-    READ = "read"
-    ANSWERED = "answered"
+class OtpPurposeEnum(str, enum.Enum):
+    """
+    Назначение OTP кода.
+    """
+
+    LOGIN = "login"  # Для входа в систему
+    PASSWORD_RESET = "password_reset"  # Для сброса пароля
+    TRANSACTION_CONFIRM = (
+        "transaction_confirm"  # Для подтверждения важных транзакций/операций
+    )
+    EMAIL_VERIFICATION = "email_verification"  # Для верификации email
+
+
+class NotificationStatusEnum(str, enum.Enum):
+    """
+    Статус уведомления/рассылки.
+    """
+
+    PENDING = "pending"  # В ожидании отправки (например, в очереди)
+    PROCESSING = "processing"  # В процессе отправки
+    SENT = "sent"  # Отправлено шлюзу/сервису рассылок
+    FAILED = "failed"  # Не удалось отправить
+    DELIVERED = (
+        "delivered"  # Доставлено получателю (если есть такая информация от провайдера)
+    )
+    READ = "read"  # Прочитано получателем (если есть такая информация)
+    CANCELED = "canceled"  # Отменено до отправки
+
+
+class TransactionTypeEnum(str, enum.Enum):
+    """
+    Тип финансовой транзакции в системе лояльности.
+    """
+
+    ACCRUAL_PURCHASE = "accrual_purchase"  # Начисление за покупку
+    SPENDING_CASHBACK = "spending_cashback"  # Списание кэшбэка на оплату
+    ACCRUAL_REFUND = "accrual_refund"  # Возврат списанного кэшбэка (например, при отмене покупки, где был списан кэшбэк)
+    SPENDING_REFUND = "spending_refund"  # Списание начисленного кэшбэка (например, при возврате товара, за который был начислен кэшбэк)
+    EXPIRATION = (
+        "expiration"  # Сгорание кэшбэка по сроку действия (если будет такая логика)
+    )
+
+
+class PromotionTypeEnum(str, enum.Enum):
+    """
+    Тип акции.
+    """
+
+    PERCENTAGE_CASHBACK = "percentage_cashback"  # Повышенный/пониженный процент кэшбэка
+    FIXED_AMOUNT_CASHBACK = (
+        "fixed_amount_cashback"  # Фиксированная сумма кэшбэка за действие/покупку
+    )
+    BONUS_POINTS = (
+        "bonus_points"  # Начисление бонусных баллов (если баллы отличаются от кэшбэка)
+    )
+    PRODUCT_DISCOUNT = "product_discount"  # Скидка на товар/услугу (может быть вне логики кэшбэка, но для полноты)
+    GIFT = "gift"  # Подарок за покупку/действие
+
+
+class UserAccessLevelEnum(str, enum.Enum):
+    """
+    Уровень доступа пользователя.
+    """
+
+    FULL_ADMIN = "full_admin"
+    COMPANY_OWNER = "company_owner"
+    COMPANY_MANAGER = "company_manager"
+    SUPPORT_SPECIALIST = "support_specialist"
+
+
+class LegalFormEnum(str, enum.Enum):
+    OOO = "ООО"
+    IP = "ИП"
+    AO = "АО"
+    ZAO = "ЗАО"
+    OTHER = "other"
+
+
+class TariffStatusEnum(str, enum.Enum):
+    ACTIVE = "active"  # Доступен для выбора
+    ARCHIVED = "archived"  # Больше не доступен для новых подписок, но старые могут продолжать работать
+    HIDDEN = "hidden"  # Не отображается публично, но может быть назначен вручную
+
+
+class PaymentCycleEnum(str, enum.Enum):
+    MONTHLY = "monthly"
+    QUARTERLY = "quarterly"
+    HALF_YEARLY = "half_yearly"
+    ANNUALLY = "annually"
