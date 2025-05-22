@@ -19,19 +19,15 @@ class Account(Base):
     phone_number: Mapped[str] = mapped_column(
         String(20), unique=True, index=True, nullable=False
     )
-    hashed_password: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )  # Пароль может быть не у всех
+    hashed_password: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     first_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    patronymic: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     email: Mapped[Optional[str]] = mapped_column(
         String(255), unique=True, index=True, nullable=True
     )
-    is_active: Mapped[bool] = mapped_column(
-        Boolean, default=True, nullable=False
-    )  # Глобальная активность аккаунта
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    # Связи один-к-одному (или один-к-нулю) с ролевыми профилями
     user_profile: Mapped[Optional["UserRole"]] = relationship(
         "UserRole",
         back_populates="account",

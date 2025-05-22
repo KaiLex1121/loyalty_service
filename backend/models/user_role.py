@@ -20,7 +20,6 @@ class UserRole(Base):
     account_id: Mapped[int] = mapped_column(
         ForeignKey("accounts.id", ondelete="CASCADE"), unique=True, nullable=False
     )
-
     access_level: Mapped[UserAccessLevelEnum] = mapped_column(
         SQLAlchemyEnum(
             UserAccessLevelEnum,
@@ -31,16 +30,10 @@ class UserRole(Base):
         default=UserAccessLevelEnum.COMPANY_OWNER,
         nullable=False,
     )
-
-    # Обратная связь к Account
     account: Mapped["Account"] = relationship("Account", back_populates="user_profile")
-
-    # Компании, которыми владеет этот UserRole
     companies_owned: Mapped[List["Company"]] = relationship(
         "Company", back_populates="owner_user_role"
     )
-
-    # Уведомления, созданные этим UserRole
     created_notifications: Mapped[List["NotificationMessage"]] = relationship(
         "NotificationMessage", back_populates="created_by_user_role"
     )

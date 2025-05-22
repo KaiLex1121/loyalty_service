@@ -19,8 +19,6 @@ class Cashback(Base):
     default_percentage: Mapped[decimal.Decimal] = mapped_column(
         Numeric(5, 2), nullable=False
     )
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-
     company: Mapped["Company"] = relationship("Company", back_populates="cashback")
 
     def __repr__(self) -> str:

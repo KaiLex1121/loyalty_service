@@ -2,8 +2,8 @@ import datetime
 import decimal
 from typing import TYPE_CHECKING, Any, List, Optional
 
-from sqlalchemy import (JSON, Boolean,  # Добавлен Integer для tariff_plan_id
-                        Date, ForeignKey, Integer, Numeric, String, Text)
+from sqlalchemy import Boolean  # Добавлен Integer для tariff_plan_id
+from sqlalchemy import JSON, Date, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 
@@ -25,7 +25,6 @@ if TYPE_CHECKING:
 class Company(Base):
     __tablename__ = "companies"
 
-    # ... (все поля до информации о тарифе) ...
     name: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
     owner_user_role_id: Mapped[int] = mapped_column(
         ForeignKey("user_roles.id", ondelete="CASCADE"), nullable=False
@@ -75,7 +74,9 @@ class Company(Base):
         String(20), nullable=True
     )
     payment_account: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    # -----------------------------
 
+    # Параметры тарифного плана
     tariff_plan_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("tariff_plans.id", ondelete="SET NULL"), nullable=True
     )
@@ -85,18 +86,18 @@ class Company(Base):
     last_billing_date: Mapped[Optional[datetime.date]] = mapped_column(
         Date, nullable=True
     )
-    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-
     tariff_plan: Mapped[Optional["TariffPlan"]] = relationship(
         "TariffPlan", back_populates="companies_on_plan"
     )
+    # -----------------------------
+
     outlets: Mapped[List["Outlet"]] = relationship(
         "Outlet", back_populates="company", cascade="all, delete-orphan"
     )
     employee_roles: Mapped[List["EmployeeRole"]] = relationship(
         "EmployeeRole", back_populates="company", cascade="all, delete-orphan"
     )
-    cashback: Mapped[Optional["Cashback"]] = relationship(
+    cashback: Mapped["Cashback"] = relationship(
         "Cashback",
         back_populates="company",
         uselist=False,

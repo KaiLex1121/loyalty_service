@@ -119,3 +119,9 @@ class PaymentCycleEnum(str, enum.Enum):
     QUARTERLY = "quarterly"
     HALF_YEARLY = "half_yearly"
     ANNUALLY = "annually"
+
+
+class CurrencyEnum(str, enum.Enum):
+    RUB = "RUB"
+    USD = "USD"
+    EUR = "EUR"
