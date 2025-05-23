@@ -1,34 +1,16 @@
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import BigInteger, Boolean, Column, ForeignKey, String, Table
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.db.base import Base
+from backend.models.association_tables import employee_role_outlet_association
 
 if TYPE_CHECKING:
     from .account import Account
     from .company import Company
     from .outlet import Outlet
-
-# Ассоциативная таблица для связи EmployeeRole <-> Outlet
-# Важно: Имена колонок в FK должны соответствовать именам таблиц и колонок, на которые они ссылаются.
-# Имя таблицы "employee_roles" и "outlets". PK в них "id".
-employee_role_outlet_association = Table(
-    "employee_role_outlet_association",  # Имя таблицы связи
-    Base.metadata,
-    Column(
-        "employee_role_id",
-        BigInteger,
-        ForeignKey("employee_roles.id", ondelete="CASCADE"),
-        primary_key=True,
-    ),
-    Column(
-        "outlet_id",
-        BigInteger,
-        ForeignKey("outlets.id", ondelete="CASCADE"),
-        primary_key=True,
-    ),
-)
+    from .transaction import Transaction
 
 
 class EmployeeRole(Base):
@@ -38,21 +20,23 @@ class EmployeeRole(Base):
         ForeignKey("accounts.id", ondelete="CASCADE"), unique=True, nullable=False
     )
     position: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    performed_transactions: Mapped[List["Transaction"]] = relationship(
+        "Transaction",
+        back_populates="performed_by_employee",
+    )
     company_id: Mapped[int] = mapped_column(
         ForeignKey("companies.id", ondelete="CASCADE"), nullable=False
-    )  # Сотрудник привязан к компании
-
+    )
     account: Mapped["Account"] = relationship(
         "Account", back_populates="employee_profile"
     )
     company: Mapped["Company"] = relationship(
         "Company", back_populates="employee_roles"
     )
-
     assigned_outlets: Mapped[List["Outlet"]] = relationship(
-        "Outlet",  # Целевая модель
-        secondary=employee_role_outlet_association,  # Таблица связи
-        back_populates="assigned_employee_roles",  # Атрибут в Outlet
+        "Outlet",
+        secondary=employee_role_outlet_association,
+        back_populates="assigned_employee_roles",
     )
 
     def __repr__(self) -> str:

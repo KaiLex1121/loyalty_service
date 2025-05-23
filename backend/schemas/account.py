@@ -4,27 +4,27 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
 
 
-class UserBase(BaseModel):
+class AccountBase(BaseModel):
     phone_number: str
     email: Optional[EmailStr] = None
     is_active: bool = False
-    is_superuser: bool = False
+    is_superAccount: bool = False
 
 
-class UserCreate(UserBase):
+class AccountCreate(AccountBase):
     pass
 
 
-class UserUpdate(BaseModel):
+class AccountUpdate(BaseModel):
     phone_number: Optional[str] = None
     email: Optional[EmailStr] = None
     is_active: Optional[bool] = None
-    is_superuser: Optional[bool] = None
+    is_superAccount: Optional[bool] = None
     otp_code: Optional[str] = None
     otp_expires_at: Optional[datetime] = None
 
 
-class UserInDBBase(UserBase):
+class AccountInDBBase(AccountBase):
     id: int
     otp_code: Optional[str] = None
     otp_expires_at: Optional[datetime] = None
@@ -33,6 +33,6 @@ class UserInDBBase(UserBase):
         from_attributes = True
 
 
-class User(UserInDBBase):  # Схема для отдачи пользователю (без otp_code)
+class Account(AccountInDBBase):  # Схема для отдачи пользователю (без otp_code)
     otp_code: Optional[str] = Field(None, exclude=True)
     otp_expires_at: Optional[datetime] = Field(None, exclude=True)

@@ -6,11 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.security import oauth2_scheme, verify_token
 from backend.dao.holder import HolderDAO
-from backend.models.user import User
+from backend.models.account import Account
 from backend.schemas.token import TokenPayload
 from backend.services.auth import AuthService
 from backend.services.otp_sending import MockOTPSendingService
-from backend.services.user import UserService
+from backend.services.account import AccountService
 
 
 async def get_session(request: Request):
@@ -32,11 +32,11 @@ def get_jinja_templates(request: Request) -> Jinja2Templates:
     return templates_instance
 
 
-async def get_current_user(
+async def get_current_account(
     db: AsyncSession = Depends(get_session),
     dao: HolderDAO = Depends(get_dao),
     token: str = Depends(oauth2_scheme),
-) -> User:
+) -> Account:
     """
     Зависимость для получения текущего пользователя на основе JWT токена.
     """
@@ -52,43 +52,43 @@ async def get_current_user(
         raise credentials_exception
 
     phone_number: str = token_data.sub
-    user = await dao.user.get_by_phone_number(db, phone_number=phone_number)
+    account = await dao.account.get_by_phone_number(db, phone_number=phone_number)
 
-    if user is None:
+    if account is None:
         raise credentials_exception
 
-    return user
+    return account
 
 
-async def get_current_active_user(
-    current_user: User = Depends(get_current_user),
-) -> User:
+async def get_current_active_account(
+    current_account: Account = Depends(get_current_account),
+) -> Account:
 
-    if not current_user.is_active:
+    if not current_account.is_active:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Inactive user"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Inactive account"
         )
-    return current_user
+    return current_account
 
 
-async def get_current_superuser(
-    current_user: User = Depends(
-        get_current_active_user
+async def get_current_superaccount(
+    current_account: Account = Depends(
+        get_current_active_account
     ),  # Зависит от активного пользователя
-) -> User:
-    if not current_user.is_superuser:
+) -> Account:
+    if not current_account.is_superaccount:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="The user doesn't have enough privileges",
+            detail="The account doesn't have enough privileges",
         )
-    return current_user
+    return current_account
 
 
-async def get_current_user_from_cookie(
+async def get_current_account_from_cookie(
     request: Request,  # Для доступа к cookie
     db: AsyncSession = Depends(get_session),
     dao: HolderDAO = Depends(get_dao),
-) -> Optional[User]:
+) -> Optional[Account]:
     token = request.cookies.get("access_token")  # Имя вашего cookie
     if not token:
         return None
@@ -101,39 +101,39 @@ async def get_current_user_from_cookie(
         return None  # Не кидаем ошибку, т.к. пользователь может быть не залогинен на странице
 
     phone_number: str = token_data.sub
-    user = await dao.user.get_by_phone_number(db, phone_number=phone_number)
-    return user
+    account = await dao.account.get_by_phone_number(db, phone_number=phone_number)
+    return account
 
 
-async def get_current_active_user_from_cookie(
-    current_user: Optional[User] = Depends(get_current_user_from_cookie),
-) -> User:
-    if not current_user:
+async def get_current_active_account_from_cookie(
+    current_account: Optional[Account] = Depends(get_current_account_from_cookie),
+) -> Account:
+    if not current_account:
         raise HTTPException(
             status_code=status.HTTP_307_TEMPORARY_REDIRECT,
             detail="Not authenticated",
             headers={"Location": "/login"},  # Редирект на страницу логина
         )
-    if not current_user.is_active:
+    if not current_account.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive user. Please verify your account.",
+            detail="Inactive account. Please verify your account.",
         )
-    return current_user
+    return current_account
 
 
 def get_otp_sending_service() -> MockOTPSendingService:
     return MockOTPSendingService()
 
 
-def get_user_service() -> UserService:
-    return UserService()
+def get_account_service() -> AccountService:
+    return AccountService()
 
 
 def get_auth_service(
-    user_service: UserService = Depends(get_user_service),
+    account_service: AccountService = Depends(get_account_service),
     otp_sending_service: MockOTPSendingService = Depends(get_otp_sending_service),
 ) -> AuthService:
     return AuthService(
-        user_service=user_service, otp_sending_service=otp_sending_service
+        account_service=account_service, otp_sending_service=otp_sending_service
     )

@@ -1,7 +1,8 @@
 import datetime
+import decimal
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import Date, ForeignKey, Text
+from sqlalchemy import Date, ForeignKey, Numeric, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.db.base import Base
@@ -18,11 +19,16 @@ class CustomerRole(Base):
     account_id: Mapped[int] = mapped_column(
         ForeignKey("accounts.id", ondelete="CASCADE"), unique=True, nullable=False
     )
-    birth_date: Mapped[Optional[datetime.date]] = mapped_column(Date, nullable=True)
     company_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("companies.id", ondelete="SET NULL"), nullable=True
     )
-
+    birth_date: Mapped[Optional[datetime.date]] = mapped_column(Date, nullable=True)
+    cashback_balance: Mapped[decimal.Decimal] = mapped_column(
+        Numeric(12, 2),
+        nullable=False,
+        default=decimal.Decimal("0.00"),
+        server_default="0.00",
+    )
     company: Mapped[Optional["Company"]] = relationship(
         "Company", back_populates="customer_roles_profiles"
     )

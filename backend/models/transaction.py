@@ -11,6 +11,7 @@ from backend.db.base import Base
 if TYPE_CHECKING:
     from .company import Company
     from .customer_role import CustomerRole
+    from .employee_role import EmployeeRole
     from .outlet import Outlet
     from .promotion import Promotion
 
@@ -30,8 +31,15 @@ class Transaction(Base):
     transaction_time: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
-    balance_after: Mapped[Optional[decimal.Decimal]] = mapped_column(Numeric(12, 2), nullable=True) # Для аудита
-
+    balance_after: Mapped[decimal.Decimal] = mapped_column(
+        Numeric(12, 2), nullable=True
+    )  # Для аудита
+    performed_by_employee_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("employee_roles.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    performed_by_employee: Mapped[Optional["EmployeeRole"]] = relationship(
+        "EmployeeRole", back_populates="performed_transactions"
+    )
     customer_role_id: Mapped[int] = mapped_column(
         ForeignKey("customer_roles.id", ondelete="CASCADE"), nullable=False
     )

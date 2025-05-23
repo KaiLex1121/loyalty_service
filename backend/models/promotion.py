@@ -2,8 +2,7 @@ import datetime
 import decimal
 from typing import TYPE_CHECKING, Any, List, Optional  # Any для JSON
 
-from sqlalchemy import (JSON, Boolean, DateTime, ForeignKey, Numeric, String,
-                        Text, Time)
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Numeric, String, Text, Time
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.db.base import Base

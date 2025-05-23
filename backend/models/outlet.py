@@ -4,13 +4,11 @@ from sqlalchemy import Boolean, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.db.base import Base
-
-# Ассоциативная таблица employee_role_outlet_association импортируется из employee_role.py
+from backend.models.association_tables import employee_role_outlet_association
 
 if TYPE_CHECKING:
     from .company import Company
-    from .employee_role import EmployeeRole  # Импорт ассоциативной таблицы
-    from .employee_role import employee_role_outlet_association
+    from .employee_role import EmployeeRole
     from .transaction import Transaction
 
 
@@ -28,7 +26,7 @@ class Outlet(Base):
 
     assigned_employee_roles: Mapped[List["EmployeeRole"]] = relationship(
         "EmployeeRole",
-        secondary="employee_role_outlet_association",  # Имя таблицы из employee_role.py
+        secondary=employee_role_outlet_association,
         back_populates="assigned_outlets",
     )
 

@@ -4,14 +4,17 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.dependencies import (get_auth_service,
-                                       get_current_active_user, get_dao,
-                                       get_session)
+from backend.core.dependencies import (
+    get_auth_service,
+    get_current_active_account,
+    get_dao,
+    get_session,
+)
 from backend.dao.holder import HolderDAO
-from backend.models.user import User
+from backend.models.account import Account
 from backend.schemas.auth import OTPVerifyRequest, PhoneRequest
 from backend.schemas.token import Token
-from backend.schemas.user import UserBase, UserInDBBase
+from backend.schemas.account import AccountBase, AccountInDBBase
 from backend.services.auth import AuthService
 
 router = APIRouter()
@@ -43,7 +46,7 @@ async def login_for_swagger_ui(
 
 
 @router.post(
-    "/request-otp", response_model=UserInDBBase, status_code=status.HTTP_200_OK
+    "/request-otp", response_model=AccountInDBBase, status_code=status.HTTP_200_OK
 )
 async def request_otp_endpoint(
     phone_data: PhoneRequest,
@@ -52,8 +55,8 @@ async def request_otp_endpoint(
     dao: HolderDAO = Depends(get_dao),
 ):
     try:
-        user = await auth_svc.request_otp(db, dao, phone_number=phone_data.phone_number)
-        return UserInDBBase.model_validate(user)
+        account = await auth_svc.request_otp(db, dao, phone_number=phone_data.phone_number)
+        return AccountInDBBase.model_validate(account)
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -86,6 +89,6 @@ async def verify_otp_endpoint(
         )
 
 
-@router.get("/me", response_model=UserBase)
-async def read_users_me(current_user: User = Depends(get_current_active_user)):
-    return current_user
+@router.get("/me", response_model=AccountBase)
+async def read_users_me(current_account: AccountBase = Depends(get_current_active_account)):
+    return current_account

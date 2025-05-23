@@ -5,8 +5,9 @@ from typing import Any, Optional, Union
 
 from fastapi.security import APIKeyHeader, HTTPBearer, OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import \
-    CryptContext  # Пока не используем для OTP, но может пригодиться
+from passlib.context import (
+    CryptContext,
+)  # Пока не используем для OTP, но может пригодиться
 
 from backend.core.settings import settings
 from backend.schemas.token import TokenPayload

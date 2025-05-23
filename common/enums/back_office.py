@@ -1,16 +1,20 @@
 # app/core/enums.py
 import enum
 
+
 class SubscriptionStatusEnum(str, enum.Enum):
     """Статус подписки компании на тарифный план."""
-    TRIALING = "trialing"         # На пробном периоде
-    ACTIVE = "active"             # Активна, оплачена
-    PAST_DUE = "past_due"         # Просрочен платеж
-    CANCELED = "canceled"         # Отменена (пользователем или системой до окончания периода)
-    EXPIRED = "expired"           # Истек срок действия (если не было автопродления)
-    INCOMPLETE = "incomplete"     # Создание подписки не завершено (например, не прошел первый платеж)
-    INCOMPLETE_EXPIRED = "incomplete_expired" # Время на завершение создания подписки истекло
-    UNPAID = "unpaid"             # Не оплачена (после past_due, если не отменена)
+
+    TRIALING = "trialing"  # На пробном периоде
+    ACTIVE = "active"  # Активна, оплачена
+    PAST_DUE = "past_due"  # Просрочен платеж
+    CANCELED = "canceled"  # Отменена (пользователем или системой до окончания периода)
+    EXPIRED = "expired"  # Истек срок действия (если не было автопродления)
+    INCOMPLETE = "incomplete"  # Создание подписки не завершено (например, не прошел первый платеж)
+    INCOMPLETE_EXPIRED = (
+        "incomplete_expired"  # Время на завершение создания подписки истекло
+    )
+    UNPAID = "unpaid"  # Не оплачена (после past_due, если не отменена)
 
 
 class CompanyStatusEnum(str, enum.Enum):

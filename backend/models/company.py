@@ -8,8 +8,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 
 from backend.db.base import Base
-from common.enums.back_office import (CompanyStatusEnum, LegalFormEnum,
-                                      PaymentCycleEnum, VatTypeEnum)
+from common.enums.back_office import (
+    CompanyStatusEnum,
+    LegalFormEnum,
+)
 
 if TYPE_CHECKING:
     from .cashback import Cashback
@@ -17,10 +19,10 @@ if TYPE_CHECKING:
     from .notification import NotificationMessage
     from .outlet import Outlet
     from .promotion import Promotion
+    from .subscription import Subscription
     from .tariff_plan import TariffPlan
     from .transaction import Transaction
     from .user_role import UserRole
-    from .subscription import Subscription
 
 
 class Company(Base):
@@ -76,7 +78,9 @@ class Company(Base):
     )
     payment_account: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     # -----------------------------
-    subscriptions: Mapped[List["Subscription"]] = relationship("Subscription", back_populates="company", cascade="all, delete-orphan")
+    subscriptions: Mapped[List["Subscription"]] = relationship(
+        "Subscription", back_populates="company", cascade="all, delete-orphan"
+    )
     outlets: Mapped[List["Outlet"]] = relationship(
         "Outlet", back_populates="company", cascade="all, delete-orphan"
     )
