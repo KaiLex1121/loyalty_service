@@ -20,9 +20,7 @@ class Account(Base):
         String(20), unique=True, index=True, nullable=False
     )
     hashed_password: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    first_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    patronymic: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    full_name: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
     email: Mapped[Optional[str]] = mapped_column(
         String(255), unique=True, index=True, nullable=True
     )

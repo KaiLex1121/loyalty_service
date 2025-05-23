@@ -30,6 +30,7 @@ class Transaction(Base):
     transaction_time: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+    balance_after: Mapped[Optional[decimal.Decimal]] = mapped_column(Numeric(12, 2), nullable=True) # Для аудита
 
     customer_role_id: Mapped[int] = mapped_column(
         ForeignKey("customer_roles.id", ondelete="CASCADE"), nullable=False

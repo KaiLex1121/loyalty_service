@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from .tariff_plan import TariffPlan
     from .transaction import Transaction
     from .user_role import UserRole
+    from .subscription import Subscription
 
 
 class Company(Base):
@@ -75,22 +76,7 @@ class Company(Base):
     )
     payment_account: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     # -----------------------------
-
-    # Параметры тарифного плана
-    tariff_plan_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("tariff_plans.id", ondelete="SET NULL"), nullable=True
-    )
-    next_billing_date: Mapped[Optional[datetime.date]] = mapped_column(
-        Date, nullable=True
-    )
-    last_billing_date: Mapped[Optional[datetime.date]] = mapped_column(
-        Date, nullable=True
-    )
-    tariff_plan: Mapped[Optional["TariffPlan"]] = relationship(
-        "TariffPlan", back_populates="companies_on_plan"
-    )
-    # -----------------------------
-
+    subscriptions: Mapped[List["Subscription"]] = relationship("Subscription", back_populates="company", cascade="all, delete-orphan")
     outlets: Mapped[List["Outlet"]] = relationship(
         "Outlet", back_populates="company", cascade="all, delete-orphan"
     )

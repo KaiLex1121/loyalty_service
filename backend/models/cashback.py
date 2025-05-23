@@ -1,7 +1,7 @@
 import decimal
-from typing import TYPE_CHECKING, Optional  # Optional нужен
+from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, ForeignKey, Numeric
+from sqlalchemy import ForeignKey, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.db.base import Base
