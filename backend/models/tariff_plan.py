@@ -6,17 +6,16 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 
 from backend.db.base import Base
-from common.enums.back_office import CurrencyEnum, PaymentCycleEnum, TariffStatusEnum
+from common.enums.back_office import (CurrencyEnum, PaymentCycleEnum,
+                                      TariffStatusEnum)
 
 if TYPE_CHECKING:
-    # from .company import Company # Эта связь теперь идет через Subscription
-    from .subscription import Subscription  # <--- Добавляем импорт Subscription
+    from .subscription import Subscription
 
 
 class TariffPlan(Base):
     __tablename__ = "tariff_plans"
 
-    # ... (поля name, description, price, currency, billing_period, лимиты, features, status, is_public, is_trial, trial_duration_days, sort_order остаются) ...
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     price: Mapped[decimal.Decimal] = mapped_column(Numeric(10, 2), nullable=False)
@@ -65,9 +64,6 @@ class TariffPlan(Base):
     is_trial: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     trial_duration_days: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-
-    # Обратная связь к подпискам, использующим этот тарифный план
-    # companies_on_plan: Mapped[List["Company"]] = relationship("Company", back_populates="tariff_plan") # УДАЛЯЕМ ЭТО
     subscriptions: Mapped[List["Subscription"]] = relationship(
         "Subscription", back_populates="tariff_plan"
     )

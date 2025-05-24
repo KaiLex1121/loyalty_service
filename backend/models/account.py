@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import Boolean, String
@@ -9,7 +8,7 @@ from backend.db.base import Base
 if TYPE_CHECKING:
     from .customer_role import CustomerRole
     from .employee_role import EmployeeRole
-    from .otp import OtpCode
+    from .otp_code import OtpCode
     from .user_role import UserRole
 
 

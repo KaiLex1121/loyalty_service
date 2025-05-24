@@ -61,8 +61,9 @@ class ApiSettings(BaseSettings):
 
 
 class SecuritySettings(BaseSettings):
-    SECRET_KEY: str
+    JWT_SECRET_KEY: str
     ALGORITHM: str
+    HMAC_SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     OTP_EXPIRE_MINUTES: int
     OTP_LENGTH: int

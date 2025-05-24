@@ -4,17 +4,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.dependencies import (
-    get_auth_service,
-    get_current_active_account,
-    get_dao,
-    get_session,
-)
+from backend.core.dependencies import (get_auth_service,
+                                       get_current_active_account, get_dao,
+                                       get_session)
 from backend.dao.holder import HolderDAO
 from backend.models.account import Account
+from backend.schemas.account import AccountBase, AccountInDBBase
 from backend.schemas.auth import OTPVerifyRequest, PhoneRequest
 from backend.schemas.token import Token
-from backend.schemas.account import AccountBase, AccountInDBBase
 from backend.services.auth import AuthService
 
 router = APIRouter()
@@ -55,7 +52,9 @@ async def request_otp_endpoint(
     dao: HolderDAO = Depends(get_dao),
 ):
     try:
-        account = await auth_svc.request_otp(db, dao, phone_number=phone_data.phone_number)
+        account = await auth_svc.request_otp(
+            db, dao, phone_number=phone_data.phone_number
+        )
         return AccountInDBBase.model_validate(account)
     except HTTPException as e:
         raise e
@@ -90,5 +89,7 @@ async def verify_otp_endpoint(
 
 
 @router.get("/me", response_model=AccountBase)
-async def read_users_me(current_account: AccountBase = Depends(get_current_active_account)):
+async def read_users_me(
+    current_account: AccountBase = Depends(get_current_active_account),
+):
     return current_account

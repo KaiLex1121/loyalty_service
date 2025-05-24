@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 class UserRole(Base):
     __tablename__ = "user_roles"
 
-    # Внешний ключ на Account, уникальный для обеспечения 1-к-1
     account_id: Mapped[int] = mapped_column(
         ForeignKey("accounts.id", ondelete="CASCADE"), unique=True, nullable=False
     )

@@ -1,20 +1,18 @@
+import hashlib
+import hmac
 import logging
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional, Union
 
-from fastapi.security import APIKeyHeader, HTTPBearer, OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import (
-    CryptContext,
-)  # Пока не используем для OTP, но может пригодиться
 
 from backend.core.settings import settings
 from backend.schemas.token import TokenPayload
 
 logger = logging.getLogger(__name__)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token-for-swagger")
-# oauth2_scheme = HTTPBearer(auto_error=False)
 
 
 def create_access_token(
@@ -28,7 +26,9 @@ def create_access_token(
         )
     to_encode = {"exp": expire, "sub": str(subject)}
     encoded_jwt = jwt.encode(
-        to_encode, settings.SECURITY.SECRET_KEY, algorithm=settings.SECURITY.ALGORITHM
+        to_encode,
+        settings.SECURITY.JWT_SECRET_KEY,
+        algorithm=settings.SECURITY.ALGORITHM,
     )
     return encoded_jwt
 
@@ -37,10 +37,9 @@ def verify_token(token: str) -> Optional[TokenPayload]:
     try:
         payload_dict = jwt.decode(
             token,
-            settings.SECURITY.SECRET_KEY,
+            settings.SECURITY.JWT_SECRET_KEY,
             algorithms=[settings.SECURITY.ALGORITHM],
         )
-        print("asd")
         if "sub" not in payload_dict or "exp" not in payload_dict:
             logger.error("Error decoding token")
             return None
@@ -70,6 +69,17 @@ def verify_token(token: str) -> Optional[TokenPayload]:
 
 def generate_otp(length: int = settings.SECURITY.OTP_LENGTH) -> str:
     return "".join(secrets.choice("0123456789") for _ in range(length))
+
+
+def get_otp_hmac_hash(otp: str) -> str:
+    key = settings.SECURITY.HMAC_SECRET_KEY.encode("utf-8")
+    msg = otp.encode("utf-8")
+    hmac_hash = hmac.new(key, msg, hashlib.sha256).hexdigest()
+    return hmac_hash
+
+
+def verify_otp_hmac_hash(otp: str, hashed_otp: str) -> bool:
+    return get_otp_hmac_hash(otp) == hashed_otp
 
 
 def get_otp_expiry_time(

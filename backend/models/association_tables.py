@@ -3,7 +3,7 @@ from sqlalchemy import BigInteger, Column, ForeignKey, Table
 from backend.db.base import Base
 
 employee_role_outlet_association = Table(
-    "employee_role_outlet_association",  # Имя таблицы связи
+    "employee_role_outlet_association",
     Base.metadata,
     Column(
         "employee_role_id",

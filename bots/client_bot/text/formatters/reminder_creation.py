@@ -1,7 +1,5 @@
-from src.text.formatters.general import (
-    format_custom_frequency_to_russian,
-    format_reminder_enum_value_to_russian,
-)
+from src.text.formatters.general import (format_custom_frequency_to_russian,
+                                         format_reminder_enum_value_to_russian)
 from src.utils.datetime_utils import convert_dt_to_russian
 
 

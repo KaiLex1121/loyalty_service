@@ -50,8 +50,8 @@ class OtpPurposeEnum(str, enum.Enum):
     Назначение OTP кода.
     """
 
-    LOGIN = "login"  # Для входа в систему
-    PASSWORD_RESET = "password_reset"  # Для сброса пароля
+    BACKOFFICE_LOGIN = "backoffice_login"  # Для входа в систему
+    PHONE_RESET = "phone_reset"  # Для сброса номера телефона
     TRANSACTION_CONFIRM = (
         "transaction_confirm"  # Для подтверждения важных транзакций/операций
     )

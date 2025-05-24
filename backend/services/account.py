@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.dao.holder import HolderDAO
 from backend.models.account import Account
-from backend.schemas.account import AccountCreate, AccountInDBBase, AccountUpdate
+from backend.schemas.account import AccountCreate, AccountUpdate
 
 
 class AccountService:
@@ -48,37 +48,16 @@ class AccountService:
             account = await self.create_account(db, dao, phone_number=phone_number)
         return account
 
-    async def set_otp_for_account(
+    async def update_account(
         self,
         db: AsyncSession,
         dao: HolderDAO,
         account: Account,
-        otp_code: str,
-        otp_expires_at: datetime,
+        account_in: AccountUpdate,
     ) -> Account:
-        account_update_data = AccountUpdate(otp_code=otp_code, otp_expires_at=otp_expires_at)
-        updated_account = await dao.account.update(db, db_obj=account, obj_in=account_update_data)
-        await db.commit()
-        await db.refresh(updated_account)
-        return updated_account
-
-    async def activate_account_and_clear_otp(
-        self, db: AsyncSession, dao: HolderDAO, account: account
-    ) -> Account:
-        update_data = {"otp_code": None, "otp_expires_at": None}
-        if not account.is_active:
-            update_data["is_active"] = True
-
-        account_update_obj = AccountUpdate(**update_data)
-        updated_account = await dao.account.update(db, db_obj=account, obj_in=account_update_obj)
-        await db.commit()
-        await db.refresh(updated_account)
-        return updated_account
-
-    async def update_account(
-        self, db: AsyncSession, dao: HolderDAO, account: Account, account_in: accountUpdate
-    ) -> Account:
-        updated_account = await dao.account.update(db, db_obj=account, obj_in=account_in)
+        updated_account = await dao.account.update(
+            db, db_obj=account, obj_in=account_in
+        )
         await db.commit()
         await db.refresh(updated_account)
         return updated_account

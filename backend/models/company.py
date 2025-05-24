@@ -1,17 +1,11 @@
-import datetime
-import decimal
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import Boolean  # Добавлен Integer для tariff_plan_id
-from sqlalchemy import JSON, Date, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 
 from backend.db.base import Base
-from common.enums.back_office import (
-    CompanyStatusEnum,
-    LegalFormEnum,
-)
+from common.enums.back_office import CompanyStatusEnum, LegalFormEnum
 
 if TYPE_CHECKING:
     from .cashback import Cashback
@@ -20,7 +14,6 @@ if TYPE_CHECKING:
     from .outlet import Outlet
     from .promotion import Promotion
     from .subscription import Subscription
-    from .tariff_plan import TariffPlan
     from .transaction import Transaction
     from .user_role import UserRole
 
@@ -31,9 +24,6 @@ class Company(Base):
     name: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
     owner_user_role_id: Mapped[int] = mapped_column(
         ForeignKey("user_roles.id", ondelete="CASCADE"), nullable=False
-    )
-    owner_user_role: Mapped["UserRole"] = relationship(
-        "UserRole", back_populates="companies_owned"
     )
     status: Mapped[CompanyStatusEnum] = mapped_column(
         SQLAlchemyEnum(
@@ -78,6 +68,10 @@ class Company(Base):
     )
     payment_account: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     # -----------------------------
+
+    owner_user_role: Mapped["UserRole"] = relationship(
+        "UserRole", back_populates="companies_owned"
+    )
     subscriptions: Mapped[List["Subscription"]] = relationship(
         "Subscription", back_populates="company", cascade="all, delete-orphan"
     )

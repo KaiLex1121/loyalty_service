@@ -1,11 +1,13 @@
 import re
+from datetime import datetime
 
 from pydantic import BaseModel, Field, model_validator
 
 from backend.core.settings import settings
+from common.enums.back_office import OtpPurposeEnum
 
 
-class PhoneRequest(BaseModel):
+class PhoneNumber(BaseModel):
     phone_number: str = Field(
         ...,
         description="Российский номер телефона в формате +7XXXXXXXXXX или 8XXXXXXXXXX",
@@ -13,7 +15,7 @@ class PhoneRequest(BaseModel):
     )
 
     @model_validator(mode="after")
-    def validate_phone_number(self) -> "PhoneRequest":
+    def validate_phone_number(self) -> "PhoneNumber":
         pattern = (
             r"^(?:\+7|8)[\s\-]?\(?(\d{3})\)?[\s\-]?(\d{3})[\s\-]?(\d{2})[\s\-]?(\d{2})$"
         )
@@ -25,21 +27,46 @@ class PhoneRequest(BaseModel):
                 "Например: +79991234567 или 89991234567"
             )
 
-        # Нормализация номера к формату +7XXXXXXXXXX
         digits_only = re.sub(r"\D", "", phone)
         if digits_only.startswith("8"):
             digits_only = "7" + digits_only[1:]
         if not digits_only.startswith("7"):
             digits_only = "7" + digits_only
-
         self.phone_number = "+" + digits_only
 
         return self
 
 
-class OTPVerifyRequest(PhoneRequest):
+class OtpRequest(PhoneNumber):
+    pass
+
+
+class OtpVerify(PhoneNumber):
     otp_code: str = Field(
-        ...,
-        min_length=settings.SECURITY.OTP_LENGTH,
-        max_length=settings.SECURITY.OTP_LENGTH,
+        ..., min_length=settings.OTP_LENGTH, max_length=settings.OTP_LENGTH
     )
+    purpose: OtpPurposeEnum = Field(
+        default=OtpPurposeEnum.BACKOFFICE_LOGIN,
+        examples=[OtpPurposeEnum.BACKOFFICE_LOGIN],
+    )  # Или OtpPurposeEnum.BACKOFFICE_LOGIN
+
+
+class OtpCodeBase(BaseModel):
+    hashed_code: str
+    expires_at: datetime
+    purpose: OtpPurposeEnum
+    account_id: int
+
+
+class OtpCodeCreate(OtpCodeBase):
+    pass
+
+
+class OtpCodeDB(OtpCodeBase):  # Схема для чтения из БД
+    id: int
+    is_used: bool
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True  # Для SQLAlchemy моделей (orm_mode в Pydantic v1)

@@ -1,4 +1,3 @@
-# app/models/notification.py
 import datetime
 from typing import TYPE_CHECKING, Optional
 

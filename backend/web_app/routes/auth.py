@@ -1,26 +1,23 @@
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response, status
+from fastapi import (APIRouter, Depends, Form, HTTPException, Request,
+                     Response, status)
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.dependencies import (
-    get_auth_service,
-    get_current_active_user,
-    get_current_user_from_cookie,
-    get_dao,
-    get_jinja_templates,
-    get_session,
-)
+from backend.core.dependencies import (get_auth_service,
+                                       get_current_account_from_cookie,
+                                       get_current_active_account, get_dao,
+                                       get_jinja_templates, get_session)
 from backend.core.settings import settings
 from backend.dao.holder import HolderDAO
-from backend.models.user import User
+from backend.models.account import Account
+from backend.schemas.account import AccountBase, AccountInDBBase
 from backend.schemas.auth import OTPVerifyRequest, PhoneRequest
 from backend.schemas.token import Token
-from backend.schemas.user import UserBase, UserInDBBase
 from backend.services.auth import AuthService
 
 logger = logging.getLogger(__name__)
@@ -31,10 +28,10 @@ router = APIRouter()
 @router.get("/phone-entry", response_class=HTMLResponse, name="phone_entry_page")
 async def login_sms_page(
     request: Request,
-    current_user: Optional[User] = Depends(get_current_user_from_cookie),
+    current_account: Optional[Account] = Depends(get_current_account_from_cookie),
     templates: Jinja2Templates = Depends(get_jinja_templates),
 ):
-    if current_user and current_user.is_active:
+    if current_account and current_account.is_active:
         return RedirectResponse(
             url=request.url_for("page_profile"), status_code=status.HTTP_302_FOUND
         )
@@ -81,10 +78,10 @@ async def handle_login_sms_request(
 async def verify_otp_page(
     request: Request,
     phone: str,
-    current_user: Optional[User] = Depends(get_current_user_from_cookie),
+    current_account: Optional[Account] = Depends(get_current_account_from_cookie),
     templates: Jinja2Templates = Depends(get_jinja_templates),
 ):
-    if current_user and current_user.is_active:
+    if current_account and current_account.is_active:
         return RedirectResponse(
             url=request.url_for("page_profile"), status_code=status.HTTP_302_FOUND
         )
@@ -120,7 +117,7 @@ async def handle_verify_otp_and_set_cookie(
 
         fastapi_response.set_cookie(
             key="access_token",
-            value=f"Bearer {access_token}",  # Добавляем "Bearer " для консистентности, если get_current_user_from_cookie его ожидает
+            value=f"Bearer {access_token}",  # Добавляем "Bearer " для консистентности, если get_current_account_from_cookie его ожидает
             httponly=True,
             samesite="lax",  # "lax" или "strict"
             max_age=token_expire_minutes * 60,
@@ -156,11 +153,11 @@ async def handle_verify_otp_and_set_cookie(
 async def resend_sms_code_page(
     request: Request,
     phone: str,
-    current_user: Optional[User] = Depends(get_current_user_from_cookie),
+    current_account: Optional[Account] = Depends(get_current_account_from_cookie),
     templates: Jinja2Templates = Depends(get_jinja_templates),
 ):
     # phone - это номер телефона из query параметра (?phone=...)
-    if current_user and current_user.is_active:
+    if current_account and current_account.is_active:
         return RedirectResponse(
             url=request.url_for("page_profile"), status_code=status.HTTP_302_FOUND
         )

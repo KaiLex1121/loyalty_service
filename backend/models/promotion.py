@@ -1,15 +1,16 @@
 import datetime
 import decimal
-from typing import TYPE_CHECKING, Any, List, Optional  # Any для JSON
+from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Numeric, String, Text, Time
+from sqlalchemy import (JSON, Boolean, DateTime, ForeignKey, Numeric, String,
+                        Text, Time)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.db.base import Base
 
 if TYPE_CHECKING:
     from .company import Company
-    from .transaction import Transaction  # Для обратной связи от Transaction
+    from .transaction import Transaction
 
 
 class Promotion(Base):
@@ -27,9 +28,7 @@ class Promotion(Base):
         DateTime(timezone=True), nullable=False
     )
 
-    days_of_week: Mapped[Optional[List[int]]] = mapped_column(
-        JSON, nullable=True
-    )  # Например, [0, 1, 6]
+    days_of_week: Mapped[Optional[List[int]]] = mapped_column(JSON, nullable=True)
     start_time: Mapped[Optional[datetime.time]] = mapped_column(
         Time(timezone=True), nullable=True
     )
@@ -44,7 +43,7 @@ class Promotion(Base):
     )
 
     company: Mapped["Company"] = relationship("Company", back_populates="promotions")
-    # Обратная связь от транзакций, к которым была применена эта акция
+
     transactions: Mapped[List["Transaction"]] = relationship(
         "Transaction", back_populates="applied_promotion"
     )

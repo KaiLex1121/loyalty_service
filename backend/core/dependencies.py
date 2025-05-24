@@ -8,9 +8,9 @@ from backend.core.security import oauth2_scheme, verify_token
 from backend.dao.holder import HolderDAO
 from backend.models.account import Account
 from backend.schemas.token import TokenPayload
+from backend.services.account import AccountService
 from backend.services.auth import AuthService
 from backend.services.otp_sending import MockOTPSendingService
-from backend.services.account import AccountService
 
 
 async def get_session(request: Request):

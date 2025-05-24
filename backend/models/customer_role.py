@@ -2,7 +2,7 @@ import datetime
 import decimal
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import Date, ForeignKey, Numeric, Text
+from sqlalchemy import Date, ForeignKey, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.db.base import Base
