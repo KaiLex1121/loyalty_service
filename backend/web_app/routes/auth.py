@@ -1,23 +1,21 @@
 import logging
 from typing import Optional
 
-from fastapi import (APIRouter, Depends, Form, HTTPException, Request,
-                     Response, status)
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response, status
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.dependencies import (get_auth_service,
-                                       get_current_account_from_cookie,
-                                       get_current_active_account, get_dao,
-                                       get_jinja_templates, get_session)
+from backend.core.dependencies import (
+    get_auth_service,
+    get_current_account_from_cookie,
+    get_dao,
+    get_jinja_templates,
+    get_session,
+)
 from backend.core.settings import settings
 from backend.dao.holder import HolderDAO
 from backend.models.account import Account
-from backend.schemas.account import AccountBase, AccountInDBBase
-from backend.schemas.auth import OTPVerifyRequest, PhoneRequest
-from backend.schemas.token import Token
 from backend.services.auth import AuthService
 
 logger = logging.getLogger(__name__)

@@ -6,31 +6,24 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.dao.holder import HolderDAO
 from backend.models.account import Account
-from backend.schemas.account import AccountCreate, AccountUpdate
+from backend.models.otp_code import OtpCode
+from common.enums.back_office import OtpPurposeEnum
 
 
 class OtpCodeService:
 
     async def invalidate_previous_otps(
-        self, db: AsyncSession, dao: HolderDAO, account: Account, purpose: str
+        self, session: AsyncSession, dao: HolderDAO, account: Account, purpose: str
     ) -> None:
-        try:
-            await dao.otp_code.invalidate_previous_otps(
-                db,
-                account_id=account.id,
-                purpose=purpose,
-                phone_number_ref=account.phone_number
-            )
-            await db.commit()
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-            )
-
+        await dao.otp_code.invalidate_previous_otps(
+            session,
+            account_id=account.id,
+            purpose=purpose,
+        )
 
     async def create_otp(
         self,
-        db: AsyncSession,
+        session: AsyncSession,
         dao: HolderDAO,
         *,
         hashed_otp: str,
@@ -38,10 +31,16 @@ class OtpCodeService:
         purpose: str,
         account: Account
     ):
-        await dao.otp_code.create_otp(db,
+        otp_code = await dao.otp_code.create_otp(
+            session=session,
             hashed_otp=hashed_otp,
             expires_at=expires_at,
             purpose=purpose,
-            account_id=account.id
+            account_id=account.id,
         )
-        await db.commit()
+        return otp_code
+
+    async def mark_otp_as_used(
+        self, session: AsyncSession, dao: HolderDAO, otp_obj: OtpCode
+    ) -> None:
+        await dao.otp_code.mark_otp_as_used(session, otp_obj=otp_obj)

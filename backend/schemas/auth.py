@@ -37,13 +37,13 @@ class PhoneNumber(BaseModel):
         return self
 
 
-class OtpRequest(PhoneNumber):
+class PhoneNumberRequest(PhoneNumber):
     pass
 
 
-class OtpVerify(PhoneNumber):
+class OTPVerifyRequest(PhoneNumber):
     otp_code: str = Field(
-        ..., min_length=settings.OTP_LENGTH, max_length=settings.OTP_LENGTH
+        ..., min_length=settings.SECURITY.OTP_LENGTH, max_length=settings.SECURITY.OTP_LENGTH
     )
     purpose: OtpPurposeEnum = Field(
         default=OtpPurposeEnum.BACKOFFICE_LOGIN,

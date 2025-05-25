@@ -30,7 +30,7 @@ class CustomerRole(Base):
         server_default="0.00",
     )
     company: Mapped[Optional["Company"]] = relationship(
-        "Company", back_populates="customer_roles_profiles"
+        "Company", back_populates="customers"
     )
     account: Mapped["Account"] = relationship(
         "Account", back_populates="customer_profile"

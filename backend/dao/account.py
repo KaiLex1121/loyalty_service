@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.dao.base import BaseDAO
@@ -13,26 +13,28 @@ class AccountDAO(BaseDAO[Account]):
         super().__init__(Account)
 
     async def get_by_phone_number(
-        self, db: AsyncSession, *, phone_number: str
+        self, session: AsyncSession, *, phone_number: str
     ) -> Optional[Account]:
         statement = select(self.model).where(
-            self.model.phone_number == phone_number and self.model.deleted_at.is_(None)
+            and_(
+                self.model.phone_number == phone_number, self.model.deleted_at.is_(None)
+            )
         )
-        result = await db.execute(statement)
+        result = await session.execute(statement)
         return result.scalar_one_or_none()
 
-    async def create(self, db: AsyncSession, *, obj_in: AccountCreate) -> Account:
-        db_obj = self.model(
+    async def create(self, session: AsyncSession, *, obj_in: AccountCreate) -> Account:
+        db_ojb = self.model(
             phone_number=obj_in.phone_number,
             email=obj_in.email,
             full_name=obj_in.full_name,
             is_active=obj_in.is_active,
         )
-        db.add(db_obj)
-        return db_obj
+        session.add(db_ojb)
+        return db_ojb
 
     async def update(
-        self, db: AsyncSession, *, db_obj: Account, obj_in: AccountUpdate | dict
+        self, session: AsyncSession, *, db_ojb: Account, obj_in: AccountUpdate | dict
     ) -> Account:
         if isinstance(obj_in, dict):
             update_data = obj_in
@@ -40,7 +42,6 @@ class AccountDAO(BaseDAO[Account]):
             update_data = obj_in.model_dump(exclude_unset=True)
 
         for field, value in update_data.items():
-            setattr(db_obj, field, value)
-
-        db.add(db_obj)
-        return db_obj
+            setattr(db_ojb, field, value)
+        session.add(db_ojb)
+        return db_ojb

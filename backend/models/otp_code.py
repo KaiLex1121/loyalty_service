@@ -28,11 +28,10 @@ class OtpCode(Base):
             inherit_schema=True,
         ),
         nullable=False,
-        default=OtpPurposeEnum.LOGIN,
+        default=OtpPurposeEnum.BACKOFFICE_LOGIN,
     )
     attempts: Mapped[int] = mapped_column(Integer, default=0)
     channel: Mapped[str] = mapped_column(String(10))
-
     account_id: Mapped[int] = mapped_column(
         ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False
     )
@@ -40,3 +39,7 @@ class OtpCode(Base):
 
     def __repr__(self) -> str:
         return f"<OtpCode(id={self.id}, account_id={self.account_id}, used={self.is_used})>"
+
+    @property
+    def is_expired(self) -> bool:
+        return datetime.datetime.now() > self.expires_at

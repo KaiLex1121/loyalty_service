@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 
+from fastapi import HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,6 +12,8 @@ from common.enums.back_office import OtpPurposeEnum
 
 
 class OtpCodeDAO(BaseDAO[OtpCode]):
+    def __init__(self):
+        super().__init__(Account)
 
     async def create_otp(
         self,
@@ -19,18 +22,15 @@ class OtpCodeDAO(BaseDAO[OtpCode]):
         hashed_otp: str,
         expires_at: datetime,
         purpose: str,
-        account_id: int
+        account_id: int,
     ) -> OtpCode:
-        db_obj = OtpCodeCreate(
+        db_obj = self.model(
             hashed_code=hashed_otp,
             expires_at=expires_at,
             purpose=purpose,
             account_id=account_id,
         )
         session.add(db_obj)
-        await session.commit()
-        await session.refresh(db_obj)
-        return db_obj
 
     async def get_active_otp_by_account_and_purpose(
         self,
@@ -38,7 +38,6 @@ class OtpCodeDAO(BaseDAO[OtpCode]):
         *,
         account_id: int,
         purpose: OtpPurposeEnum,
-        phone_number_ref: str
     ) -> OtpCode | None:
         stmt = (
             select(self.model)
@@ -56,8 +55,6 @@ class OtpCodeDAO(BaseDAO[OtpCode]):
     ) -> OtpCode:
         otp_obj.is_used = True
         session.add(otp_obj)
-        await session.commit()
-        await session.refresh(otp_obj)
         return otp_obj
 
     async def invalidate_previous_otps(

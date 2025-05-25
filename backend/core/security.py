@@ -71,15 +71,15 @@ def generate_otp(length: int = settings.SECURITY.OTP_LENGTH) -> str:
     return "".join(secrets.choice("0123456789") for _ in range(length))
 
 
-def get_otp_hmac_hash(otp: str) -> str:
+def get_otp_hash(otp: str) -> str:
     key = settings.SECURITY.HMAC_SECRET_KEY.encode("utf-8")
     msg = otp.encode("utf-8")
     hmac_hash = hmac.new(key, msg, hashlib.sha256).hexdigest()
     return hmac_hash
 
 
-def verify_otp_hmac_hash(otp: str, hashed_otp: str) -> bool:
-    return get_otp_hmac_hash(otp) == hashed_otp
+def verify_otp_hash(otp: str, hashed_otp: str) -> bool:
+    return get_otp_hash(otp) == hashed_otp
 
 
 def get_otp_expiry_time(

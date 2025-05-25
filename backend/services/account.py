@@ -36,11 +36,9 @@ class AccountService:
             phone_number=phone_number, email=email, is_active=False
         )
         account = await dao.account.create(db, obj_in=account_in_create)
-        await db.commit()
-        await db.refresh(account)
         return account
 
-    async def get_or_create_account_for_otp(
+    async def get_or_create_account(
         self, db: AsyncSession, dao: HolderDAO, phone_number: str
     ) -> Account:
         account = await self.get_account_by_phone(db, dao, phone_number=phone_number)
@@ -58,6 +56,6 @@ class AccountService:
         updated_account = await dao.account.update(
             db, db_obj=account, obj_in=account_in
         )
-        await db.commit()
+        await db.flush()
         await db.refresh(updated_account)
         return updated_account

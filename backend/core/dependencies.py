@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Optional
 
 from fastapi import Depends, HTTPException, Request, status
@@ -11,6 +12,7 @@ from backend.schemas.token import TokenPayload
 from backend.services.account import AccountService
 from backend.services.auth import AuthService
 from backend.services.otp_sending import MockOTPSendingService
+from backend.services.otp_code import OtpCodeService
 
 
 async def get_session(request: Request):
@@ -71,19 +73,6 @@ async def get_current_active_account(
     return current_account
 
 
-async def get_current_superaccount(
-    current_account: Account = Depends(
-        get_current_active_account
-    ),  # Зависит от активного пользователя
-) -> Account:
-    if not current_account.is_superaccount:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="The account doesn't have enough privileges",
-        )
-    return current_account
-
-
 async def get_current_account_from_cookie(
     request: Request,  # Для доступа к cookie
     db: AsyncSession = Depends(get_session),
@@ -122,18 +111,28 @@ async def get_current_active_account_from_cookie(
     return current_account
 
 
+@lru_cache
 def get_otp_sending_service() -> MockOTPSendingService:
     return MockOTPSendingService()
 
 
+@lru_cache
 def get_account_service() -> AccountService:
     return AccountService()
+
+
+@lru_cache
+def get_otp_code_service() -> OtpCodeService:
+    return OtpCodeService()
 
 
 def get_auth_service(
     account_service: AccountService = Depends(get_account_service),
     otp_sending_service: MockOTPSendingService = Depends(get_otp_sending_service),
+    otp_code_service: OtpCodeService = Depends(get_otp_code_service),
 ) -> AuthService:
     return AuthService(
-        account_service=account_service, otp_sending_service=otp_sending_service
+        account_service=account_service,
+        otp_sending_service=otp_sending_service,
+        otp_code_service=otp_code_service,
     )
