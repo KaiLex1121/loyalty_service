@@ -30,9 +30,7 @@ class EmployeeRole(Base):
     account: Mapped["Account"] = relationship(
         "Account", back_populates="employee_profile"
     )
-    company: Mapped["Company"] = relationship(
-        "Company", back_populates="employees"
-    )
+    company: Mapped["Company"] = relationship("Company", back_populates="employees")
     assigned_outlets: Mapped[List["Outlet"]] = relationship(
         "Outlet",
         secondary=employee_role_outlet_association,

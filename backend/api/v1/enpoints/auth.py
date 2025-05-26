@@ -4,17 +4,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.dependencies import (
-    get_auth_service,
-    get_current_active_account,
-    get_dao,
-    get_session,
-)
+from backend.core.dependencies import (get_auth_service,
+                                       get_current_active_account, get_dao,
+                                       get_session)
 from backend.dao.holder import HolderDAO
 from backend.schemas.account import AccountBase, AccountInDBBase
 from backend.schemas.auth import OTPVerifyRequest, PhoneNumberRequest
 from backend.schemas.token import Token
 from backend.services.auth import AuthService
+from common.enums.back_office import OtpPurposeEnum
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -24,14 +22,18 @@ logger = logging.getLogger(__name__)
 async def login_for_swagger_ui(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_session),
-    auth_svc: AuthService = Depends(get_auth_service),
+    auth_service: AuthService = Depends(get_auth_service),
     dao: HolderDAO = Depends(get_dao),
 ) -> Token:
     phone_number: str = form_data.username
     otp_code: str = form_data.password
+
     try:
-        access_token = await auth_svc.verify_otp_and_login(
-            session, dao, phone_number=phone_number, otp_code=otp_code
+        otp_request = OTPVerifyRequest(
+            otp_code=otp_code, purpose=OtpPurposeEnum.BACKOFFICE_LOGIN, phone_number=phone_number
+        )
+        access_token = await auth_service.verify_otp_and_login(
+            session, dao, otp_data=otp_request
         )
         return Token(access_token=access_token, token_type="bearer")
     except HTTPException as e:
@@ -54,12 +56,10 @@ async def request_otp_endpoint(
     dao: HolderDAO = Depends(get_dao),
 ):
     try:
-        account = await auth_service.request_otp(
+        account = await auth_service.request_otp_for_login(
             session, dao, phone_number=phone_data.phone_number
         )
         return AccountInDBBase.model_validate(account)
-    except HTTPException as e:
-        raise e
     except Exception as e:
         logger.error(f"Error in request_otp_endpoint: {e}", exc_info=True)
         raise HTTPException(
@@ -77,7 +77,7 @@ async def verify_otp_endpoint(
 ):
     try:
         access_token = await auth_svc.verify_otp_and_login(
-            session, dao, phone_number=otp_data.phone_number, otp_code=otp_data.otp_code
+            session, dao, otp_data=otp_data
         )
         return Token(access_token=access_token, token_type="bearer")
     except HTTPException as e:

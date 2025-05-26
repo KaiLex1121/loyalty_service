@@ -44,6 +44,8 @@ class AccountService:
         account = await self.get_account_by_phone(db, dao, phone_number=phone_number)
         if not account:
             account = await self.create_account(db, dao, phone_number=phone_number)
+        await db.flush()
+        await db.refresh(account)
         return account
 
     async def update_account(

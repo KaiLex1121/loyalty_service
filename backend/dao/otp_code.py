@@ -5,15 +5,13 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.dao.base import BaseDAO
-from backend.models.account import Account
 from backend.models.otp_code import OtpCode
-from backend.schemas.auth import OtpCodeCreate
 from common.enums.back_office import OtpPurposeEnum
 
 
 class OtpCodeDAO(BaseDAO[OtpCode]):
     def __init__(self):
-        super().__init__(Account)
+        super().__init__(OtpCode)
 
     async def create_otp(
         self,
@@ -23,12 +21,14 @@ class OtpCodeDAO(BaseDAO[OtpCode]):
         expires_at: datetime,
         purpose: str,
         account_id: int,
+        channel: str,
     ) -> OtpCode:
         db_obj = self.model(
             hashed_code=hashed_otp,
             expires_at=expires_at,
             purpose=purpose,
             account_id=account_id,
+            channel=channel,
         )
         session.add(db_obj)
 

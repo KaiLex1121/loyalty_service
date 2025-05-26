@@ -20,10 +20,10 @@ class OtpCode(Base):
         DateTime(timezone=True), nullable=False
     )
     is_used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    otp_type: Mapped[OtpPurposeEnum] = mapped_column(
+    purpose: Mapped[OtpPurposeEnum] = mapped_column(
         SQLAlchemyEnum(
             OtpPurposeEnum,
-            name="otp_type_enum",
+            name="otp_purpose_enum",
             create_constraint=True,
             inherit_schema=True,
         ),
@@ -31,7 +31,7 @@ class OtpCode(Base):
         default=OtpPurposeEnum.BACKOFFICE_LOGIN,
     )
     attempts: Mapped[int] = mapped_column(Integer, default=0)
-    channel: Mapped[str] = mapped_column(String(10))
+    channel: Mapped[str] = mapped_column(String(10)) # Канал, по которому передается код
     account_id: Mapped[int] = mapped_column(
         ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False
     )
@@ -42,4 +42,4 @@ class OtpCode(Base):
 
     @property
     def is_expired(self) -> bool:
-        return datetime.datetime.now() > self.expires_at
+        return datetime.datetime.now(datetime.timezone.utc) > self.expires_at

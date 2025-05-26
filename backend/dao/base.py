@@ -15,7 +15,7 @@ class BaseDAO(Generic[ModelType]):
         self.model = model
 
     async def get(self, session, id_: int) -> ModelType:
-        result = await session.execute(select(self.model).where(self.model.id_ == id_))
+        result = await session.execute(select(self.model).where(self.model.id == id_))
         return result.scalar_one()
 
     async def get_active(self, db: AsyncSession, id_: Any) -> Optional[ModelType]:

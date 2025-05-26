@@ -1,17 +1,14 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, Request
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI
 from fastapi.templating import Jinja2Templates
 
 from backend.api.v1.api import api_router_v1
-from backend.core.dependencies import get_jinja_templates
 from backend.core.settings import settings
 from backend.dao.holder import HolderDAO
 from backend.db.session import create_pool
-from backend.web_app.routes.web_app import web_app_router
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -42,27 +39,12 @@ def create_app():
         lifespan=lifespan,
     )
     app.include_router(api_router_v1, prefix="/api/v1")
-    app.include_router(web_app_router)
+
     app.state.dao = dao
     app.state.pool = pool
     app.state.templates = templates
-    app.mount(
-        "/static",
-        StaticFiles(directory=settings.WEB_APP.STATIC_DIR),
-        name="static",
-    )
 
     return app
 
 
 app = create_app()
-
-
-@app.get("/", response_class=HTMLResponse, name="index_page")
-async def read_root(
-    request: Request, templates: Jinja2Templates = Depends(get_jinja_templates)
-):
-    return templates.TemplateResponse(
-        "index.html",
-        {"request": request, "message": "Добро пожаловать в сервис лояльности!"},
-    )

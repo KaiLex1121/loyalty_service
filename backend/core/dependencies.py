@@ -11,8 +11,8 @@ from backend.models.account import Account
 from backend.schemas.token import TokenPayload
 from backend.services.account import AccountService
 from backend.services.auth import AuthService
-from backend.services.otp_sending import MockOTPSendingService
 from backend.services.otp_code import OtpCodeService
+from backend.services.otp_sending import MockOTPSendingService
 
 
 async def get_session(request: Request):
@@ -35,7 +35,7 @@ def get_jinja_templates(request: Request) -> Jinja2Templates:
 
 
 async def get_current_account(
-    db: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
     dao: HolderDAO = Depends(get_dao),
     token: str = Depends(oauth2_scheme),
 ) -> Account:
@@ -49,12 +49,13 @@ async def get_current_account(
     )
 
     token_data: Optional[TokenPayload] = verify_token(token)
-
     if token_data is None or token_data.sub is None:
         raise credentials_exception
 
-    phone_number: str = token_data.sub
-    account = await dao.account.get_by_phone_number(db, phone_number=phone_number)
+    account_id: str = token_data.sub
+
+
+    account = await dao.account.get(session, id_=account_id)
 
     if account is None:
         raise credentials_exception
@@ -69,44 +70,6 @@ async def get_current_active_account(
     if not current_account.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Inactive account"
-        )
-    return current_account
-
-
-async def get_current_account_from_cookie(
-    request: Request,  # Для доступа к cookie
-    db: AsyncSession = Depends(get_session),
-    dao: HolderDAO = Depends(get_dao),
-) -> Optional[Account]:
-    token = request.cookies.get("access_token")  # Имя вашего cookie
-    if not token:
-        return None
-
-    if token.lower().startswith("bearer "):
-        token = token.split(" ")[1]
-
-    token_data: Optional[TokenPayload] = verify_token(token)
-    if token_data is None or token_data.sub is None:
-        return None  # Не кидаем ошибку, т.к. пользователь может быть не залогинен на странице
-
-    phone_number: str = token_data.sub
-    account = await dao.account.get_by_phone_number(db, phone_number=phone_number)
-    return account
-
-
-async def get_current_active_account_from_cookie(
-    current_account: Optional[Account] = Depends(get_current_account_from_cookie),
-) -> Account:
-    if not current_account:
-        raise HTTPException(
-            status_code=status.HTTP_307_TEMPORARY_REDIRECT,
-            detail="Not authenticated",
-            headers={"Location": "/login"},  # Редирект на страницу логина
-        )
-    if not current_account.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive account. Please verify your account.",
         )
     return current_account
 

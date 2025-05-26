@@ -29,14 +29,16 @@ class OtpCodeService:
         hashed_otp: str,
         expires_at: datetime,
         purpose: str,
-        account: Account
+        account_id: int,
+        channel: str,
     ):
         otp_code = await dao.otp_code.create_otp(
             session=session,
             hashed_otp=hashed_otp,
             expires_at=expires_at,
             purpose=purpose,
-            account_id=account.id,
+            account_id=account_id,
+            channel=channel,
         )
         return otp_code
 

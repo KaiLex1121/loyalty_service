@@ -4,13 +4,9 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.security import (
-    create_access_token,
-    generate_otp,
-    get_otp_expiry_time,
-    get_otp_hash,
-    verify_otp_hash,
-)
+from backend.core.security import (create_access_token, generate_otp,
+                                   get_otp_expiry_time, get_otp_hash,
+                                   verify_otp_hash)
 from backend.dao.holder import HolderDAO
 from backend.schemas.auth import OTPVerifyRequest
 from backend.services.account import AccountService
@@ -32,7 +28,7 @@ class AuthService:
         self.otp_sending_service = otp_sending_service
         self.otp_code_service = otp_code_service
 
-    async def request_otp(
+    async def request_otp_for_login(
         self, session: AsyncSession, dao: HolderDAO, phone_number: str
     ) -> None:
         otp_purpose = OtpPurposeEnum.BACKOFFICE_LOGIN
@@ -50,40 +46,39 @@ class AuthService:
             )
 
             await self.otp_code_service.create_otp(
-                session,
+                dao=dao,
+                session=session,
                 account_id=account.id,
                 purpose=otp_purpose,
                 hashed_otp=hashed_otp,
                 expires_at=otp_expires,
+                channel="tg",
             )
 
+            sms_sent = await self.otp_sending_service.send_otp(
+                phone_number=account.phone_number, otp_code=plain_otp
+            )
+            if not sms_sent:
+                logger.error("Failed to send OTP SMS")
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Could not send OTP SMS. Please try again later.",
+                )
             await session.commit()
-
+            return account
         except HTTPException:
             await session.rollback()
             raise
 
-        sms_sent = await self.otp_sending_service.send_otp(
-            phone_number=account.phone_number, otp_code=plain_otp
-        )
-        if not sms_sent:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Could not send OTP SMS. Please try again later.",
-            )
-
-        return None
 
     async def verify_otp_and_login(
         self,
         session: AsyncSession,
         dao: HolderDAO,
         otp_data: OTPVerifyRequest,
-        phone_number: str,
-        otp_code: str,
     ) -> str:
         account = await self.account_service.get_account_by_phone(
-            session, dao, phone_number=phone_number
+            session, dao, phone_number=otp_data.phone_number
         )
         if not account:
             raise HTTPException(
@@ -108,7 +103,7 @@ class AuthService:
 
         if not verify_otp_hash(
             otp_code=otp_data.otp_code,
-            hashed_otp_from_db=active_otp.hashed_code,
+            hashed_otp_code=active_otp.hashed_code,
         ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -118,4 +113,5 @@ class AuthService:
         await self.otp_code_service.mark_otp_as_used(session, dao, otp_obj=active_otp)
 
         access_token = create_access_token(subject=account.id)
+
         return access_token

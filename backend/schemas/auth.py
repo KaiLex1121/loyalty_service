@@ -43,7 +43,9 @@ class PhoneNumberRequest(PhoneNumber):
 
 class OTPVerifyRequest(PhoneNumber):
     otp_code: str = Field(
-        ..., min_length=settings.SECURITY.OTP_LENGTH, max_length=settings.SECURITY.OTP_LENGTH
+        ...,
+        min_length=settings.SECURITY.OTP_LENGTH,
+        max_length=settings.SECURITY.OTP_LENGTH,
     )
     purpose: OtpPurposeEnum = Field(
         default=OtpPurposeEnum.BACKOFFICE_LOGIN,

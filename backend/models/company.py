@@ -9,6 +9,7 @@ from common.enums.back_office import CompanyStatusEnum, LegalFormEnum
 
 if TYPE_CHECKING:
     from .cashback import Cashback
+    from .customer_role import CustomerRole
     from .employee_role import EmployeeRole
     from .notification import NotificationMessage
     from .outlet import Outlet
@@ -78,9 +79,13 @@ class Company(Base):
     outlets: Mapped[List["Outlet"]] = relationship(
         "Outlet", back_populates="company", cascade="all, delete-orphan"
     )
-    employee_roles: Mapped[List["EmployeeRole"]] = relationship(
+    employees: Mapped[List["EmployeeRole"]] = relationship(
         "EmployeeRole", back_populates="company", cascade="all, delete-orphan"
     )
+    customers: Mapped[List["CustomerRole"]] = relationship(
+        "CustomerRole", back_populates="company"
+    )
+
     cashback: Mapped["Cashback"] = relationship(
         "Cashback",
         back_populates="company",

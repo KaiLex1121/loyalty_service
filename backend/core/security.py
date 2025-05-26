@@ -59,6 +59,7 @@ def verify_token(token: str) -> Optional[TokenPayload]:
             return None
 
         return token_data
+
     except JWTError:
         logger.error("JWTError", exc_info=True)
         return None
@@ -78,8 +79,8 @@ def get_otp_hash(otp: str) -> str:
     return hmac_hash
 
 
-def verify_otp_hash(otp: str, hashed_otp: str) -> bool:
-    return get_otp_hash(otp) == hashed_otp
+def verify_otp_hash(otp_code: str, hashed_otp_code: str) -> bool:
+    return get_otp_hash(otp_code) == hashed_otp_code
 
 
 def get_otp_expiry_time(
