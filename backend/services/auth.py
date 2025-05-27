@@ -109,9 +109,12 @@ class AuthService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid OTP code.",
             )
-
-        await self.otp_code_service.mark_otp_as_used(session, dao, otp_obj=active_otp)
-
-        access_token = create_access_token(subject=account.id)
-
-        return access_token
+        try:
+            await self.otp_code_service.set_mark_otp_as_used(session, dao, otp_obj=active_otp)
+            await self.account_service.set_account_as_active(session, dao, account=account)
+            access_token = create_access_token(subject=account.id)
+            await session.commit()
+            return access_token
+        except HTTPException:
+            await session.rollback()
+            raise

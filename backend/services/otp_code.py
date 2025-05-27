@@ -42,7 +42,7 @@ class OtpCodeService:
         )
         return otp_code
 
-    async def mark_otp_as_used(
+    async def set_mark_otp_as_used(
         self, session: AsyncSession, dao: HolderDAO, otp_obj: OtpCode
     ) -> None:
         await dao.otp_code.mark_otp_as_used(session, otp_obj=otp_obj)

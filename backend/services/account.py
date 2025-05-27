@@ -48,6 +48,15 @@ class AccountService:
         await db.refresh(account)
         return account
 
+    async def set_account_as_active(
+        self, db: AsyncSession, dao: HolderDAO, account: Account
+    ) -> Account:
+        account.is_active = True
+        account.updated_at = datetime.now()
+        await db.flush()
+        await db.refresh(account)
+        return account
+
     async def update_account(
         self,
         db: AsyncSession,

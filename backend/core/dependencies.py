@@ -52,7 +52,7 @@ async def get_current_account(
     if token_data is None or token_data.sub is None:
         raise credentials_exception
 
-    account_id: str = token_data.sub
+    account_id = int(token_data.sub)
 
 
     account = await dao.account.get(session, id_=account_id)

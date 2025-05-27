@@ -49,4 +49,4 @@ class Account(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<Account(id={self.id}, phone_number='{self.phone_number}')>"
+        return f"<Account(id={self.id}, phone_number='{self.phone_number}'), active={self.is_active}>"

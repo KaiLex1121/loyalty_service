@@ -23,6 +23,11 @@ class AccountDAO(BaseDAO[Account]):
         result = await session.execute(statement)
         return result.scalar_one_or_none()
 
+    async def mark_as_active(self, session: AsyncSession, *, account: Account) -> None:
+        account.is_active = True
+        session.add(account)
+        return account
+
     async def create(self, session: AsyncSession, *, obj_in: AccountCreate) -> Account:
         db_ojb = self.model(
             phone_number=obj_in.phone_number,
