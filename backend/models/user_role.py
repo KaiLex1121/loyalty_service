@@ -22,7 +22,7 @@ class UserRole(Base):
     access_level: Mapped[UserAccessLevelEnum] = mapped_column(
         SQLAlchemyEnum(
             UserAccessLevelEnum,
-            name="admin_access_level_enum",
+            name="user_access_level_enum",
             create_constraint=True,
             inherit_schema=True,
         ),

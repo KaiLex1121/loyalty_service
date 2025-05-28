@@ -21,12 +21,8 @@ logger = logging.getLogger(__name__)
     response_model=DashboardResponse,
 )
 async def get_backoffice_dashboard(
-    session: AsyncSession = Depends(get_session),
-    dao: HolderDAO = Depends(get_dao),
     dashboard_service: DashboardService = Depends(get_dashboard_service),
-    current_account: AccountModel = Depends(
-        get_current_active_account_with_profiles
-    ),  # Получаем активный аккаунт с профилями
+    current_account: AccountModel = Depends(get_current_active_account_with_profiles),
 ):
     """
     Возвращает информацию о текущем пользователе, его компаниях (владелец/сотрудник)
@@ -44,10 +40,3 @@ async def get_backoffice_dashboard(
         raise HTTPException(
             status_code=500, detail="An error occurred while fetching dashboard data."
         )
-
-
-@router.get("/", response_model=AccountBase)
-async def read_users_me(
-    current_account: AccountBase = Depends(get_current_active_account_with_profiles),
-):
-    return current_account
