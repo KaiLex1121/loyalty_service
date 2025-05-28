@@ -2,15 +2,36 @@ from typing import Optional
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from backend.dao.base import BaseDAO
 from backend.models.account import Account
+from backend.models.employee_role import EmployeeRole
+from backend.models.user_role import UserRole
 from backend.schemas.account import AccountCreate, AccountUpdate
 
 
 class AccountDAO(BaseDAO[Account]):
     def __init__(self):
         super().__init__(Account)
+
+    async def get_by_id_with_profiles(
+        self, db: AsyncSession, *, id_: int
+    ) -> Optional[Account]:
+        stmt = (
+            select(self.model)
+            .options(
+                selectinload(self.model.user_profile).selectinload(
+                    UserRole.companies_owned
+                ),  # Загружаем компании админа
+                selectinload(self.model.employee_profile).selectinload(
+                    EmployeeRole.company
+                ),  # Загружаем компанию сотрудника
+            )
+            .filter(Account.id == id_)
+        )
+        result = await db.execute(stmt)
+        return result.scalars().first()
 
     async def get_by_phone_number(
         self, session: AsyncSession, *, phone_number: str

@@ -1,13 +1,10 @@
 from datetime import datetime
-from typing import Optional
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.dao.holder import HolderDAO
 from backend.models.account import Account
 from backend.models.otp_code import OtpCode
-from common.enums.back_office import OtpPurposeEnum
 
 
 class OtpCodeService:

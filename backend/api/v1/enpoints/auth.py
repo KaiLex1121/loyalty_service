@@ -4,15 +4,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.dependencies import (get_auth_service,
-                                       get_current_active_account, get_dao,
-                                       get_session)
+from backend.core.dependencies import get_auth_service, get_dao, get_session
 from backend.dao.holder import HolderDAO
-from backend.schemas.account import AccountBase, AccountInDBBase
+from backend.enums.back_office import OtpPurposeEnum
+from backend.schemas.account import AccountInDBBase
 from backend.schemas.auth import OTPVerifyRequest, PhoneNumberRequest
 from backend.schemas.token import Token
 from backend.services.auth import AuthService
-from common.enums.back_office import OtpPurposeEnum
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -30,7 +28,9 @@ async def login_for_swagger_ui(
 
     try:
         otp_request = OTPVerifyRequest(
-            otp_code=otp_code, purpose=OtpPurposeEnum.BACKOFFICE_LOGIN, phone_number=phone_number
+            otp_code=otp_code,
+            purpose=OtpPurposeEnum.BACKOFFICE_LOGIN,
+            phone_number=phone_number,
         )
         access_token = await auth_service.verify_otp_and_login(
             session, dao, otp_data=otp_request
@@ -88,10 +88,3 @@ async def verify_otp_endpoint(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred.",
         )
-
-
-@router.get("/me", response_model=AccountBase)
-async def read_users_me(
-    current_account: AccountBase = Depends(get_current_active_account),
-):
-    return current_account

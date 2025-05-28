@@ -4,7 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field, model_validator
 
 from backend.core.settings import settings
-from common.enums.back_office import OtpPurposeEnum
+from backend.enums.back_office import OtpPurposeEnum
 
 
 class PhoneNumber(BaseModel):

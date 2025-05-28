@@ -8,11 +8,11 @@ from backend.core.security import (create_access_token, generate_otp,
                                    get_otp_expiry_time, get_otp_hash,
                                    verify_otp_hash)
 from backend.dao.holder import HolderDAO
+from backend.enums.back_office import OtpPurposeEnum
 from backend.schemas.auth import OTPVerifyRequest
 from backend.services.account import AccountService
 from backend.services.otp_code import OtpCodeService
 from backend.services.otp_sending import MockOTPSendingService
-from common.enums.back_office import OtpPurposeEnum
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,6 @@ class AuthService:
             await session.rollback()
             raise
 
-
     async def verify_otp_and_login(
         self,
         session: AsyncSession,
@@ -110,8 +109,12 @@ class AuthService:
                 detail="Invalid OTP code.",
             )
         try:
-            await self.otp_code_service.set_mark_otp_as_used(session, dao, otp_obj=active_otp)
-            await self.account_service.set_account_as_active(session, dao, account=account)
+            await self.otp_code_service.set_mark_otp_as_used(
+                session, dao, otp_obj=active_otp
+            )
+            await self.account_service.set_account_as_active(
+                session, dao, account=account
+            )
             access_token = create_access_token(subject=account.id)
             await session.commit()
             return access_token

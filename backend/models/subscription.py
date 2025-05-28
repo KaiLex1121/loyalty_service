@@ -8,8 +8,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 
 from backend.db.base import Base  # Ваш базовый класс
-from common.enums.back_office import PaymentCycleEnum  # Импортируем Enum'ы
-from common.enums.back_office import SubscriptionStatusEnum
+from backend.enums.back_office import PaymentCycleEnum  # Импортируем Enum'ы
+from backend.enums.back_office import SubscriptionStatusEnum
 
 if TYPE_CHECKING:
     from .company import Company

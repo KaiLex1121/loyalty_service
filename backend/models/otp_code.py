@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 
 from backend.db.base import Base
-from common.enums.back_office import OtpPurposeEnum
+from backend.enums.back_office import OtpPurposeEnum
 
 if TYPE_CHECKING:
     from .account import Account
@@ -31,7 +31,9 @@ class OtpCode(Base):
         default=OtpPurposeEnum.BACKOFFICE_LOGIN,
     )
     attempts: Mapped[int] = mapped_column(Integer, default=0)
-    channel: Mapped[str] = mapped_column(String(10)) # Канал, по которому передается код
+    channel: Mapped[str] = mapped_column(
+        String(10)
+    )  # Канал, по которому передается код
     account_id: Mapped[int] = mapped_column(
         ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False
     )

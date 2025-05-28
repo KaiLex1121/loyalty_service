@@ -11,6 +11,7 @@ from backend.models.account import Account
 from backend.schemas.token import TokenPayload
 from backend.services.account import AccountService
 from backend.services.auth import AuthService
+from backend.services.dashboard import DashboardService
 from backend.services.otp_code import OtpCodeService
 from backend.services.otp_sending import MockOTPSendingService
 
@@ -34,7 +35,7 @@ def get_jinja_templates(request: Request) -> Jinja2Templates:
     return templates_instance
 
 
-async def get_current_account(
+async def get_current_account_with_profiles(
     session: AsyncSession = Depends(get_session),
     dao: HolderDAO = Depends(get_dao),
     token: str = Depends(oauth2_scheme),
@@ -54,8 +55,7 @@ async def get_current_account(
 
     account_id = int(token_data.sub)
 
-
-    account = await dao.account.get(session, id_=account_id)
+    account = await dao.account.get_by_id_with_profiles(session, id_=account_id)
 
     if account is None:
         raise credentials_exception
@@ -63,8 +63,8 @@ async def get_current_account(
     return account
 
 
-async def get_current_active_account(
-    current_account: Account = Depends(get_current_account),
+async def get_current_active_account_with_profiles(
+    current_account: Account = Depends(get_current_account_with_profiles),
 ) -> Account:
 
     if not current_account.is_active:
@@ -87,6 +87,11 @@ def get_account_service() -> AccountService:
 @lru_cache
 def get_otp_code_service() -> OtpCodeService:
     return OtpCodeService()
+
+
+@lru_cache
+def get_dashboard_service() -> DashboardService:
+    return DashboardService()
 
 
 def get_auth_service(

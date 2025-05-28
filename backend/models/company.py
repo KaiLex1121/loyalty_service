@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 
 from backend.db.base import Base
-from common.enums.back_office import CompanyStatusEnum, LegalFormEnum
+from backend.enums.back_office import CompanyStatusEnum, LegalFormEnum
 
 if TYPE_CHECKING:
     from .cashback import Cashback
