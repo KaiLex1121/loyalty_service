@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import BigInteger, MetaData
+from sqlalchemy import BigInteger, MetaData, inspect
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.sql.functions import func
@@ -31,9 +31,18 @@ class Base(DeclarativeBase):
         TIMESTAMP(timezone=True), nullable=True, index=True
     )
 
-    # --- Свойство для проверки, удалена ли запись ---
+
     @property
     def is_deleted(self) -> bool:
         return self.deleted_at is not None
 
-    # -------------------------------------------------
+    def as_dict(self) -> Dict[str, Any]:
+        """
+        Возвращает словарь с атрибутами модели SQLAlchemy.
+        Включает только те атрибуты, которые являются колонками таблицы.
+        Не включает связанные объекты (relationships) или другие методы/свойства.
+        """
+        # Используем inspect для получения имен колонок, чтобы быть уверенными,
+        # что мы берем только атрибуты, соответствующие колонкам в БД.
+        mapper = inspect(self.__class__)
+        return {column.key: getattr(self, column.key) for column in mapper.attrs if hasattr(self, column.key)}

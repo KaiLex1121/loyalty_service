@@ -11,6 +11,7 @@ from backend.models.account import Account
 from backend.schemas.token import TokenPayload
 from backend.services.account import AccountService
 from backend.services.auth import AuthService
+from backend.services.company import CompanyService
 from backend.services.dashboard import DashboardService
 from backend.services.otp_code import OtpCodeService
 from backend.services.otp_sending import MockOTPSendingService
@@ -94,6 +95,12 @@ def get_dashboard_service() -> DashboardService:
     return DashboardService()
 
 
+@lru_cache
+def get_company_service() -> CompanyService:
+    return CompanyService()
+
+
+@lru_cache
 def get_auth_service(
     account_service: AccountService = Depends(get_account_service),
     otp_sending_service: MockOTPSendingService = Depends(get_otp_sending_service),

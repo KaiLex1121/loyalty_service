@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
-from typing import Any, Generic, List, Optional, Type, TypeVar
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
+from pydantic import BaseModel
 from sqlalchemy import delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -8,11 +9,43 @@ from sqlalchemy.future import select
 from backend.db.base import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
+CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel) # Ограничение: должна быть Pydantic модель
+UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel) # Ограничение: должна быть Pydantic модель
 
 
-class BaseDAO(Generic[ModelType]):
+class BaseDAO(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, model: Type[ModelType]):
         self.model = model
+
+    async def create(self, session: AsyncSession, *, obj_in: CreateSchemaType) -> ModelType:
+        obj_in_data = obj_in.model_dump()
+        db_obj = self.model(**obj_in_data)
+        session.add(db_obj)
+        await session.flush()  # Для получения ID и проверки ограничений до коммита
+        await session.refresh(db_obj) # Для обновления server_default и т.д.
+        return db_obj
+
+    async def update(
+        self,
+        session: AsyncSession,
+        *,
+        db_obj: ModelType, # Существующий объект SQLAlchemy из БД
+        obj_in: Union[UpdateSchemaType, Dict[str, Any]] # Схема Pydantic с обновлениями или словарь
+    ) -> ModelType:
+        if hasattr(db_obj, 'is_deleted') and db_obj.is_deleted:
+            pass
+        obj_data = db_obj.as_dict()
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.model_dump(exclude_unset=True) # exclude_unset=True чтобы обновлять только переданные поля
+        for field, value in obj_data:
+            if field in update_data:
+                setattr(db_obj, field, value)
+        session.add(db_obj) # Добавляем измененный объект обратно в сессию (хотя он уже там)
+        await session.flush()
+        await session.refresh(db_obj)
+        return db_obj
 
     async def get(self, session, id_: int) -> ModelType:
         result = await session.execute(select(self.model).where(self.model.id == id_))

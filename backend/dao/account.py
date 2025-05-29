@@ -11,7 +11,7 @@ from backend.models.user_role import UserRole
 from backend.schemas.account import AccountCreate, AccountUpdate
 
 
-class AccountDAO(BaseDAO[Account]):
+class AccountDAO(BaseDAO[Account, AccountCreate, AccountUpdate]):
     def __init__(self):
         super().__init__(Account)
 

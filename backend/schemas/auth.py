@@ -51,24 +51,3 @@ class OTPVerifyRequest(PhoneNumber):
         default=OtpPurposeEnum.BACKOFFICE_LOGIN,
         examples=[OtpPurposeEnum.BACKOFFICE_LOGIN],
     )  # Или OtpPurposeEnum.BACKOFFICE_LOGIN
-
-
-class OtpCodeBase(BaseModel):
-    hashed_code: str
-    expires_at: datetime
-    purpose: OtpPurposeEnum
-    account_id: int
-
-
-class OtpCodeCreate(OtpCodeBase):
-    pass
-
-
-class OtpCodeDB(OtpCodeBase):  # Схема для чтения из БД
-    id: int
-    is_used: bool
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True  # Для SQLAlchemy моделей (orm_mode в Pydantic v1)

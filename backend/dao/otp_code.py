@@ -1,15 +1,15 @@
 from datetime import datetime, timezone
 
-from fastapi import HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.dao.base import BaseDAO
 from backend.enums.back_office import OtpPurposeEnum
 from backend.models.otp_code import OtpCode
+from backend.schemas.auth import OtpCodeCreate, OtpCodeUpdate
 
 
-class OtpCodeDAO(BaseDAO[OtpCode]):
+class OtpCodeDAO(BaseDAO[OtpCode, OtpCodeCreate, OtpCodeUpdate]):
     def __init__(self):
         super().__init__(OtpCode)
 

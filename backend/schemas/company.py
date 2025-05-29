@@ -1,81 +1,80 @@
-import datetime
-from typing import List, Optional
+# backend/schemas/company.py
+from pydantic import BaseModel, Field, field_validator
+from typing import Optional, List # List нужен для CompanyResponse, если будем включать связи
+import datetime # Для created_at, updated_at в CompanyResponse
+import decimal # Для initial_cashback_percentage
 
-from pydantic import BaseModel, EmailStr, Field, validator
+# Импортируем Enum'ы из вашего расположения
+from backend.enums.back_office import CompanyStatusEnum, LegalFormEnum
 
-from backend.enums.back_office import \
-    PaymentCycleEnum  # Если используется в CompanyResponse для информации о подписке
-from backend.enums.back_office import (  # Импорт из вашего enums/back_office.py
-    CompanyStatusEnum, LegalFormEnum, VatTypeEnum)
-
-# Предполагаем, что AdminAccessLevelEnum импортируется там, где нужна схема UserRole
-
-
-# --- Company Schemas ---
+# --- Базовая схема с полями, которые могут приходить от клиента или использоваться для обновления ---
 class CompanyBase(BaseModel):
-    name: str = Field(..., min_length=2, max_length=255)
-    legal_name: str = Field(..., min_length=2, max_length=500)
-    inn: str = Field(
-        ..., min_length=10, max_length=12, pattern=r"^\d{10}(\d{2})?$"
-    )  # Валидация ИНН
+    name: str = Field(..., description="Отображаемое название компании", min_length=1, max_length=255)
 
-    short_name: Optional[str] = Field(None, max_length=255)
-    legal_form: Optional[LegalFormEnum] = None
-    kpp: Optional[str] = Field(None, min_length=9, max_length=9, pattern=r"^\d{9}$")
-    ogrn: Optional[str] = Field(
-        None, min_length=13, max_length=15, pattern=r"^\d{13}(\d{2})?$"
-    )
-    okpo: Optional[str] = Field(
-        None, min_length=8, max_length=10, pattern=r"^\d{8}(\d{2})?$"
-    )
-    okved_main: Optional[str] = Field(None, max_length=10)  # Формат XX.XX.XX
-    legal_address: Optional[str] = Field(None, max_length=500)
-    postal_address: Optional[str] = Field(None, max_length=500)
+    # Реквизиты компании
+    legal_name: str = Field(..., description="Полное юридическое наименование", min_length=1, max_length=500)
+    short_name: Optional[str] = Field(None, description="Краткое наименование компании", max_length=255)
+    legal_form: Optional[LegalFormEnum] = Field(None, description="Организационно-правовая форма")
+    inn: str = Field(..., description="ИНН компании", min_length=10, max_length=12, pattern=r"^\d{10}(\d{2})?$")
+    kpp: Optional[str] = Field(None, description="КПП компании (для юр. лиц)", pattern=r"^\d{9}$")
+    ogrn: Optional[str] = Field(None, description="ОГРН/ОГРНИП компании", pattern=r"^\d{13}(\d{2})?$")
+    legal_address: Optional[str] = Field(None, description="Юридический адрес компании", max_length=500)
+    representative_full_name: Optional[str] = Field(None, description="ФИО представителя, подписывающего договор", max_length=255)
 
-    representative_full_name: Optional[str] = Field(None, max_length=255)
-    representative_position: Optional[str] = Field(None, max_length=255)
-    representative_basis: Optional[str] = Field(None, max_length=255)
-    power_of_attorney_number: Optional[str] = Field(None, max_length=50)
-    power_of_attorney_date: Optional[datetime.date] = None
+    # Банковские реквизиты
+    bank_name: Optional[str] = Field(None, description="Наименование банка", max_length=255)
+    bik: Optional[str] = Field(None, description="БИК банка", pattern=r"^\d{9}$")
+    correspondent_account: Optional[str] = Field(None, description="Корреспондентский счет банка", pattern=r"^\d{20}$")
+    payment_account: Optional[str] = Field(None, description="Расчетный (платежный) счет компании", pattern=r"^\d{20}$") # Используем payment_account как в модели
 
-    bank_name: Optional[str] = Field(None, max_length=255)
-    bik: Optional[str] = Field(None, min_length=9, max_length=9, pattern=r"^\d{9}$")
-    correspondent_account: Optional[str] = Field(
-        None, min_length=20, max_length=20, pattern=r"^\d{20}$"
-    )
-    checking_account: Optional[str] = Field(
-        None, min_length=20, max_length=20, pattern=r"^\d{20}$"
-    )
-
-    billing_email: Optional[EmailStr] = None
-    billing_phone: Optional[str] = Field(None, max_length=20)
-    vat_type: Optional[VatTypeEnum] = None
-    notes: Optional[str] = None
-
-
+# --- Схема для создания новой компании ---
 class CompanyCreateRequest(CompanyBase):
-    pass  # Все поля для создания берутся из CompanyBase
-
-
-class CompanyUpdateRequest(CompanyBase):
-    # Делаем все поля опциональными для обновления
-    name: Optional[str] = Field(None, min_length=2, max_length=255)
-    legal_name: Optional[str] = Field(None, min_length=2, max_length=500)
-    inn: Optional[str] = Field(
-        None, min_length=10, max_length=12, pattern=r"^\d{10}(\d{2})?$"
+    initial_cashback_percentage: decimal.Decimal = Field(
+        ...,
+        gt=0,
+        le=100,
+        description="Начальный процент кэшбэка для компании (больше 0)"
     )
-    # ... и так далее для всех полей из CompanyBase ...
-    # Статус и owner_user_role_id обычно не обновляются напрямую через этот DTO
+
+    @field_validator('initial_cashback_percentage')
+    def percentage_must_be_valid(cls, v):
+        if v <= decimal.Decimal("0") or v > decimal.Decimal("100"): # Проверка на корректный диапазон
+            raise ValueError('Cashback percentage must be between 0 (exclusive) and 100 (inclusive)')
+        return v
+
+# --- Схема для обновления существующей компании ---
+# Все поля из CompanyBase делаем опциональными
+class CompanyUpdateRequest(BaseModel):
+    name: Optional[str] = Field(None, description="Отображаемое название компании", min_length=1, max_length=255)
+    legal_name: Optional[str] = Field(None, description="Полное юридическое наименование", min_length=1, max_length=500)
+    short_name: Optional[str] = Field(None, description="Краткое наименование компании", max_length=255)
+    legal_form: Optional[LegalFormEnum] = Field(None, description="Организационно-правовая форма")
+    kpp: Optional[str] = Field(None, description="КПП компании (для юр. лиц)", pattern=r"^\d{9}$")
+    ogrn: Optional[str] = Field(None, description="ОГРН/ОГРНИП компании", pattern=r"^\d{13}(\d{2})?$")
+    legal_address: Optional[str] = Field(None, description="Юридический адрес компании", max_length=500)
+    representative_full_name: Optional[str] = Field(None, description="ФИО представителя, подписывающего договор", max_length=255)
+    bank_name: Optional[str] = Field(None, description="Наименование банка", max_length=255)
+    bik: Optional[str] = Field(None, description="БИК банка", pattern=r"^\d{9}$")
+    correspondent_account: Optional[str] = Field(None, description="Корреспондентский счет банка", pattern=r"^\d{20}$")
+    payment_account: Optional[str] = Field(None, description="Расчетный (платежный) счет компании", pattern=r"^\d{20}$")
+    status: Optional[CompanyStatusEnum] = Field(None, description="Новый статус компании")
 
 
+# --- Схема для ответа API (отображение компании) ---
+# Включает поля из CompanyBase, а также системные поля и, возможно, некоторые связи
 class CompanyResponse(CompanyBase):
     id: int
+    owner_user_role_id: int # ID профиля владельца
     status: CompanyStatusEnum
-    owner_user_role_id: int  # ID профиля владельца
-    # tariff_plan_id: Optional[int] = None # Если подписка создается сразу
-    # next_billing_date: Optional[datetime.date] = None # Если подписка создается сразу
+
     created_at: datetime.datetime
     updated_at: datetime.datetime
+    deleted_at: Optional[datetime.datetime] = None # Показываем, если нужно знать о мягком удалении
+
+    # Опционально: можно добавить информацию о текущем тарифе или кэшбэке, если это часто нужно
+    # current_tariff_name: Optional[str] = None
+    # current_cashback_percentage: Optional[decimal.Decimal] = None
 
     class Config:
-        from_attributes = True
+        from_attributes = True # Для SQLAlchemy > Pydantic преобразования (Pydantic V2)
+        # orm_mode = True # Для Pydantic V1

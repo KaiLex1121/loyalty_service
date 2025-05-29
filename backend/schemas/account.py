@@ -22,8 +22,11 @@ class AccountUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 
-# Базовая схема для ответа API, содержащая общие поля Account
 class AccountInDBBase(BaseModel):
+    """
+    Базовая схема для представления OTP кода, как он есть в базе данных,
+    включая поля, унаследованные от вашей Base SQLAlchemy модели.
+    """
     id: int
     phone_number: str
     full_name: Optional[str] = None
@@ -36,6 +39,9 @@ class AccountInDBBase(BaseModel):
         from_attributes = True
 
 
-# Полная схема Account для ответа API. На данный момент совпадает с AccountInDBBase, но можно расширить
-class Account(AccountInDBBase):
+
+class AccountResponse(AccountInDBBase):
+    """
+    Схема Account для ответа API. Ha данный момент совпадает c AccountInDBBase, но можно расширить
+    """
     pass
