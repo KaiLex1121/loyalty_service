@@ -36,8 +36,6 @@ class AccountService:
             phone_number=phone_number, email=email, is_active=False
         )
         account = await dao.account.create(db, obj_in=account_in_create)
-        await db.flush()
-        await db.refresh(account)
         return account
 
     async def get_or_create_account(
@@ -48,9 +46,7 @@ class AccountService:
             account = await self.create_account(db, dao, phone_number=phone_number)
         return account
 
-    async def set_account_as_active(
-        self, db: AsyncSession, account: Account
-    ) -> Account:
+    async def set_account_as_active(self, account: Account) -> Account:
         account.is_active = True
         return account
 

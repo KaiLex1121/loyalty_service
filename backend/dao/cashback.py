@@ -1,6 +1,10 @@
-from backend.dao.base import CRUDBase
-from backend.models.cashback import CashbackConfig
-from backend.schemas.cashback import CashbackConfigCreate # Предполагаем схему
+from backend.dao.base import BaseDAO
+from backend.models.cashback import Cashback
+from backend.schemas.cashback import CashbackConfigCreate  # Предполагаем схему
 
-class CashbackConfigDAO(CRUDBase[CashbackConfig, CashbackConfigCreate, CashbackConfigCreate]):
-    pass # Базовых методов CRUD должно хватить
+
+class CashbackConfigDAO(
+    BaseDAO[Cashback, CashbackConfigCreate, CashbackConfigCreate]
+):
+    def __init__(self):
+        super().__init__(Cashback)

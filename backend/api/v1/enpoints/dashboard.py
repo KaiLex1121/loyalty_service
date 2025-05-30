@@ -4,8 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.dependencies import (
-    get_current_active_account_with_profiles, get_dao, get_dashboard_service,
-    get_session)
+    get_current_active_account_with_profiles,
+    get_dao,
+    get_dashboard_service,
+    get_session,
+)
 from backend.dao.holder import HolderDAO
 from backend.models.account import Account as AccountModel
 from backend.schemas.account import AccountBase
@@ -33,10 +36,12 @@ async def get_backoffice_dashboard(
             current_account=current_account
         )
         return dashboard_data
+    except HTTPException as e:
+        raise e
     except Exception as e:
         logger.error(
             f"Error in get_backoffice_dashboard: {e}", exc_info=True
-        )  # Замените на нормальный логгер
+        )
         raise HTTPException(
             status_code=500, detail="An error occurred while fetching dashboard data."
         )

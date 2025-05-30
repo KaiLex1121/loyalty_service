@@ -4,12 +4,17 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.security import (create_access_token, generate_otp,
-                                   get_otp_expiry_time, get_otp_hash,
-                                   verify_otp_hash)
+from backend.core.security import (
+    create_access_token,
+    generate_otp,
+    get_otp_expiry_time,
+    get_otp_hash,
+    verify_otp_hash,
+)
 from backend.dao.holder import HolderDAO
 from backend.enums.back_office import OtpPurposeEnum
 from backend.schemas.auth import OTPVerifyRequest
+from backend.schemas.otp_code import OtpCodeCreate
 from backend.services.account import AccountService
 from backend.services.otp_code import OtpCodeService
 from backend.services.otp_sending import MockOTPSendingService
@@ -36,23 +41,24 @@ class AuthService:
         hashed_otp = get_otp_hash(plain_otp)
         otp_expires = get_otp_expiry_time()
 
-        try:
+        async with session.begin():
             account = await self.account_service.get_or_create_account(
                 session, dao, phone_number=phone_number
             )
-
             await self.otp_code_service.invalidate_previous_otps(
                 session, dao, account=account, purpose=otp_purpose
             )
-
+            otp_code_schema = OtpCodeCreate(
+                hashed_code=hashed_otp,
+                expires_at=otp_expires,
+                purpose=otp_purpose,
+                account_id=account.id,
+                channel="tg_userbot",
+            )
             await self.otp_code_service.create_otp(
                 dao=dao,
                 session=session,
-                account_id=account.id,
-                purpose=otp_purpose,
-                hashed_otp=hashed_otp,
-                expires_at=otp_expires,
-                channel="tg",
+                obj_in=otp_code_schema,
             )
 
             sms_sent = await self.otp_sending_service.send_otp(
@@ -64,11 +70,10 @@ class AuthService:
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                     detail="Could not send OTP SMS. Please try again later.",
                 )
-            await session.commit()
-            return account
-        except HTTPException:
-            await session.rollback()
-            raise
+        print(f"Session {id(session)} in_transaction: {session.in_transaction()}") # Проверяем, есть ли уже активная транзакция
+        print(f"Session {id(session)} is_active: {session.is_active}") # Общее состояние сессии
+
+        return account
 
     async def verify_otp_and_login(
         self,
@@ -76,48 +81,44 @@ class AuthService:
         dao: HolderDAO,
         otp_data: OTPVerifyRequest,
     ) -> str:
-        account = await self.account_service.get_account_by_phone(
-            session, dao, phone_number=otp_data.phone_number
-        )
-        if not account:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Account with this phone number not found for OTP verification.",
+        async with session.begin():
+            account = await self.account_service.get_account_by_phone(
+                session, dao, phone_number=otp_data.phone_number
             )
-        active_otp = await dao.otp_code.get_active_otp_by_account_and_purpose(
-            session,
-            account_id=account.id,
-            purpose=otp_data.purpose,
-        )
-        if not active_otp:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No active OTP found or OTP expired. Please request a new one.",
+            if not account:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Account with this phone number not found for OTP verification.",
+                )
+            active_otp = await dao.otp_code.get_active_otp_by_account_and_purpose(
+                session,
+                account_id=account.id,
+                purpose=otp_data.purpose,
             )
-        if active_otp.is_expired:  # Двойная проверка
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="OTP has expired. Please request a new one.",
-            )
+            if not active_otp:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="No active OTP found or OTP expired. Please request a new one.",
+                )
+            if active_otp.is_expired:  # Двойная проверка
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="OTP has expired. Please request a new one.",
+                )
 
-        if not verify_otp_hash(
-            otp_code=otp_data.otp_code,
-            hashed_otp_code=active_otp.hashed_code,
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid OTP code.",
-            )
-        try:
+            if not verify_otp_hash(
+                otp_code=otp_data.otp_code,
+                hashed_otp_code=active_otp.hashed_code,
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid OTP code.",
+                )
             await self.otp_code_service.set_mark_otp_as_used(
                 session, dao, otp_obj=active_otp
             )
             await self.account_service.set_account_as_active(
-                session, dao, account=account
+                account=account
             )
             access_token = create_access_token(subject=account.id)
-            await session.commit()
             return access_token
-        except HTTPException:
-            await session.rollback()
-            raise

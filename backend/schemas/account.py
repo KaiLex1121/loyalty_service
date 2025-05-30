@@ -27,6 +27,7 @@ class AccountInDBBase(BaseModel):
     Базовая схема для представления OTP кода, как он есть в базе данных,
     включая поля, унаследованные от вашей Base SQLAlchemy модели.
     """
+
     id: int
     phone_number: str
     full_name: Optional[str] = None
@@ -39,9 +40,9 @@ class AccountInDBBase(BaseModel):
         from_attributes = True
 
 
-
 class AccountResponse(AccountInDBBase):
     """
     Схема Account для ответа API. Ha данный момент совпадает c AccountInDBBase, но можно расширить
     """
+
     pass

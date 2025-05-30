@@ -60,11 +60,13 @@ async def request_otp_endpoint(
             session, dao, phone_number=phone_data.phone_number
         )
         return AccountInDBBase.model_validate(account)
+    except HTTPException as e:
+        raise e
     except Exception as e:
-        logger.error(f"Error in request_otp_endpoint: {e}", exc_info=True)
+        logger.error(f"Unexpected error in request_otp_endpoint: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred.",
+            detail="An unexpected server error occurred.",
         )
 
 

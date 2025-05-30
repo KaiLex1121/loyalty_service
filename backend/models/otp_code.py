@@ -31,9 +31,7 @@ class OtpCode(Base):
         default=OtpPurposeEnum.BACKOFFICE_LOGIN,
     )
     attempts: Mapped[int] = mapped_column(Integer, default=0)
-    channel: Mapped[str] = mapped_column(
-        String(10)
-    )  # Канал, по которому передается код
+    channel: Mapped[str] = mapped_column(String(50))
     account_id: Mapped[int] = mapped_column(
         ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False
     )

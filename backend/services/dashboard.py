@@ -1,10 +1,12 @@
 from typing import List
 
 from backend.models.account import Account as AccountModel
-from backend.schemas.account import Account as DashboardAccountInfoResponse
-from backend.schemas.dashboard import (DashboardCompanyAdminResponse,
-                                       DashboardCompanyEmployeeResponse,
-                                       DashboardResponse)
+from backend.schemas.account import AccountResponse as DashboardAccountInfoResponse
+from backend.schemas.dashboard import (
+    DashboardCompanyAdminResponse,
+    DashboardCompanyEmployeeResponse,
+    DashboardResponse,
+)
 
 # Предполагается, что CRUD для Company и EmployeeRole существуют и доступны
 # from backend.crud import crud_company, crud_employee_role
@@ -15,7 +17,6 @@ class DashboardService:
     async def get_dashboard_data(
         self, current_account: AccountModel
     ) -> DashboardResponse:
-
         account_info = DashboardAccountInfoResponse.model_validate(
             current_account
         )  # Создаем объект DashboardAccountInfoResponse из данных current_account, проверяя их на соответствие схеме.
@@ -37,9 +38,7 @@ class DashboardService:
         ):
             employee_role = current_account.employee_profile
             company_as_employee = employee_role.company
-            if (
-                not company_as_employee.is_deleted
-            ):  # Показываем только если компания не удалена
+            if not company_as_employee.is_deleted:
                 employee_in_companies_response.append(
                     DashboardCompanyEmployeeResponse(
                         id=company_as_employee.id,
@@ -56,6 +55,3 @@ class DashboardService:
             employee_in_companies=employee_in_companies_response,
             can_create_company=can_create_company,
         )
-
-
-dashboard_service = DashboardService()

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy import BigInteger, MetaData, inspect
 from sqlalchemy.dialects.postgresql import TIMESTAMP
@@ -31,7 +31,6 @@ class Base(DeclarativeBase):
         TIMESTAMP(timezone=True), nullable=True, index=True
     )
 
-
     @property
     def is_deleted(self) -> bool:
         return self.deleted_at is not None
@@ -45,4 +44,8 @@ class Base(DeclarativeBase):
         # Используем inspect для получения имен колонок, чтобы быть уверенными,
         # что мы берем только атрибуты, соответствующие колонкам в БД.
         mapper = inspect(self.__class__)
-        return {column.key: getattr(self, column.key) for column in mapper.attrs if hasattr(self, column.key)}
+        return {
+            column.key: getattr(self, column.key)
+            for column in mapper.attrs
+            if hasattr(self, column.key)
+        }

@@ -41,14 +41,14 @@ class Company(Base):
     # Реквизиты компании
     legal_name: Mapped[str] = mapped_column(String(500), nullable=False)
     short_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    legal_form: Mapped[Optional[LegalFormEnum]] = mapped_column(
+    legal_form: Mapped[LegalFormEnum] = mapped_column(
         SQLAlchemyEnum(
             LegalFormEnum,
             name="legal_form_enum",
             create_constraint=True,
             inherit_schema=True,
         ),
-        nullable=True,
+        nullable=False,
     )
     inn: Mapped[str] = mapped_column(
         String(12), unique=True, index=True, nullable=False

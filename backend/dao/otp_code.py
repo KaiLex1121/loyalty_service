@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.dao.base import BaseDAO
 from backend.enums.back_office import OtpPurposeEnum
 from backend.models.otp_code import OtpCode
-from backend.schemas.auth import OtpCodeCreate, OtpCodeUpdate
+from backend.schemas.otp_code import OtpCodeCreate, OtpCodeUpdate
 
 
 class OtpCodeDAO(BaseDAO[OtpCode, OtpCodeCreate, OtpCodeUpdate]):
@@ -31,6 +31,9 @@ class OtpCodeDAO(BaseDAO[OtpCode, OtpCodeCreate, OtpCodeUpdate]):
             channel=channel,
         )
         session.add(db_obj)
+        await session.flush()
+        await session.refresh(db_obj)
+        return db_obj
 
     async def get_active_otp_by_account_and_purpose(
         self,

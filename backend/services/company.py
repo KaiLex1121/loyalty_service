@@ -1,84 +1,93 @@
+import logging
+from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 import datetime
-from dateutil.relativedelta import relativedelta # Для добавления месяцев
+from dateutil.relativedelta import relativedelta
+import decimal
 
-from backend.dao.holder import HolderDAO # Ваш HolderDAO
+from backend.dao.holder import HolderDAO
 from backend.models.account import Account as AccountModel
 from backend.models.company import Company as CompanyModel
 from backend.models.user_role import UserRole as UserRoleModel
-from backend.models.cashback import CashbackConfig as CashbackConfigModel
+from backend.models.cashback import Cashback as CashbackConfigModel
 from backend.models.subscription import Subscription as SubscriptionModel
 from backend.models.tariff_plan import TariffPlan as TariffPlanModel
 
-from backend.schemas.company import CompanyCreateRequest, CompanyResponse
+from backend.schemas.company import CompanyCreateRequest
+
 from backend.schemas.user_role import UserRoleCreate
 from backend.schemas.cashback import CashbackConfigCreate
 from backend.schemas.subscription import SubscriptionCreate
 
-from backend.enums.back_office import AdminAccessLevelEnum, CompanyStatusEnum, SubscriptionStatusEnum
+from backend.enums.back_office import (
+    UserAccessLevelEnum,
+    CompanyStatusEnum,
+    SubscriptionStatusEnum,
+)
+
+
+logger = logging.getLogger(__name__)
+
 
 class CompanyService:
 
     async def create_company_flow(
         self,
-        db: AsyncSession,
+        session: AsyncSession,  # <--- Изменили db на session
         dao: HolderDAO,
         company_data: CompanyCreateRequest,
-        current_account: AccountModel
-    ) -> CompanyModel:
-
-        async with db.begin(): # Управляем транзакцией здесь
+        current_account: AccountModel,
+    ) -> CompanyModel:  # Возвращаем SQLAlchemy модель, эндпоинт преобразует в Pydantic
+        async with session.begin():
+            # Объекты, которые мы создадим и должны будем добавить в сессию
+            new_user_role_obj: Optional[UserRoleModel] = None
+            new_company_obj: Optional[CompanyModel] = None
+            new_cashback_config_obj: Optional[CashbackConfigModel] = None
+            new_subscription_obj: Optional[SubscriptionModel] = None
             # 1. Получение или создание UserRole
-            user_role = current_account.user_role # Предполагаем, что загружен с Account
+            user_role = current_account.user_role
             if not user_role:
-                user_role_schema = UserRoleCreate(access_level=AdminAccessLevelEnum.COMPANY_OWNER)
-                # dao.user_role.create_for_account должен добавлять в сессию, но не коммитить
-                user_role = await dao.user_role.create_for_account(
-                    db, obj_in=user_role_schema, account_id=current_account.id
+                user_role_schema = UserRoleCreate(
+                    access_level=UserAccessLevelEnum.COMPANY_OWNER,
+                    account_id=current_account.id,
                 )
-            elif user_role.access_level != AdminAccessLevelEnum.FULL_SYSTEM_ADMIN:
-                # Проверка: если COMPANY_OWNER, может ли он создать еще одну компанию?
-                # (Зависит от бизнес-логики, пока разрешаем)
-                # Если у него уже есть компании, и он не суперадмин, возможно, стоит ограничить.
-                # existing_companies = await dao.company.get_by_owner_role_id(db, owner_role_id=user_role.id)
-                # if existing_companies:
-                #     raise HTTPException(status_code=403, detail="Company owner can only manage one company or upgrade plan.")
-                pass
-
-
-            # 2. Валидация initial_cashback_percentage (уже сделана Pydantic)
-            if company_data.initial_cashback_percentage <= decimal.Decimal("0"):
-                 raise HTTPException(status_code=400, detail="Initial cashback percentage must be greater than 0.")
+                new_user_role_obj = await dao.user_role.create(
+                    session, obj_in=user_role_schema
+                )
+                user_role = new_user_role_obj
+            if (
+                not user_role or not user_role.id
+            ):
+                raise ValueError("UserRole could not be established for the account.")
 
             # 3. Создание Company
-            # Исключаем initial_cashback_percentage из данных для Company, т.к. это для CashbackConfig
-            company_create_dict = company_data.model_dump(exclude={"initial_cashback_percentage"})
-
-            new_company_obj = CompanyModel(
-                **company_create_dict,
-                owner_user_role_id=user_role.id,
-                status=CompanyStatusEnum.PENDING_VERIFICATION # или ACTIVE, если не нужна верификация
+            company_create_dict = company_data.model_dump(
+                exclude={"initial_cashback_percentage"}
             )
-            db.add(new_company_obj)
-            await db.flush() # Чтобы получить new_company_obj.id для связей
-            # await db.refresh(new_company_obj) # пока не нужен, если нет server_default для полей Company
+            new_company_obj = await dao.company.create_company_with_owner(
+                session,
+                company_data=company_create_dict,
+                owner_user_role_id=user_role.id,
+                status=CompanyStatusEnum.PENDING_VERIFICATION,
+            )
 
             # 4. Создание CashbackConfig
             cashback_config_schema = CashbackConfigCreate(
-                company_id=new_company_obj.id, # Используем ID созданной компании
+                company_id=new_company_obj.id,
                 default_percentage=company_data.initial_cashback_percentage,
-                is_active=True
+                is_active=True,
             )
-            # dao.cashback_config.create должен добавлять в сессию, но не коммитить
-            await dao.cashback_config.create(db, obj_in=cashback_config_schema)
+            new_cashback_config_obj = await dao.cashback_config.create(
+                session, obj_in=cashback_config_schema
+            )
 
             # 5. Поиск триального TariffPlan
-            trial_plan = await dao.tariff_plan.get_trial_plan(db)
+            trial_plan = await dao.tariff_plan.get_trial_plan(session)
             if not trial_plan:
-                # Это ошибка конфигурации сервера, триальный тариф должен существовать
-                raise HTTPException(status_code=500, detail="Trial tariff plan not configured.")
+                raise HTTPException(
+                    status_code=500, detail="Trial tariff plan not configured."
+                )
 
             # 6. Создание Subscription
             today = datetime.date.today()
@@ -90,25 +99,25 @@ class CompanyService:
                 status=SubscriptionStatusEnum.TRIALING,
                 start_date=today,
                 trial_end_date=trial_end,
-                next_billing_date=trial_end, # Или trial_end + 1 day, в зависимости от логики биллинга
-                auto_renew=True # Обычно триалы пытаются конвертировать в платные
+                next_billing_date=trial_end,
+                auto_renew=False,
             )
-            # dao.subscription.create должен добавлять в сессию, но не коммитить
-            await dao.subscription.create(db, obj_in=subscription_schema)
+            new_subscription_obj = await dao.subscription.create(
+                session, obj_in=subscription_schema
+            )
+            if new_user_role_obj:
+                await session.refresh(current_account, attribute_names=["user_role"])
 
-            # Коммит произойдет автоматически при выходе из `async with db.begin():`
-            # Обновляем объекты, чтобы получить все данные из БД (включая связи, если они настроены на eager load при refresh)
-            await db.refresh(new_company_obj)
-            if user_role not in db: # Если user_role был новым
-                await db.refresh(user_role)
-            # Можно также обновить current_account, если его user_role был создан/изменен
-            # await db.refresh(current_account, attribute_names=['user_role'])
+        # Загружаем компанию со всеми нужными связями для ответа API
+        # Это гарантирует, что Pydantic схема CompanyResponse получит все данные
+        company_for_response = await dao.company.get_by_id_with_relations(
+            session, company_id=new_company_obj.id
+        )
 
-        # После коммита и выхода из транзакции, new_company_obj будет содержать актуальные данные
-        # Для ответа API может потребоваться загрузить связи, если они не загружены по умолчанию
-        # или если refresh их не подтянул так, как нужно для CompanyResponse.
-        # Это можно сделать отдельным запросом или настроить eager loading в модели/запросе.
-        # Для простоты пока возвращаем то, что есть.
-        return new_company_obj
+        if not company_for_response:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to retrieve newly created company details for response.",
+            )
 
-company_service = CompanyService()
+        return company_for_response

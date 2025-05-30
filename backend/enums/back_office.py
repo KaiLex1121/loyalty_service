@@ -1,4 +1,3 @@
-# app/core/enums.py
 import enum
 
 
@@ -120,7 +119,8 @@ class LegalFormEnum(str, enum.Enum):
     IP = "ИП"
     AO = "АО"
     ZAO = "ЗАО"
-    OTHER = "other"
+    SELF_EMPLOYED = "Самозанятый"
+    OTHER = "Другое"
 
 
 class TariffStatusEnum(str, enum.Enum):

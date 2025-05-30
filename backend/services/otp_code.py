@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.dao.holder import HolderDAO
 from backend.models.account import Account
 from backend.models.otp_code import OtpCode
+from backend.schemas.otp_code import OtpCodeCreate
 
 
 class OtpCodeService:
@@ -19,24 +20,9 @@ class OtpCodeService:
         )
 
     async def create_otp(
-        self,
-        session: AsyncSession,
-        dao: HolderDAO,
-        *,
-        hashed_otp: str,
-        expires_at: datetime,
-        purpose: str,
-        account_id: int,
-        channel: str,
+        self, session: AsyncSession, dao: HolderDAO, obj_in: OtpCodeCreate
     ):
-        otp_code = await dao.otp_code.create_otp(
-            session=session,
-            hashed_otp=hashed_otp,
-            expires_at=expires_at,
-            purpose=purpose,
-            account_id=account_id,
-            channel=channel,
-        )
+        otp_code = await dao.otp_code.create(session, obj_in=obj_in)
         return otp_code
 
     async def set_mark_otp_as_used(

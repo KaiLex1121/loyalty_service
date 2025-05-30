@@ -23,10 +23,11 @@ class AccountDAO(BaseDAO[Account, AccountCreate, AccountUpdate]):
             .options(
                 selectinload(self.model.user_profile).selectinload(
                     UserRole.companies_owned
-                ),  # Загружаем компании админа
+                ),
                 selectinload(self.model.employee_profile).selectinload(
                     EmployeeRole.company
-                ),  # Загружаем компанию сотрудника
+                ),
+                selectinload(self.model.customer_profile),
             )
             .filter(Account.id == id_)
         )
@@ -57,6 +58,8 @@ class AccountDAO(BaseDAO[Account, AccountCreate, AccountUpdate]):
             is_active=obj_in.is_active,
         )
         session.add(db_ojb)
+        await session.flush()
+        await session.refresh(db_ojb)
         return db_ojb
 
     async def update(

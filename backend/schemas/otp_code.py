@@ -10,6 +10,7 @@ class OtpCodeBase(BaseModel):
     expires_at: datetime
     purpose: OtpPurposeEnum
     account_id: int
+    channel: str
 
 
 class OtpCodeCreate(OtpCodeBase):
