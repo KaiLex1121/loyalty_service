@@ -15,6 +15,17 @@ class AccountDAO(BaseDAO[Account, AccountCreate, AccountUpdate]):
     def __init__(self):
         super().__init__(Account)
 
+    async def get_by_id_without_relations(
+        self, session: AsyncSession, *, id_: int
+    ) -> Optional[Account]:
+        statement = select(self.model).where(
+            and_(
+                self.model.id == id_, self.model.deleted_at.is_(None)
+            )
+        )
+        result = await session.execute(statement)
+        return result.scalar_one_or_none()
+
     async def get_by_id_with_profiles(
         self, db: AsyncSession, *, id_: int
     ) -> Optional[Account]:

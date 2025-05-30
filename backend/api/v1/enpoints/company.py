@@ -3,14 +3,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.dependencies import (
+    get_account_id_from_token,
     get_company_service,
-    get_current_active_account_with_profiles,
     get_dao,
     get_session,
 )
-from backend.models.account import Account as AccountModel
 from backend.schemas.company import CompanyCreateRequest, CompanyResponse
-from backend.services.company import CompanyService  # Импортируем экземпляр
+from backend.services.company import CompanyService
 from backend.dao.holder import HolderDAO
 
 router = APIRouter()
@@ -18,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.post(
-    "/create",
+    "",
     response_model=CompanyResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Создать новую компанию",
@@ -27,7 +26,7 @@ async def create_company_endpoint(
     company_data: CompanyCreateRequest,
     session: AsyncSession = Depends(get_session),
     dao: HolderDAO = Depends(get_dao),
-    current_account: AccountModel = Depends(get_current_active_account_with_profiles),
+    account_id: int = Depends(get_account_id_from_token),
     company_service: CompanyService = Depends(get_company_service),
 ):
     try:
@@ -35,7 +34,7 @@ async def create_company_endpoint(
             session=session,
             dao=dao,
             company_data=company_data,
-            current_account=current_account,
+            account_id=account_id,
         )
         return CompanyResponse.model_validate(new_company)
     except HTTPException as e:

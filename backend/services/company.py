@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 import datetime
 from dateutil.relativedelta import relativedelta
-import decimal
+
 
 from backend.dao.holder import HolderDAO
 from backend.models.account import Account as AccountModel
@@ -34,23 +34,29 @@ class CompanyService:
 
     async def create_company_flow(
         self,
-        session: AsyncSession,  # <--- Изменили db на session
+        session: AsyncSession,
         dao: HolderDAO,
         company_data: CompanyCreateRequest,
-        current_account: AccountModel,
+        account_id: int,
     ) -> CompanyModel:  # Возвращаем SQLAlchemy модель, эндпоинт преобразует в Pydantic
+
+        # Объекты, которые мы создадим и должны будем добавить в сессию
+        new_user_role_obj: Optional[UserRoleModel] = None
+        new_company_obj: Optional[CompanyModel] = None
+        new_cashback_config_obj: Optional[CashbackConfigModel] = None
+        new_subscription_obj: Optional[SubscriptionModel] = None
         async with session.begin():
-            # Объекты, которые мы создадим и должны будем добавить в сессию
-            new_user_role_obj: Optional[UserRoleModel] = None
-            new_company_obj: Optional[CompanyModel] = None
-            new_cashback_config_obj: Optional[CashbackConfigModel] = None
-            new_subscription_obj: Optional[SubscriptionModel] = None
             # 1. Получение или создание UserRole
-            user_role = current_account.user_role
+            current_account = await dao.account.get_by_id_with_profiles(session, id_=account_id)
+            if not current_account or not current_account.is_active or current_account.is_deleted:
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or inactive account.")
+
+            user_role: Optional[UserRoleModel] = current_account.user_profile
+
             if not user_role:
                 user_role_schema = UserRoleCreate(
                     access_level=UserAccessLevelEnum.COMPANY_OWNER,
-                    account_id=current_account.id,
+                    account_id=account_id,
                 )
                 new_user_role_obj = await dao.user_role.create(
                     session, obj_in=user_role_schema
@@ -62,21 +68,17 @@ class CompanyService:
                 raise ValueError("UserRole could not be established for the account.")
 
             # 3. Создание Company
-            company_create_dict = company_data.model_dump(
-                exclude={"initial_cashback_percentage"}
-            )
             new_company_obj = await dao.company.create_company_with_owner(
                 session,
-                company_data=company_create_dict,
+                obj_in=company_data,
                 owner_user_role_id=user_role.id,
-                status=CompanyStatusEnum.PENDING_VERIFICATION,
+                initial_status=CompanyStatusEnum.PENDING_VERIFICATION,
             )
 
             # 4. Создание CashbackConfig
             cashback_config_schema = CashbackConfigCreate(
                 company_id=new_company_obj.id,
                 default_percentage=company_data.initial_cashback_percentage,
-                is_active=True,
             )
             new_cashback_config_obj = await dao.cashback_config.create(
                 session, obj_in=cashback_config_schema

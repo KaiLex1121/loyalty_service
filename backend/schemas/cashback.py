@@ -4,7 +4,6 @@ import decimal
 
 class CashbackConfigBase(BaseModel):
     default_percentage: decimal.Decimal
-    is_active: bool = True
 
 
 class CashbackConfigCreate(CashbackConfigBase):

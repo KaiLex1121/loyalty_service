@@ -52,9 +52,9 @@ class CompanyDAO(BaseDAO[Company, CompanyCreateRequest, CompanyUpdateRequest]):
         initial_status: CompanyStatusEnum
     ) -> Company:
         company_obj = self.model(
-            **obj_in.model_dump(),
+            **obj_in.model_dump(exclude={"initial_cashback_percentage"}),
             owner_user_role_id=owner_user_role_id,
-            status=initial_status
+            status=initial_status,
         )
         db.add(company_obj)
         await db.flush()
