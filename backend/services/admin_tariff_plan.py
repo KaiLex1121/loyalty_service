@@ -24,7 +24,7 @@ class AdminTariffPlanService:
     async def create_tariff_plan(
         self, session: AsyncSession, dao: HolderDAO, plan_data: TariffPlanCreate
     ) -> TariffPlanModel:
-        async with session.begin():  # <--- ТРАНЗАКЦИЯ ЗДЕСЬ (в сервисе)
+        async with session.begin():
             existing_plan = await dao.tariff_plan.get_by_name(
                 session, name=plan_data.name
             )
@@ -33,7 +33,6 @@ class AdminTariffPlanService:
                     status_code=status.HTTP_409_CONFLICT,
                     detail=f"Tariff plan with name '{plan_data.name}' already exists.",
                 )
-
             if plan_data.is_trial and plan_data.status == TariffStatusEnum.ACTIVE:
                 active_trial_plan = await dao.tariff_plan.get_trial_plan(session)
                 if active_trial_plan:
@@ -41,16 +40,8 @@ class AdminTariffPlanService:
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail=f"An active trial plan ('{active_trial_plan.name}') already exists.",
                     )
-
-            # dao.tariff_plan.create НЕ должен делать commit
             new_plan = await dao.tariff_plan.create(session, obj_in=plan_data)
-            # await session.flush([new_plan]) # Если create не делает flush, а ID нужен сразу
-            # await session.refresh(new_plan) # Если create не делает refresh
-
-            # Коммит будет автоматическим при выходе из блока with
-            # Возвращаем объект, который уже содержит ID и значения по умолчанию из БД (если create сделал refresh)
-            # Для TariffPlanResponse обычно достаточно полей самого new_plan
-            return new_plan  # new_plan уже должен быть актуален после CRUD.create (с flush/refresh)
+            return new_plan
 
     async def get_tariff_plan(
         self, session: AsyncSession, dao: HolderDAO, plan_id: int

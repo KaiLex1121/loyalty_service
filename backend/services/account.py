@@ -13,7 +13,8 @@ class AccountService:
     async def get_account_by_phone(
         self, db: AsyncSession, dao: HolderDAO, phone_number: str
     ) -> Optional[Account]:
-        return await dao.account.get_by_phone_number(db, phone_number=phone_number)
+        result = await dao.account.get_by_phone_number_without_relations(db, phone_number=phone_number)
+        return result
 
     async def get_account_by_id(
         self, db: AsyncSession, dao: HolderDAO, account_id: int

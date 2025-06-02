@@ -63,7 +63,8 @@ async def get_current_account_without_relations(
     """
     Зависимость для получения текущего пользователя на основе JWT токена.
     """
-    account = await dao.account.get_by_id_without_relations(session, id_=account_id)
+    async with session.begin():
+        account = await dao.account.get_by_id_without_relations(session, id_=account_id)
     return account
 
 
@@ -86,7 +87,8 @@ async def get_current_account_with_profiles(
     """
     Зависимость для получения текущего пользователя на основе JWT токена.
     """
-    account = await dao.account.get_by_id_with_profiles(session, id_=account_id)
+    async with session.begin():
+        account = await dao.account.get_by_id_with_profiles(session, id_=account_id)
     return account
 
 
@@ -115,7 +117,7 @@ async def get_current_user_profile_from_account(
 async def get_current_full_system_admin(
     current_user_profile: UserRole = Depends(get_current_user_profile_from_account),
 ) -> UserRole:
-    if current_user_profile.access_level != UserAccessLevelEnum.FULL_SYSTEM_ADMIN:
+    if current_user_profile.access_level != UserAccessLevelEnum.FULL_ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Full system administrator privileges required.",

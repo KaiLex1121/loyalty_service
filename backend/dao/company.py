@@ -30,7 +30,7 @@ class CompanyDAO(BaseDAO[Company, CompanyCreateRequest, CompanyUpdateRequest]):
             select(self.model)
             .options(
                 selectinload(self.model.owner_user_role),
-                selectinload(self.model.cashback_config),
+                selectinload(self.model.cashback),
                 selectinload(self.model.subscriptions).options(
                     selectinload(SubscriptionModel.tariff_plan)
                 ),

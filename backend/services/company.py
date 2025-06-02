@@ -108,8 +108,6 @@ class CompanyService:
             new_subscription_obj = await dao.subscription.create(
                 session, obj_in=subscription_schema
             )
-            if new_user_role_obj:
-                await session.refresh(current_account, attribute_names=["user_role"])
 
         # Загружаем компанию со всеми нужными связями для ответа API
         # Это гарантирует, что Pydantic схема CompanyResponse получит все данные

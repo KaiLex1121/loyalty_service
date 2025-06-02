@@ -75,16 +75,12 @@ class AccountDAO(BaseDAO[Account, AccountCreate, AccountUpdate]):
         return account
 
     async def create(self, session: AsyncSession, *, obj_in: AccountCreate) -> Account:
-        db_ojb = self.model(
-            phone_number=obj_in.phone_number,
-            email=obj_in.email,
-            full_name=obj_in.full_name,
-            is_active=obj_in.is_active,
-        )
-        session.add(db_ojb)
+        obj_in_data = obj_in.model_dump()
+        db_obj = self.model(**obj_in_data)
+        session.add(db_obj)
         await session.flush()
-        await session.refresh(db_ojb)
-        return db_ojb
+        await session.refresh(db_obj)
+        return db_obj
 
     async def update(
         self, session: AsyncSession, *, db_ojb: Account, obj_in: AccountUpdate | dict

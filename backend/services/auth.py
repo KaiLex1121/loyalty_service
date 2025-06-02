@@ -66,13 +66,6 @@ class AuthService:
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                     detail="Could not send OTP SMS. Please try again later.",
                 )
-        print(
-            f"Session {id(session)} in_transaction: {session.in_transaction()}"
-        )  # Проверяем, есть ли уже активная транзакция
-        print(
-            f"Session {id(session)} is_active: {session.is_active}"
-        )  # Общее состояние сессии
-
         return account
 
     async def verify_otp_and_login(

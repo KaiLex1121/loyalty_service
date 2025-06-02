@@ -77,8 +77,6 @@ class CompanyCreateRequest(CompanyBase):
         return v
 
 
-# --- Схема для обновления существующей компании ---
-# Все поля из CompanyBase делаем опциональными
 class CompanyUpdateRequest(BaseModel):
     name: Optional[str] = Field(
         None, description="Отображаемое название компании", min_length=1, max_length=255

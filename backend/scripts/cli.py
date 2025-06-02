@@ -1,21 +1,21 @@
 import asyncio
-from typing import Optional, Tuple
-import typer
-from sqlalchemy.ext.asyncio import AsyncSession
 import logging
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from typing import Optional, Tuple
 
-# Импорты из вашего проекта
-from backend.db.session import create_pool
-from backend.core.settings import settings
+import typer
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from backend.core.security import get_password_hash
-from backend.models.user_role import UserRole  # Используем AdminProfile
-from backend.enums.back_office import (
-    UserAccessLevelEnum,
-)  # Прямой импорт или из backend.enums
+from backend.core.settings import settings
 from backend.dao.account import AccountDAO  # Используем экземпляры DAO
 from backend.dao.user_role import UserRoleDAO  # Используем экземпляры DAO
-from backend.schemas.account import AccountCreateInternal
+# Импорты из вашего проекта
+from backend.db.session import create_pool
+from backend.enums.back_office import \
+    UserAccessLevelEnum  # Прямой импорт или из backend.enums
+from backend.models.user_role import UserRole  # Используем AdminProfile
+from backend.schemas.account import AccountCreateInternal, AccountUpdate
 from backend.schemas.user_role import UserRoleCreate
 
 cli_app = typer.Typer()
@@ -76,13 +76,13 @@ async def _create_superuser_logic(
 
         else:
             # Аккаунт существует, проверяем статус
-            # Обновляем пароль в любом случае
-            account.hashed_password = get_password_hash(password)
-            account.is_active = True
-            session.add(account)
-            await session.flush()
-            # Явно обновляем объект с загруженными отношениями
-            await session.refresh(account, ["user_profile"])
+            # Обновляем почту, имя и пароль
+            updated_account = AccountUpdate(
+                hashed_password=get_password_hash(password),
+                email=email,
+                full_name=full_name
+            )
+            await account_dao.update(session, db_ojb=account, obj_in=updated_account)
 
             # Проверяем существующий профиль
             if account.user_profile:
@@ -205,7 +205,7 @@ def create_superuser(
 
 @cli_app.command("test_command")
 def test_command(name: str = "World"):
-    print(f"Hello, {name} from test_command!")
+    pass
 
 
 if __name__ == "__main__":

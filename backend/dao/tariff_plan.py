@@ -24,3 +24,11 @@ class TariffPlanDAO(BaseDAO[TariffPlan, TariffPlan, TariffPlan]):
             .order_by(self.model.created_at.desc())
         )
         return result.scalars().first()
+
+    async def get_by_name(self, db: AsyncSession, *, name: str) -> Optional[TariffPlan]:
+        result = await db.execute(
+            select(self.model).filter(
+                self.model.name == name, self.model.deleted_at.is_(None)
+            )
+        )
+        return result.scalars().first()
