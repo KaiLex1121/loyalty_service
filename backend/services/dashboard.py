@@ -1,12 +1,11 @@
 from typing import List
 
 from backend.models.account import Account as AccountModel
-from backend.schemas.account import AccountResponse as DashboardAccountInfoResponse
-from backend.schemas.dashboard import (
-    DashboardCompanyAdminResponse,
-    DashboardCompanyEmployeeResponse,
-    DashboardResponse,
-)
+from backend.schemas.account import \
+    AccountResponse as DashboardAccountInfoResponse
+from backend.schemas.dashboard import (DashboardCompanyAdminResponse,
+                                       DashboardCompanyEmployeeResponse,
+                                       DashboardResponse)
 
 # Предполагается, что CRUD для Company и EmployeeRole существуют и доступны
 # from backend.crud import crud_company, crud_employee_role

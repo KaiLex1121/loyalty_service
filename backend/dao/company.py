@@ -2,17 +2,13 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from backend.dao.base import BaseDAO
 from backend.enums.back_office import CompanyStatusEnum
 from backend.models.company import Company
 from backend.models.subscription import Subscription as SubscriptionModel
-from backend.schemas.company import (
-    CompanyCreateRequest,
-    CompanyUpdateRequest,
-)
-from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
+from backend.schemas.company import CompanyCreateRequest, CompanyUpdateRequest
 
 
 class CompanyDAO(BaseDAO[Company, CompanyCreateRequest, CompanyUpdateRequest]):
@@ -27,7 +23,9 @@ class CompanyDAO(BaseDAO[Company, CompanyCreateRequest, CompanyUpdateRequest]):
         )
         return result.scalars().first()
 
-    async def get_by_id_with_relations(self, session: AsyncSession, *, company_id: int) -> Optional[Company]:
+    async def get_by_id_with_relations(
+        self, session: AsyncSession, *, company_id: int
+    ) -> Optional[Company]:
         stmt = (
             select(self.model)
             .options(

@@ -1,6 +1,7 @@
+from typing import Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from typing import Optional
 
 from backend.dao.base import BaseDAO
 from backend.enums.back_office import TariffStatusEnum

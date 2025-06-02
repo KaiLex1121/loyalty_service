@@ -4,13 +4,9 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.security import (
-    create_access_token,
-    generate_otp,
-    get_otp_expiry_time,
-    get_otp_hash,
-    verify_otp_hash,
-)
+from backend.core.security import (create_access_token, generate_otp,
+                                   get_otp_expiry_time, get_otp_hash,
+                                   verify_otp_hash)
 from backend.dao.holder import HolderDAO
 from backend.enums.back_office import OtpPurposeEnum
 from backend.schemas.auth import OTPVerifyRequest
@@ -70,8 +66,12 @@ class AuthService:
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                     detail="Could not send OTP SMS. Please try again later.",
                 )
-        print(f"Session {id(session)} in_transaction: {session.in_transaction()}") # Проверяем, есть ли уже активная транзакция
-        print(f"Session {id(session)} is_active: {session.is_active}") # Общее состояние сессии
+        print(
+            f"Session {id(session)} in_transaction: {session.in_transaction()}"
+        )  # Проверяем, есть ли уже активная транзакция
+        print(
+            f"Session {id(session)} is_active: {session.is_active}"
+        )  # Общее состояние сессии
 
         return account
 
@@ -117,8 +117,6 @@ class AuthService:
             await self.otp_code_service.set_mark_otp_as_used(
                 session, dao, otp_obj=active_otp
             )
-            await self.account_service.set_account_as_active(
-                account=account
-            )
+            await self.account_service.set_account_as_active(account=account)
             access_token = create_access_token(subject=account.id)
             return access_token

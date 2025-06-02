@@ -22,6 +22,10 @@ class AccountUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 
+class AccountCreateInternal(AccountBase):
+    hashed_password: str
+
+
 class AccountInDBBase(BaseModel):
     """
     Базовая схема для представления OTP кода, как он есть в базе данных,

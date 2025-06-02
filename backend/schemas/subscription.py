@@ -1,8 +1,10 @@
-import decimal
-from pydantic import BaseModel
 import datetime
+import decimal
 from typing import Optional
-from backend.enums.back_office import SubscriptionStatusEnum, PaymentCycleEnum
+
+from pydantic import BaseModel
+
+from backend.enums.back_office import PaymentCycleEnum, SubscriptionStatusEnum
 
 
 class SubscriptionBase(BaseModel):

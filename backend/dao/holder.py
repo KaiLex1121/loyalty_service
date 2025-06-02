@@ -1,12 +1,12 @@
 from dataclasses import dataclass, field
 
 from backend.dao.account import AccountDAO
+from backend.dao.cashback import CashbackConfigDAO
 from backend.dao.company import CompanyDAO
 from backend.dao.otp_code import OtpCodeDAO
 from backend.dao.subscription import SubscriptionDAO
 from backend.dao.tariff_plan import TariffPlanDAO
 from backend.dao.user_role import UserRoleDAO
-from backend.dao.cashback import CashbackConfigDAO
 
 
 @dataclass

@@ -1,15 +1,14 @@
+from typing import Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from typing import Optional
 
 from backend.dao.base import BaseDAO
 from backend.models.user_role import UserRole
 from backend.schemas.user_role import UserRoleCreate
 
 
-class UserRoleDAO(
-    BaseDAO[UserRole, UserRoleCreate, UserRoleCreate]
-):
+class UserRoleDAO(BaseDAO[UserRole, UserRoleCreate, UserRoleCreate]):
     def __init__(self):
         super().__init__(UserRole)
 
@@ -21,11 +20,8 @@ class UserRoleDAO(
         )
         return result.scalars().first()
 
-    # async def create_for_account(
-    #     self, session: AsyncSession, *, obj_in: UserRoleCreate, account_id: int
-    # ) -> UserRole:
-    #     db_obj = self.model(**obj_in.model_dump(), account_id=account_id)
-    #     session.add(db_obj)
-    #     await session.flush()
-    #     await session.refresh(db_obj)
-    #     return db_obj
+    async def create_for_account(
+        self, session: AsyncSession, *, obj_in: UserRoleCreate
+    ) -> UserRole:
+        db_obj = await self.create(session, obj_in=obj_in)
+        return db_obj

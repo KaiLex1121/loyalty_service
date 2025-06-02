@@ -1,11 +1,10 @@
 # backend/schemas/company.py
-from pydantic import BaseModel, Field, field_validator
-from typing import (
-    Optional,
-    List,
-)  # List нужен для CompanyResponse, если будем включать связи
 import datetime  # Для created_at, updated_at в CompanyResponse
 import decimal  # Для initial_cashback_percentage
+from typing import (  # List нужен для CompanyResponse, если будем включать связи
+    List, Optional)
+
+from pydantic import BaseModel, Field, field_validator
 
 # Импортируем Enum'ы из вашего расположения
 from backend.enums.back_office import CompanyStatusEnum, LegalFormEnum

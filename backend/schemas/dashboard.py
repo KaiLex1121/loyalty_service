@@ -3,9 +3,8 @@ from typing import List, Optional
 from pydantic import BaseModel, EmailStr, Field
 
 from backend.enums.back_office import CompanyStatusEnum
-from backend.schemas.account import (
-    AccountResponse,
-)  # Предполагаем, что Enum'ы импортируются так
+from backend.schemas.account import \
+    AccountResponse  # Предполагаем, что Enum'ы импортируются так
 
 
 class DashboardCompanyAdminResponse(BaseModel):

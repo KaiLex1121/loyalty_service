@@ -1,5 +1,5 @@
-from functools import lru_cache
 import logging
+from functools import lru_cache
 from typing import Optional
 
 from fastapi import Depends, HTTPException, Request, status
@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.security import oauth2_scheme, verify_token
 from backend.dao.holder import HolderDAO
+from backend.enums.back_office import UserAccessLevelEnum
 from backend.models.account import Account
 from backend.models.user_role import UserRole
 from backend.schemas.token import TokenPayload
@@ -19,10 +20,9 @@ from backend.services.company import CompanyService
 from backend.services.dashboard import DashboardService
 from backend.services.otp_code import OtpCodeService
 from backend.services.otp_sending import MockOTPSendingService
-from backend.enums.back_office import UserAccessLevelEnum
-
 
 logger = logging.getLogger(__name__)
+
 
 async def get_session(request: Request):
     pool = request.app.state.pool
@@ -32,6 +32,7 @@ async def get_session(request: Request):
             yield session
         finally:
             await session.close()
+
 
 async def get_dao(request: Request) -> HolderDAO:
     dao = request.app.state.dao
@@ -64,6 +65,7 @@ async def get_current_account_without_relations(
     """
     account = await dao.account.get_by_id_without_relations(session, id_=account_id)
     return account
+
 
 async def get_current_active_account_without_relations(
     current_account: Account = Depends(get_current_account_without_relations),
@@ -100,23 +102,23 @@ async def get_current_active_account_with_profiles(
 
 
 async def get_current_user_profile_from_account(
-    current_account: Account = Depends(get_current_account_with_profiles)
+    current_account: Account = Depends(get_current_account_with_profiles),
 ) -> UserRole:
     if current_account.user_profile is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="User profile required for this operation. Account does not have an user profile."
+            detail="User profile required for this operation. Account does not have an user profile.",
         )
     return current_account.user_profile
 
 
 async def get_current_full_system_admin(
-    current_user_profile: UserRole = Depends(get_current_user_profile_from_account)
+    current_user_profile: UserRole = Depends(get_current_user_profile_from_account),
 ) -> UserRole:
     if current_user_profile.access_level != UserAccessLevelEnum.FULL_SYSTEM_ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Full system administrator privileges required."
+            detail="Full system administrator privileges required.",
         )
     return current_user_profile
 

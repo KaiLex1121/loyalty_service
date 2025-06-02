@@ -1,5 +1,6 @@
-from pydantic import BaseModel
 import decimal
+
+from pydantic import BaseModel
 
 
 class CashbackConfigBase(BaseModel):

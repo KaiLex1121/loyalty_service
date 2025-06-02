@@ -1,8 +1,7 @@
 from pydantic import BaseModel
 
-from backend.enums.back_office import (
-    UserAccessLevelEnum,
-)  # Убедитесь, что путь правильный
+from backend.enums.back_office import \
+    UserAccessLevelEnum  # Убедитесь, что путь правильный
 
 
 class UserRoleBase(BaseModel):

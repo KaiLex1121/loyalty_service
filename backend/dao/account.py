@@ -19,9 +19,7 @@ class AccountDAO(BaseDAO[Account, AccountCreate, AccountUpdate]):
         self, session: AsyncSession, *, id_: int
     ) -> Optional[Account]:
         statement = select(self.model).where(
-            and_(
-                self.model.id == id_, self.model.deleted_at.is_(None)
-            )
+            and_(self.model.id == id_, self.model.deleted_at.is_(None))
         )
         result = await session.execute(statement)
         return result.scalar_one_or_none()
@@ -45,7 +43,7 @@ class AccountDAO(BaseDAO[Account, AccountCreate, AccountUpdate]):
         result = await db.execute(stmt)
         return result.scalars().first()
 
-    async def get_by_phone_number(
+    async def get_by_phone_number_without_relations(
         self, session: AsyncSession, *, phone_number: str
     ) -> Optional[Account]:
         statement = select(self.model).where(
@@ -55,6 +53,21 @@ class AccountDAO(BaseDAO[Account, AccountCreate, AccountUpdate]):
         )
         result = await session.execute(statement)
         return result.scalar_one_or_none()
+
+    async def get_by_phone_number_with_profiles(
+        self, session: AsyncSession, *, phone_number: str
+    ):
+        stmt = (
+            select(self.model)
+            .options(
+                selectinload(self.model.user_profile),
+                selectinload(self.model.employee_profile),
+                selectinload(self.model.customer_profile),
+            )
+            .filter(Account.phone_number == phone_number)
+        )
+        result = await session.execute(stmt)
+        return result.scalars().first()
 
     async def mark_as_active(self, session: AsyncSession, *, account: Account) -> None:
         account.is_active = True
