@@ -80,7 +80,7 @@ async def _create_superuser_logic(
             updated_account = AccountUpdate(
                 hashed_password=get_password_hash(password),
                 email=email,
-                full_name=full_name
+                full_name=full_name,
             )
             await account_dao.update(session, db_ojb=account, obj_in=updated_account)
 

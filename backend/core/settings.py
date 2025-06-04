@@ -1,4 +1,5 @@
 from functools import lru_cache  # Для кэширования экземпляра настроек
+import os
 from pathlib import Path
 from typing import List, Optional
 
@@ -86,7 +87,7 @@ class AppSettings(BaseSettings):
     REDIS: RedisSettings
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file = ".env.test" if os.getenv("TEST_MODE") == "true" else ".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )

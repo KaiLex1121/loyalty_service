@@ -4,11 +4,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from backend.enums.back_office import (
-    CurrencyEnum,
-    PaymentCycleEnum,
-    TariffStatusEnum,
-)
+from backend.enums.back_office import (CurrencyEnum, PaymentCycleEnum,
+                                       TariffStatusEnum)
 
 
 class TariffPlanBase(BaseModel):
@@ -26,9 +23,7 @@ class TariffPlanBase(BaseModel):
     status: TariffStatusEnum = TariffStatusEnum.ACTIVE
     is_public: bool = True
     is_trial: bool = False
-    trial_duration_days: Optional[int] = Field(
-        None, ge=1
-    )
+    trial_duration_days: Optional[int] = Field(None, ge=1)
     sort_order: int = 0
 
 
