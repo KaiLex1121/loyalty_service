@@ -22,16 +22,16 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def create_access_token(
-    subject: Union[str, Any], expires_delta: timedelta | None = None
-) -> str:
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(
             minutes=settings.SECURITY.ACCESS_TOKEN_EXPIRE_MINUTES
         )
-    to_encode = {"exp": expire, "sub": str(subject)}
+
+    to_encode = data.copy()
+    to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
         to_encode,
         settings.SECURITY.JWT_SECRET_KEY,
@@ -76,8 +76,8 @@ def verify_token(token: str) -> Optional[TokenPayload]:
 
 
 def generate_otp(length: int = settings.SECURITY.OTP_LENGTH) -> str:
-    # return "".join(secrets.choice("0123456789") for _ in range(length))
-    return "123456"
+    return "".join(secrets.choice("0123456789") for _ in range(length))
+    # return "123456"
 
 
 def get_otp_hash(otp: str) -> str:
@@ -98,4 +98,4 @@ def get_otp_expiry_time(
 
 
 def is_otp_valid(otp_expires_at: datetime) -> bool:
-    return datetime.utcnow() < otp_expires_at
+    return datetime.now(timezone.utc) < otp_expires_at

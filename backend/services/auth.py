@@ -111,5 +111,5 @@ class AuthService:
                 session, dao, otp_obj=active_otp
             )
             await self.account_service.set_account_as_active(account=account)
-            access_token = create_access_token(subject=account.id)
+            access_token = create_access_token(data={"sub": account.id})
             return access_token
