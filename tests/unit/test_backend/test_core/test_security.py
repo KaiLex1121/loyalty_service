@@ -94,9 +94,13 @@ class TestAccessToken:
         token = jwt.encode(payload, "test_secret_key", algorithm="HS256")
 
         # Мокаем TokenPayload
-        mock_token_instance = MagicMock()
-        mock_token_instance.exp = future_time
-        mock_token_payload.return_value = mock_token_instance
+        mock_token_instance = (
+            MagicMock()
+        )  # Создаем чистый экземпляр класса TokenPayload, это просто пустой объект
+        mock_token_instance.exp = (
+            future_time  # Создаем ему поле exp и присваиваем ему future_time
+        )
+        mock_token_payload.return_value = mock_token_instance  # Каждый раз, когда TokenPayload будет исопльзован (вызван/создан), вместо него будет использоваться mock_token_instance с созданным полем exp
 
         result = verify_token(token)
 

@@ -17,7 +17,14 @@ class DummyAsyncContextManager:
 def mock_session():
     session = AsyncMock()
     session.begin = MagicMock(return_value=DummyAsyncContextManager())
+    session.flush = AsyncMock()
+    session.refresh = AsyncMock()
     return session
+
+
+@pytest.fixture
+def mock_dao() -> MagicMock:
+    return MagicMock()
 
 
 @pytest.fixture

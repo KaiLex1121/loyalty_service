@@ -22,10 +22,14 @@ class OtpCodeService:
     async def create_otp(
         self, session: AsyncSession, dao: HolderDAO, obj_in: OtpCodeCreate
     ):
+        if obj_in is None:
+            raise TypeError("Expected OtpCodeCreate object, got None instead")
         otp_code = await dao.otp_code.create(session, obj_in=obj_in)
         return otp_code
 
     async def set_mark_otp_as_used(
         self, session: AsyncSession, dao: HolderDAO, otp_obj: OtpCode
     ) -> None:
+        if otp_obj is None:
+            raise TypeError("Expected OtpCode object, got None instead")
         await dao.otp_code.mark_otp_as_used(session, otp_obj=otp_obj)
