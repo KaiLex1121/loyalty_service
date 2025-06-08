@@ -7,10 +7,6 @@ from backend.schemas.dashboard import (DashboardCompanyAdminResponse,
                                        DashboardCompanyEmployeeResponse,
                                        DashboardResponse)
 
-# Предполагается, что CRUD для Company и EmployeeRole существуют и доступны
-# from backend.crud import crud_company, crud_employee_role
-# Для простоты примера, будем работать с уже загруженными данными из AccountModel
-
 
 class DashboardService:
     async def get_dashboard_data(

@@ -37,8 +37,6 @@ class CompanyService:
         # Объекты, которые мы создадим и должны будем добавить в сессию
         new_user_role_obj: Optional[UserRoleModel] = None
         new_company_obj: Optional[CompanyModel] = None
-        new_cashback_config_obj: Optional[CashbackConfigModel] = None
-        new_subscription_obj: Optional[SubscriptionModel] = None
         async with session.begin():
             # 1. Получение или создание UserRole
             current_account = await dao.account.get_by_id_with_profiles(
@@ -81,9 +79,7 @@ class CompanyService:
                 company_id=new_company_obj.id,
                 default_percentage=company_data.initial_cashback_percentage,
             )
-            new_cashback_config_obj = await dao.cashback_config.create(
-                session, obj_in=cashback_config_schema
-            )
+            await dao.cashback_config.create(session, obj_in=cashback_config_schema)
 
             # 5. Поиск триального TariffPlan
             trial_plan = await dao.tariff_plan.get_trial_plan(session)
