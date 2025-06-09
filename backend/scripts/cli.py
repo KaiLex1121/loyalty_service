@@ -10,10 +10,12 @@ from backend.core.security import get_password_hash
 from backend.core.settings import settings
 from backend.dao.account import AccountDAO  # Используем экземпляры DAO
 from backend.dao.user_role import UserRoleDAO  # Используем экземпляры DAO
+
 # Импорты из вашего проекта
 from backend.db.session import create_pool
-from backend.enums.back_office import \
-    UserAccessLevelEnum  # Прямой импорт или из backend.enums
+from backend.enums.back_office import (
+    UserAccessLevelEnum,
+)  # Прямой импорт или из backend.enums
 from backend.models.user_role import UserRole  # Используем AdminProfile
 from backend.schemas.account import AccountCreateInternal, AccountUpdate
 from backend.schemas.user_role import UserRoleCreate

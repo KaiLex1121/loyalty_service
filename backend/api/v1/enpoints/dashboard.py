@@ -4,8 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.dependencies import (
-    get_current_active_account_with_profiles, get_dao, get_dashboard_service,
-    get_session)
+    get_current_active_account_with_profiles,
+    get_dao,
+    get_dashboard_service,
+    get_session,
+)
 from backend.dao.holder import HolderDAO
 from backend.models.account import Account as AccountModel
 from backend.schemas.account import AccountBase

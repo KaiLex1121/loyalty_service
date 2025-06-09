@@ -1,11 +1,12 @@
 from typing import List
 
 from backend.models.account import Account as AccountModel
-from backend.schemas.account import \
-    AccountResponse as DashboardAccountInfoResponse
-from backend.schemas.dashboard import (DashboardCompanyAdminResponse,
-                                       DashboardCompanyEmployeeResponse,
-                                       DashboardResponse)
+from backend.schemas.account import AccountResponse as DashboardAccountInfoResponse
+from backend.schemas.dashboard import (
+    DashboardCompanyAdminResponse,
+    DashboardCompanyEmployeeResponse,
+    DashboardResponse,
+)
 
 
 class DashboardService:

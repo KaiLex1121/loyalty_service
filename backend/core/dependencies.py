@@ -1,19 +1,15 @@
 import logging
 from functools import lru_cache
-from typing import Optional
 
 from fastapi import Depends, HTTPException, Request, status
-from fastapi.templating import Jinja2Templates
-from jose import JWTError
-from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.security import oauth2_scheme, verify_token
+from backend.core.settings import AppSettings, get_settings
 from backend.dao.holder import HolderDAO
 from backend.enums.back_office import UserAccessLevelEnum
 from backend.models.account import Account
 from backend.models.user_role import UserRole
-from backend.schemas.token import TokenPayload
 from backend.services.account import AccountService
 from backend.services.auth import AuthService
 from backend.services.company import CompanyService
@@ -27,7 +23,6 @@ logger = logging.getLogger(__name__)
 async def get_session(request: Request):
     pool = request.app.state.pool
     async with pool() as session:
-
         try:
             yield session
         finally:
@@ -39,19 +34,24 @@ async def get_dao(request: Request) -> HolderDAO:
     return dao
 
 
-async def get_account_id_from_token(token: str = Depends(oauth2_scheme)) -> int:
+async def get_account_id_from_token(
+    token: str = Depends(oauth2_scheme),
+    settings: AppSettings = Depends(get_settings),
+) -> int:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+    token_data = verify_token(token=token, settings=settings)
+
+    if token_data is None:
+        raise credentials_exception
     try:
-        token_data: Optional[TokenPayload] = verify_token(token)
-        if token_data is None or token_data.sub is None:
-            raise credentials_exception
         account_id = int(token_data.sub)
         return account_id
-    except (JWTError, ValidationError, ValueError):
+    except (ValueError, TypeError):
         raise credentials_exception
 
 
@@ -155,9 +155,11 @@ def get_auth_service(
     account_service: AccountService = Depends(get_account_service),
     otp_sending_service: MockOTPSendingService = Depends(get_otp_sending_service),
     otp_code_service: OtpCodeService = Depends(get_otp_code_service),
+    settings: AppSettings = Depends(get_settings),
 ) -> AuthService:
     return AuthService(
         account_service=account_service,
         otp_sending_service=otp_sending_service,
         otp_code_service=otp_code_service,
+        settings=settings,
     )

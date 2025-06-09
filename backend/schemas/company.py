@@ -2,7 +2,9 @@
 import datetime  # Для created_at, updated_at в CompanyResponse
 import decimal  # Для initial_cashback_percentage
 from typing import (  # List нужен для CompanyResponse, если будем включать связи
-    List, Optional)
+    List,
+    Optional,
+)
 
 from pydantic import BaseModel, Field, field_validator
 

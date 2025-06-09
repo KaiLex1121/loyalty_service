@@ -4,9 +4,14 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.security import (create_access_token, generate_otp,
-                                   get_otp_expiry_time, get_otp_hash,
-                                   verify_otp_hash)
+from backend.core.security import (
+    create_access_token,
+    generate_otp,
+    get_otp_expiry_time,
+    get_otp_hash,
+    verify_otp_hash,
+)
+from backend.core.settings import AppSettings
 from backend.dao.holder import HolderDAO
 from backend.enums.back_office import OtpPurposeEnum
 from backend.schemas.auth import OTPVerifyRequest
@@ -24,18 +29,20 @@ class AuthService:
         account_service: AccountService,
         otp_code_service: OtpCodeService,
         otp_sending_service: MockOTPSendingService,
+        settings: AppSettings,
     ):
         self.account_service = account_service
         self.otp_sending_service = otp_sending_service
         self.otp_code_service = otp_code_service
+        self.settings = settings
 
     async def request_otp_for_login(
         self, session: AsyncSession, dao: HolderDAO, phone_number: str
     ) -> None:
         otp_purpose = OtpPurposeEnum.BACKOFFICE_LOGIN
-        plain_otp = generate_otp()
-        hashed_otp = get_otp_hash(plain_otp)
-        otp_expires = get_otp_expiry_time()
+        plain_otp = generate_otp(self.settings)
+        hashed_otp = get_otp_hash(plain_otp, self.settings)
+        otp_expires = get_otp_expiry_time(self.settings)
 
         async with session.begin():
             account = await self.account_service.get_or_create_account(
@@ -102,6 +109,7 @@ class AuthService:
             if not verify_otp_hash(
                 otp_code=otp_data.otp_code,
                 hashed_otp_code=active_otp.hashed_code,
+                settings=self.settings,
             ):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -111,5 +119,7 @@ class AuthService:
                 session, dao, otp_obj=active_otp
             )
             await self.account_service.set_account_as_active(account=account)
-            access_token = create_access_token(data={"sub": account.id})
+            access_token = create_access_token(
+                data={"sub": account.id}, settings=self.settings
+            )
             return access_token

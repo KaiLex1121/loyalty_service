@@ -3,15 +3,18 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from backend.dao.base import CRUDBase
-from backend.enums import \
-    TariffStatusEnum  # Прямой импорт, если не через __init__
+from backend.dao.base import BaseDAO
+from backend.enums.back_office import (
+    TariffStatusEnum,
+)  # Прямой импорт, если не через __init__
 from backend.models.tariff_plan import TariffPlan
 from backend.schemas.tariff_plan import (  # Используем наши схемы
-    TariffPlanCreate, TariffPlanUpdate)
+    TariffPlanCreate,
+    TariffPlanUpdate,
+)
 
 
-class TariffPlanDAO(CRUDBase[TariffPlan, TariffPlanCreate, TariffPlanUpdate]):
+class TariffPlanDAO(BaseDAO[TariffPlan, TariffPlanCreate, TariffPlanUpdate]):
     async def get_by_name(self, db: AsyncSession, *, name: str) -> Optional[TariffPlan]:
         """Получает тарифный план по имени."""
         result = await db.execute(

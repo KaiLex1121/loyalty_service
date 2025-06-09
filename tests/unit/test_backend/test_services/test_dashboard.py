@@ -5,8 +5,7 @@ import pytest
 
 from backend.models.account import Account as AccountModel
 from backend.models.company import Company
-from backend.schemas.account import \
-    AccountResponse as DashboardAccountInfoResponse
+from backend.schemas.account import AccountResponse as DashboardAccountInfoResponse
 from backend.schemas.dashboard import DashboardResponse
 from backend.services.dashboard import DashboardService
 

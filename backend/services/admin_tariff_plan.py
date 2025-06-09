@@ -4,22 +4,19 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select  # Для явного SELECT с options
 
-from backend.dao.holder import \
-    HolderDAO  # Предполагаем, что HolderDAO принимает сессию при инициализации или DAO получают сессию в методах
+from backend.dao.holder import (
+    HolderDAO,
+)  # Предполагаем, что HolderDAO принимает сессию при инициализации или DAO получают сессию в методах
 from backend.enums.back_office import TariffStatusEnum
 from backend.models.tariff_plan import TariffPlan as TariffPlanModel
-from backend.schemas.tariff_plan import (TariffPlanCreate, TariffPlanResponse,
-                                         TariffPlanUpdate)
+from backend.schemas.tariff_plan import (
+    TariffPlanCreate,
+    TariffPlanResponse,
+    TariffPlanUpdate,
+)
 
 
 class AdminTariffPlanService:
-    async def _load_plan_for_response(
-        self, session: AsyncSession, dao: HolderDAO, plan_id: int
-    ) -> Optional[TariffPlanModel]:
-        # Вспомогательный метод для загрузки плана (если нужны связи для ответа)
-        # В данном случае TariffPlanResponse простая, так что можно обойтись без него
-        # или использовать dao.tariff_plan.get(session, id_=plan_id)
-        return await dao.tariff_plan.get(session, id_=plan_id)
 
     async def create_tariff_plan(
         self, session: AsyncSession, dao: HolderDAO, plan_data: TariffPlanCreate

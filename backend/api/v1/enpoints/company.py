@@ -3,9 +3,12 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.dependencies import (get_account_id_from_token,
-                                       get_company_service, get_dao,
-                                       get_session)
+from backend.core.dependencies import (
+    get_account_id_from_token,
+    get_company_service,
+    get_dao,
+    get_session,
+)
 from backend.dao.holder import HolderDAO
 from backend.schemas.company import CompanyCreateRequest, CompanyResponse
 from backend.services.company import CompanyService

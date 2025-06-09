@@ -4,8 +4,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from backend.enums.back_office import (CurrencyEnum, PaymentCycleEnum,
-                                       TariffStatusEnum)
+from backend.enums.back_office import CurrencyEnum, PaymentCycleEnum, TariffStatusEnum
 
 
 class TariffPlanBase(BaseModel):

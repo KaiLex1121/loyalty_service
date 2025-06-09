@@ -3,12 +3,14 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.dependencies import \
-    get_session  # Ваша зависимость для сессии
+from backend.core.dependencies import get_session  # Ваша зависимость для сессии
 from backend.core.dependencies import get_current_full_system_admin, get_dao
 from backend.dao.holder import HolderDAO
-from backend.schemas.tariff_plan import (TariffPlanCreate, TariffPlanResponse,
-                                         TariffPlanUpdate)
+from backend.schemas.tariff_plan import (
+    TariffPlanCreate,
+    TariffPlanResponse,
+    TariffPlanUpdate,
+)
 from backend.services import admin_tariff_plan
 from backend.services.admin_tariff_plan import AdminTariffPlanService
 

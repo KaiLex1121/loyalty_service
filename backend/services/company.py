@@ -7,9 +7,11 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.dao.holder import HolderDAO
-from backend.enums.back_office import (CompanyStatusEnum,
-                                       SubscriptionStatusEnum,
-                                       UserAccessLevelEnum)
+from backend.enums.back_office import (
+    CompanyStatusEnum,
+    SubscriptionStatusEnum,
+    UserAccessLevelEnum,
+)
 from backend.models.account import Account as AccountModel
 from backend.models.cashback import Cashback as CashbackConfigModel
 from backend.models.company import Company as CompanyModel
