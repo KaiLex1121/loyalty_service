@@ -22,20 +22,14 @@ from backend.db.base import Base
 from backend.main import app
 
 
-class DummyAsyncContextManager:
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, exc_type, exc, tb):
-        return None
-
-
 @pytest.fixture
 def mock_session():
-    session = AsyncMock()
-    session.begin = MagicMock(return_value=DummyAsyncContextManager())
-    session.flush = AsyncMock()
-    session.refresh = AsyncMock()
+    session = AsyncMock(spec=AsyncSession)
+    mock_context_manager = AsyncMock()
+    session.begin.return_value = mock_context_manager
+    mock_context_manager.__aenter__.return_value = session
+    mock_context_manager.__aexit__.return_value = None
+
     return session
 
 

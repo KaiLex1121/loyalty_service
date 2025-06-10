@@ -1,9 +1,9 @@
 from decimal import Decimal
-from http.client import HTTPException
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from fastapi import status
+from fastapi import HTTPException, status
+from pydantic import ValidationError
 
 from backend.dao.admin_tarrif_plan import TariffPlanDAO
 from backend.dao.holder import HolderDAO
@@ -16,11 +16,11 @@ from backend.services.admin_tariff_plan import AdminTariffPlanService
 class TestTariffPlanService:
 
     @pytest.fixture
-    def tariff_plan_service(self):
+    def tariff_plan_service(self) -> AdminTariffPlanService:
         return AdminTariffPlanService()
 
     @pytest.fixture
-    def tariff_plan_data(self):
+    def tariff_plan_data(self) -> TariffPlanCreate:
         return TariffPlanCreate(
             name="Test Tariff Plan",
             description="Test description",
@@ -39,11 +39,11 @@ class TestTariffPlanService:
         )
 
     @pytest.fixture
-    def trial_tariff_plan_data(self):
+    def trial_tariff_plan_data(self) -> TariffPlanCreate:
         return TariffPlanCreate(
             name="Test Tariff Plan",
             description="Test description",
-            price=Decimal(""),
+            price=Decimal("0.00"),
             currency=CurrencyEnum.RUB,
             billing_period=PaymentCycleEnum.MONTHLY,
             max_outlets=5,
@@ -88,7 +88,7 @@ class TestTariffPlanService:
     ):
         """Test successful creation of a regular tariff plan."""
         # Arrange
-        mock_dao.tariff_plan = MagicMock(spec=TariffPlanDAO)
+        mock_dao.tariff_plan = AsyncMock(spec=TariffPlanDAO)
         mock_dao.tariff_plan.get_by_name = AsyncMock(return_value=None)
         mock_dao.tariff_plan.create = AsyncMock(return_value=tariff_plan_model)
 
@@ -108,7 +108,11 @@ class TestTariffPlanService:
 
     @pytest.mark.asyncio
     async def test_create_trial_plan_success_no_existing_trial(
-        self, tariff_plan_service, mock_session, mock_dao, trial_tariff_plan_data
+        self,
+        tariff_plan_service: AdminTariffPlanService,
+        mock_session: AsyncMock,
+        mock_dao: MagicMock,
+        trial_tariff_plan_data: TariffPlanCreate,
     ):
         """Test successful creation of trial plan when no active trial exists"""
         # Arrange
@@ -129,9 +133,10 @@ class TestTariffPlanService:
             trial_duration_days=30,
             sort_order=0,
         )
-        mock_dao.tariff_plan.get_by_name.return_value = None
-        mock_dao.tariff_plan.get_trial_plan.return_value = None  # No existing trial
-        mock_dao.tariff_plan.create.return_value = trial_plan_model
+        mock_dao.tariff_plan = AsyncMock(spec=TariffPlanDAO)
+        mock_dao.tariff_plan.get_by_name = AsyncMock(return_value=None)
+        mock_dao.tariff_plan.get_trial_plan = AsyncMock(return_value=None)
+        mock_dao.tariff_plan.create = AsyncMock(return_value=trial_plan_model)
 
         # Act
         result = await tariff_plan_service.create_tariff_plan(
@@ -150,13 +155,16 @@ class TestTariffPlanService:
 
     @pytest.mark.asyncio
     async def test_create_inactive_trial_plan_success(
-        self, tariff_plan_service, mock_session, mock_dao
+        self,
+        tariff_plan_service: AdminTariffPlanService,
+        mock_session: AsyncMock,
+        mock_dao: MagicMock,
     ):
-        """Test successful creation of inactive trial plan even when active trial exists"""
+        """Test successful creation of hidden trial plan even when active trial exists"""
         # Arrange
-        inactive_trial_data = TariffPlanCreate(
-            name="Inactive Trial",
-            description="Inactive trial",
+        hidden_trial_data = TariffPlanCreate(
+            name="Hidden Trial",
+            description="Hidden trial",
             price=Decimal("0.00"),
             currency=CurrencyEnum.RUB,
             billing_period=PaymentCycleEnum.MONTHLY,
@@ -164,16 +172,16 @@ class TestTariffPlanService:
             max_employees=10,
             max_active_promotions=2,
             features=["feature1", "feature2"],
-            status=TariffStatusEnum.INACTIVE,
+            status=TariffStatusEnum.HIDDEN,
             is_public=True,
             is_trial=True,
             trial_duration_days=30,
             sort_order=0,
         )
-        inactive_trial_model = TariffPlanModel(
+        hidden_trial_model = TariffPlanModel(
             id=3,
-            name="Inactive Trial",
-            description="Inactive trial",
+            name="Hidden Trial",
+            description="Hidden trial",
             price=Decimal("0.00"),
             currency=CurrencyEnum.RUB,
             billing_period=PaymentCycleEnum.MONTHLY,
@@ -181,41 +189,41 @@ class TestTariffPlanService:
             max_employees=10,
             max_active_promotions=2,
             features=["feature1", "feature2"],
-            status=TariffStatusEnum.INACTIVE,
+            status=TariffStatusEnum.HIDDEN,
             is_public=True,
             is_trial=True,
             trial_duration_days=30,
             sort_order=0,
         )
 
-        mock_dao.tariff_plan.get_by_name.return_value = None
-        mock_dao.tariff_plan.create.return_value = inactive_trial_model
+        mock_dao.tariff_plan = AsyncMock(spec=TariffPlanDAO)
+        mock_dao.tariff_plan.get_by_name = AsyncMock(return_value=None)
+        mock_dao.tariff_plan.create = AsyncMock(return_value=hidden_trial_model)
 
         # Act
         result = await tariff_plan_service.create_tariff_plan(
-            mock_session, mock_dao, inactive_trial_data
+            mock_session, mock_dao, hidden_trial_data
         )
 
         # Assert
-        assert result == inactive_trial_model
-        # get_trial_plan should not be called for inactive trials
+        assert result == hidden_trial_model
+        # get_trial_plan should not be called for hidden trials
         mock_dao.tariff_plan.get_trial_plan.assert_not_called()
 
     # NEGATIVE TEST CASES
     @pytest.mark.asyncio
     async def test_create_tariff_plan_duplicate_name(
         self,
-        tariff_plan_service,
-        mock_session,
-        mock_dao,
-        tariff_plan_data,
-        tariff_plan_model,
+        tariff_plan_service: AdminTariffPlanService,
+        mock_session: AsyncMock,
+        mock_dao: MagicMock,
+        tariff_plan_data: TariffPlanCreate,
+        tariff_plan_model: TariffPlanModel,
     ):
         """Test creation fails when plan with same name already exists"""
         # Arrange
-        mock_dao.tariff_plan.get_by_name.return_value = (
-            tariff_plan_model  # Existing plan
-        )
+        mock_dao.tariff_plan = AsyncMock(spec=TariffPlanDAO)
+        mock_dao.tariff_plan.get_by_name = AsyncMock(return_value=tariff_plan_model)
 
         # Act & Assert
         with pytest.raises(HTTPException) as exc_info:
@@ -223,16 +231,28 @@ class TestTariffPlanService:
                 mock_session, mock_dao, tariff_plan_data
             )
 
+        # Проверяем, что исключение имеет правильные параметры
         assert exc_info.value.status_code == status.HTTP_409_CONFLICT
         assert (
             f"Tariff plan with name '{tariff_plan_data.name}' already exists."
             in str(exc_info.value.detail)
         )
+
+        # Проверяем, что create не был вызван
         mock_dao.tariff_plan.create.assert_not_called()
+
+        # Проверяем, что get_by_name был вызван с правильными параметрами
+        mock_dao.tariff_plan.get_by_name.assert_called_once_with(
+            mock_session, name=tariff_plan_data.name
+        )
 
     @pytest.mark.asyncio
     async def test_create_active_trial_plan_when_trial_exists(
-        self, tariff_plan_service, mock_session, mock_dao, trial_tariff_plan_data
+        self,
+        tariff_plan_service: AdminTariffPlanService,
+        mock_session: AsyncMock,
+        mock_dao: MagicMock,
+        trial_tariff_plan_data: TariffPlanCreate,
     ):
         """Test creation fails when trying to create active trial plan while another active trial exists"""
         # Arrange
@@ -253,7 +273,7 @@ class TestTariffPlanService:
             trial_duration_days=30,
             sort_order=0,
         )
-
+        mock_dao.tariff_plan = AsyncMock(spec=TariffPlanDAO)
         mock_dao.tariff_plan.get_by_name.return_value = None
         mock_dao.tariff_plan.get_trial_plan.return_value = existing_trial
 
@@ -271,10 +291,15 @@ class TestTariffPlanService:
 
     @pytest.mark.asyncio
     async def test_database_error_during_creation(
-        self, tariff_plan_service, mock_session, mock_dao, tariff_plan_data
+        self,
+        tariff_plan_service: AdminTariffPlanService,
+        mock_session: AsyncMock,
+        mock_dao: MagicMock,
+        tariff_plan_data: TariffPlanCreate,
     ):
         """Test handling of database errors during plan creation"""
         # Arrange
+        mock_dao.tariff_plan = AsyncMock(spec=TariffPlanDAO)
         mock_dao.tariff_plan.get_by_name.return_value = None
         mock_dao.tariff_plan.create.side_effect = Exception("Database connection error")
 
@@ -288,10 +313,15 @@ class TestTariffPlanService:
 
     @pytest.mark.asyncio
     async def test_database_error_during_name_check(
-        self, tariff_plan_service, mock_session, mock_dao, tariff_plan_data
+        self,
+        tariff_plan_service: AdminTariffPlanService,
+        mock_session: AsyncMock,
+        mock_dao: MagicMock,
+        tariff_plan_data: TariffPlanCreate,
     ):
         """Test handling of database errors during name existence check"""
         # Arrange
+        mock_dao.tariff_plan = AsyncMock(spec=TariffPlanDAO)
         mock_dao.tariff_plan.get_by_name.side_effect = Exception("Database query error")
 
         # Act & Assert
@@ -305,59 +335,39 @@ class TestTariffPlanService:
 
     # CORNER CASES / EDGE CASES
     @pytest.mark.asyncio
-    async def test_create_plan_with_empty_name(
-        self, tariff_plan_service, mock_session, mock_dao
-    ):
-        """Test creation with empty name"""
+    async def test_create_plan_with_empty_name(self, mock_dao: MagicMock):
+        """Test creation with empty name should raise validation error"""
         # Arrange
-        empty_name_data = TariffPlanCreate(
-            name="",
-            description="Empty name plan",
-            price=Decimal("50.00"),
-            currency=CurrencyEnum.RUB,
-            billing_period=PaymentCycleEnum.MONTHLY,
-            max_outlets=5,
-            max_employees=10,
-            max_active_promotions=2,
-            features=["feature1", "feature2"],
-            status=TariffStatusEnum.ACTIVE,
-            is_public=True,
-            is_trial=False,
-            trial_duration_days=None,
-            sort_order=0,
-        )
-        mock_dao.tariff_plan.get_by_name.return_value = None
-        created_plan = TariffPlanModel(
-            id=5,
-            name="",
-            description="Empty name plan",
-            price=Decimal("50.00"),
-            currency=CurrencyEnum.RUB,
-            billing_period=PaymentCycleEnum.MONTHLY,
-            max_outlets=5,
-            max_employees=10,
-            max_active_promotions=2,
-            features=["feature1", "feature2"],
-            status=TariffStatusEnum.ACTIVE,
-            is_public=True,
-            is_trial=False,
-            trial_duration_days=None,
-            sort_order=0,
-        )
-        mock_dao.tariff_plan.create.return_value = created_plan
+        mock_dao.tariff_plan = AsyncMock(spec=TariffPlanDAO)
 
-        # Act
-        result = await tariff_plan_service.create_tariff_plan(
-            mock_session, mock_dao, empty_name_data
-        )
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            empty_name_data = TariffPlanCreate(
+                name="",
+                description="Empty name plan",
+                price=Decimal("50.00"),
+                currency=CurrencyEnum.RUB,
+                billing_period=PaymentCycleEnum.MONTHLY,
+                max_outlets=5,
+                max_employees=10,
+                max_active_promotions=2,
+                features=["feature1", "feature2"],
+                status=TariffStatusEnum.ACTIVE,
+                is_public=True,
+                is_trial=False,
+                trial_duration_days=None,
+                sort_order=0,
+            )
 
-        # Assert
-        assert result == created_plan
-        mock_dao.tariff_plan.get_by_name.assert_called_once_with(mock_session, name="")
+        # Проверяем, что ошибка именно о коротком имени
+        assert "String should have at least 3 characters" in str(exc_info.value)
 
     @pytest.mark.asyncio
     async def test_create_plan_with_special_characters_in_name(
-        self, tariff_plan_service, mock_session, mock_dao
+        self,
+        tariff_plan_service: AdminTariffPlanService,
+        mock_session: AsyncMock,
+        mock_dao: MagicMock,
     ):
         """Test creation with special characters in name"""
         # Arrange
@@ -377,7 +387,6 @@ class TestTariffPlanService:
             trial_duration_days=None,
             sort_order=0,
         )
-        mock_dao.tariff_plan.get_by_name.return_value = None
         created_plan = TariffPlanModel(
             id=6,
             name="Plan@#$%^&*()_+-={}[]|\\:;\"'<>?,./ ",
@@ -395,7 +404,10 @@ class TestTariffPlanService:
             trial_duration_days=None,
             sort_order=0,
         )
-        mock_dao.tariff_plan.create.return_value = created_plan
+
+        mock_dao.tariff_plan = AsyncMock(spec=TariffPlanDAO)
+        mock_dao.tariff_plan.get_by_name = AsyncMock(return_value=None)
+        mock_dao.tariff_plan.create = AsyncMock(return_value=created_plan)
 
         # Act
         result = await tariff_plan_service.create_tariff_plan(
@@ -407,7 +419,10 @@ class TestTariffPlanService:
 
     @pytest.mark.asyncio
     async def test_create_plan_with_zero_price(
-        self, tariff_plan_service, mock_session, mock_dao
+        self,
+        tariff_plan_service: AdminTariffPlanService,
+        mock_session: AsyncMock,
+        mock_dao: MagicMock,
     ):
         """Test creation with zero price (but not trial)"""
         # Arrange
@@ -427,7 +442,6 @@ class TestTariffPlanService:
             trial_duration_days=None,
             sort_order=0,
         )
-        mock_dao.tariff_plan.get_by_name.return_value = None
         created_plan = TariffPlanModel(
             id=7,
             name="Free Plan",
@@ -445,7 +459,9 @@ class TestTariffPlanService:
             trial_duration_days=None,
             sort_order=0,
         )
-        mock_dao.tariff_plan.create.return_value = created_plan
+        mock_dao.tariff_plan = AsyncMock(spec=TariffPlanDAO)
+        mock_dao.tariff_plan.create = AsyncMock(return_value=created_plan)
+        mock_dao.tariff_plan.get_by_name = AsyncMock(return_value=None)
 
         # Act
         result = await tariff_plan_service.create_tariff_plan(
@@ -457,88 +473,59 @@ class TestTariffPlanService:
         # Should not check for existing trial plans since is_trial=False
         mock_dao.tariff_plan.get_trial_plan.assert_not_called()
 
-    async def test_create_plan_with_zero_price(self, service, mock_session, mock_dao):
-        """Test creation with zero price (but not trial)"""
-        # Arrange
-        zero_price_data = TariffPlanCreate(
-            name="Free Plan",
-            description="Free tier",
-            price=0.00,
-            is_trial=False,
-            status=TariffStatusEnum.ACTIVE,
-        )
-        mock_dao.tariff_plan.get_by_name.return_value = None
-        created_plan = TariffPlanModel(
-            id=7,
-            name="Free Plan",
-            description="Free tier",
-            price=0.00,
-            is_trial=False,
-            status=TariffStatusEnum.ACTIVE,
-        )
-        mock_dao.tariff_plan.create.return_value = created_plan
-
-        # Act
-        result = await service.create_tariff_plan(
-            mock_session, mock_dao, zero_price_data
-        )
-
-        # Assert
-        assert result == created_plan
-        # Should not check for existing trial plans since is_trial=False
-        mock_dao.tariff_plan.get_trial_plan.assert_not_called()
-
     @pytest.mark.asyncio
     async def test_create_plan_with_very_long_name(
-        self, service, mock_session, mock_dao
+        self,
+        tariff_plan_service: AdminTariffPlanService,
+        mock_session: AsyncMock,
+        mock_dao: MagicMock,
     ):
-        """Test creation with very long name"""
+        """Test creation with very long name should fail validation"""
         # Arrange
-        long_name = "A" * 1000  # Very long name
-        long_name_data = TariffPlanCreate(
-            name=long_name,
-            description="Long name plan",
-            price=100.00,
-            is_trial=False,
-            status=TariffStatusEnum.ACTIVE,
-        )
-        mock_dao.tariff_plan.get_by_name.return_value = None
-        created_plan = TariffPlanModel(
-            id=8,
-            name=long_name,
-            description="Long name plan",
-            price=100.00,
-            is_trial=False,
-            status=TariffStatusEnum.ACTIVE,
-        )
-        mock_dao.tariff_plan.create.return_value = created_plan
+        long_name = "A" * 101  # Превышает лимит в 100 символов
 
-        # Act
-        result = await service.create_tariff_plan(
-            mock_session, mock_dao, long_name_data
-        )
+        # Act & Assert
+        with pytest.raises(ValidationError) as exc_info:
+            TariffPlanCreate(
+                name=long_name,
+                description="Long name plan",
+                price=100.00,
+                is_trial=False,
+                status=TariffStatusEnum.ACTIVE,
+            )
 
-        # Assert
-        assert result == created_plan
+        # Проверяем, что ошибка именно о длине строки
+        assert "string_too_long" in str(exc_info.value)
 
     @pytest.mark.asyncio
     async def test_session_transaction_behavior(
-        self, service, mock_session, mock_dao, sample_plan_data, sample_plan_model
+        self,
+        tariff_plan_service: AdminTariffPlanService,
+        mock_session: AsyncMock,
+        mock_dao: MagicMock,
+        tariff_plan_data: TariffPlanCreate,
+        tariff_plan_model: TariffPlanModel,
     ):
         """Test that session.begin() is properly used for transaction management"""
         # Arrange
-        mock_dao.tariff_plan.get_by_name.return_value = None
-        mock_dao.tariff_plan.create.return_value = sample_plan_model
+        mock_dao.tariff_plan = AsyncMock(spec=TariffPlanDAO)
+        mock_dao.tariff_plan.get_by_name = AsyncMock(return_value=None)
+        mock_dao.tariff_plan.create = AsyncMock(return_value=tariff_plan_model)
 
         # Act
-        await service.create_tariff_plan(mock_session, mock_dao, sample_plan_data)
+        await tariff_plan_service.create_tariff_plan(
+            mock_session, mock_dao, tariff_plan_data
+        )
 
         # Assert
         mock_session.begin.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_case_sensitive_name_comparison(
-        self, service, mock_session, mock_dao
+        self,
+        tariff_plan_service: AdminTariffPlanService,
+        mock_session: AsyncMock,
+        mock_dao: MagicMock,
     ):
         """Test that name comparison is case-sensitive (assuming DAO handles this)"""
         # Arrange
@@ -549,7 +536,6 @@ class TestTariffPlanService:
             is_trial=False,
             status=TariffStatusEnum.ACTIVE,
         )
-        mock_dao.tariff_plan.get_by_name.return_value = None
         created_plan = TariffPlanModel(
             id=9,
             name="PREMIUM PLAN",
@@ -558,10 +544,12 @@ class TestTariffPlanService:
             is_trial=False,
             status=TariffStatusEnum.ACTIVE,
         )
-        mock_dao.tariff_plan.create.return_value = created_plan
+        mock_dao.tariff_plan = AsyncMock(spec=TariffPlanDAO)
+        mock_dao.tariff_plan.get_by_name = AsyncMock(return_value=None)
+        mock_dao.tariff_plan.create = AsyncMock(return_value=created_plan)
 
         # Act
-        result = await service.create_tariff_plan(
+        result = await tariff_plan_service.create_tariff_plan(
             mock_session, mock_dao, uppercase_data
         )
 
@@ -573,15 +561,18 @@ class TestTariffPlanService:
 
     @pytest.mark.asyncio
     async def test_trial_plan_status_combinations(
-        self, service, mock_session, mock_dao
+        self,
+        tariff_plan_service: AdminTariffPlanService,
+        mock_session: AsyncMock,
+        mock_dao: MagicMock,
     ):
         """Test various combinations of trial flag and status"""
         test_cases = [
             # (is_trial, status, should_check_existing_trial)
             (True, TariffStatusEnum.ACTIVE, True),
-            (True, TariffStatusEnum.INACTIVE, False),
+            (True, TariffStatusEnum.HIDDEN, False),
             (False, TariffStatusEnum.ACTIVE, False),
-            (False, TariffStatusEnum.INACTIVE, False),
+            (False, TariffStatusEnum.HIDDEN, False),
         ]
 
         for i, (is_trial, status, should_check_trial) in enumerate(test_cases):
@@ -604,13 +595,15 @@ class TestTariffPlanService:
                 is_trial=is_trial,
                 status=status,
             )
-
-            mock_dao.tariff_plan.get_by_name.return_value = None
-            mock_dao.tariff_plan.get_trial_plan.return_value = None
-            mock_dao.tariff_plan.create.return_value = created_plan
+            mock_dao.tariff_plan = AsyncMock(spec=TariffPlanDAO)
+            mock_dao.tariff_plan.get_by_name = AsyncMock(return_value=None)
+            mock_dao.tariff_plan.get_trial_plan = AsyncMock(return_value=None)
+            mock_dao.tariff_plan.create = AsyncMock(return_value=created_plan)
 
             # Act
-            result = await service.create_tariff_plan(mock_session, mock_dao, plan_data)
+            result = await tariff_plan_service.create_tariff_plan(
+                mock_session, mock_dao, plan_data
+            )
 
             # Assert
             assert result == created_plan

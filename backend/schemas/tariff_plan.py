@@ -10,7 +10,7 @@ from backend.enums.back_office import CurrencyEnum, PaymentCycleEnum, TariffStat
 class TariffPlanBase(BaseModel):
     name: str = Field(min_length=3, max_length=100)
     description: Optional[str] = None
-    price: decimal.Decimal = Field(ge=decimal.Decimal("0.00"))  # ge=0
+    price: decimal.Decimal = Field(ge=decimal.Decimal("0.00"))
     currency: CurrencyEnum = CurrencyEnum.RUB
     billing_period: PaymentCycleEnum = PaymentCycleEnum.MONTHLY
 
