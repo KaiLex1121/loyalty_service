@@ -1,6 +1,7 @@
 import asyncio
 import os
 from typing import Any, AsyncGenerator, Generator, Optional
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import pytest_asyncio
@@ -16,8 +17,32 @@ from sqlalchemy.ext.asyncio import (
 
 from backend.core.dependencies import get_session as app_get_db
 from backend.core.settings import AppSettings, get_settings
+from backend.dao.holder import HolderDAO
 from backend.db.base import Base
 from backend.main import app
+
+
+class DummyAsyncContextManager:
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        return None
+
+
+@pytest.fixture
+def mock_session():
+    session = AsyncMock()
+    session.begin = MagicMock(return_value=DummyAsyncContextManager())
+    session.flush = AsyncMock()
+    session.refresh = AsyncMock()
+    return session
+
+
+@pytest.fixture
+def mock_dao():
+    dao = MagicMock(spec=HolderDAO)
+    return dao
 
 
 @pytest.fixture(scope="session")

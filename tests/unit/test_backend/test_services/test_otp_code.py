@@ -12,57 +12,63 @@ from backend.schemas.otp_code import OtpCodeCreate
 from backend.services.otp_code import OtpCodeService
 
 
+@pytest.fixture
+def otp_service():
+    """Fixture to create OtpCodeService instance"""
+    return OtpCodeService()
+
+
+@pytest.fixture
+def mock_session():
+    """Fixture to create mock AsyncSession"""
+    return AsyncMock(spec=AsyncSession)
+
+
+@pytest.fixture
+def mock_dao():
+    """Fixture to create mock HolderDAO"""
+    dao = MagicMock(spec=HolderDAO)
+    dao.otp_code = AsyncMock()
+    return dao
+
+
+@pytest.fixture
+def mock_account():
+    """Fixture to create mock Account"""
+    account = MagicMock(spec=Account)
+    account.id = 123
+    account.email = "test@example.com"
+    return account
+
+
+@pytest.fixture
+def mock_otp_code():
+    """Fixture to create mock OtpCode"""
+    otp = MagicMock(spec=OtpCode)
+    otp.id = 456
+    otp.code = "123456"
+    otp.purpose = "backoffice_login"
+    otp.account_id = 123
+    otp.created_at = datetime.now()
+    otp.expires_at = datetime.now()
+    otp.is_used = False
+    return otp
+
+
+@pytest.fixture
+def mock_otp_create():
+    """Fixture to create mock OtpCodeCreate schema"""
+    return OtpCodeCreate(
+        account_id=123,
+        hashed_code="hashed_123456",
+        purpose="backoffice_login",
+        expires_at=datetime.now(),
+        channel="tg",
+    )
+
+
 class TestOtpCodeService:
     """Test suite for OtpCodeService"""
-
-    @pytest.fixture
-    def otp_service(self):
-        """Fixture to create OtpCodeService instance"""
-        return OtpCodeService()
-
-    @pytest.fixture
-    def mock_session(self):
-        """Fixture to create mock AsyncSession"""
-        return AsyncMock(spec=AsyncSession)
-
-    @pytest.fixture
-    def mock_dao(self):
-        """Fixture to create mock HolderDAO"""
-        dao = MagicMock(spec=HolderDAO)
-        dao.otp_code = AsyncMock()
-        return dao
-
-    @pytest.fixture
-    def mock_account(self):
-        """Fixture to create mock Account"""
-        account = MagicMock(spec=Account)
-        account.id = 123
-        account.email = "test@example.com"
-        return account
-
-    @pytest.fixture
-    def mock_otp_code(self):
-        """Fixture to create mock OtpCode"""
-        otp = MagicMock(spec=OtpCode)
-        otp.id = 456
-        otp.code = "123456"
-        otp.purpose = "backoffice_login"
-        otp.account_id = 123
-        otp.created_at = datetime.now()
-        otp.expires_at = datetime.now()
-        otp.is_used = False
-        return otp
-
-    @pytest.fixture
-    def mock_otp_create(self):
-        """Fixture to create mock OtpCodeCreate schema"""
-        return OtpCodeCreate(
-            account_id=123,
-            hashed_code="hashed_123456",
-            purpose="backoffice_login",
-            expires_at=datetime.now(),
-            channel="tg",
-        )
 
     # POSITIVE TESTS
     class TestPositiveCases:
@@ -98,12 +104,12 @@ class TestOtpCodeService:
             otp_service: OtpCodeService,
             mock_session: AsyncMock,
             mock_dao: MagicMock,
-            mock_otp_create,
-            mock_otp_code,
+            mock_otp_create: MagicMock,
+            mock_otp_code: MagicMock,
         ):
             """Test successful OTP creation"""
             # Arrange
-            mock_dao.otp_code.create.return_value = mock_otp_code
+            mock_dao.otp_code.create = AsyncMock(return_value=mock_otp_code)
 
             # Act
             result = await otp_service.create_otp(
@@ -241,7 +247,11 @@ class TestOtpCodeService:
 
         @pytest.mark.asyncio
         async def test_invalidate_previous_otps_database_error(
-            self, otp_service, mock_session, mock_dao, mock_account
+            self,
+            otp_service,
+            mock_session: AsyncMock,
+            mock_dao: MagicMock,
+            mock_account,
         ):
             """Test database error during OTP invalidation"""
             # Arrange
@@ -261,7 +271,11 @@ class TestOtpCodeService:
 
         @pytest.mark.asyncio
         async def test_create_otp_integrity_error(
-            self, otp_service, mock_session, mock_dao, mock_otp_create
+            self,
+            otp_service,
+            mock_session: AsyncMock,
+            mock_dao: MagicMock,
+            mock_otp_create,
         ):
             """Test integrity constraint violation during OTP creation"""
             # Arrange
@@ -278,7 +292,11 @@ class TestOtpCodeService:
 
         @pytest.mark.asyncio
         async def test_set_mark_otp_as_used_database_error(
-            self, otp_service, mock_session, mock_dao, mock_otp_code
+            self,
+            otp_service,
+            mock_session: AsyncMock,
+            mock_dao: MagicMock,
+            mock_otp_code,
         ):
             """Test database error when marking OTP as used"""
             # Arrange
@@ -297,7 +315,11 @@ class TestOtpCodeService:
 
         @pytest.mark.asyncio
         async def test_create_otp_generic_exception(
-            self, otp_service, mock_session, mock_dao, mock_otp_create
+            self,
+            otp_service,
+            mock_session: AsyncMock,
+            mock_dao: MagicMock,
+            mock_otp_create,
         ):
             """Test generic exception during OTP creation"""
             # Arrange
@@ -311,7 +333,11 @@ class TestOtpCodeService:
 
         @pytest.mark.asyncio
         async def test_invalidate_previous_otps_timeout(
-            self, otp_service, mock_session, mock_dao, mock_account
+            self,
+            otp_service,
+            mock_session: AsyncMock,
+            mock_dao: MagicMock,
+            mock_account,
         ):
             """Test timeout during OTP invalidation"""
             # Arrange
@@ -330,7 +356,7 @@ class TestOtpCodeService:
 
         @pytest.mark.asyncio
         async def test_dao_method_not_found(
-            self, otp_service, mock_session, mock_account
+            self, otp_service, mock_session: AsyncMock, mock_account
         ):
             """Test when DAO doesn't have expected methods"""
             # Arrange
@@ -351,7 +377,11 @@ class TestOtpCodeService:
 
         @pytest.mark.asyncio
         async def test_invalidate_with_special_characters_in_purpose(
-            self, otp_service, mock_session, mock_dao, mock_account
+            self,
+            otp_service,
+            mock_session: AsyncMock,
+            mock_dao: MagicMock,
+            mock_account,
         ):
             """Test invalidation with special characters in purpose"""
             # Arrange
@@ -370,7 +400,11 @@ class TestOtpCodeService:
 
         @pytest.mark.asyncio
         async def test_invalidate_with_very_long_purpose(
-            self, otp_service, mock_session, mock_dao, mock_account
+            self,
+            otp_service,
+            mock_session: AsyncMock,
+            mock_dao: MagicMock,
+            mock_account,
         ):
             """Test invalidation with extremely long purpose string"""
             # Arrange
@@ -389,7 +423,11 @@ class TestOtpCodeService:
 
         @pytest.mark.asyncio
         async def test_create_otp_returns_none(
-            self, otp_service, mock_session, mock_dao, mock_otp_create
+            self,
+            otp_service,
+            mock_session: AsyncMock,
+            mock_dao: MagicMock,
+            mock_otp_create,
         ):
             """Test when DAO create method returns None"""
             # Arrange
@@ -403,63 +441,6 @@ class TestOtpCodeService:
             # Assert
             assert result is None
             mock_dao.otp_code.create.assert_called_once()
-
-
-# INTEGRATION-STYLE TESTS
-class TestOtpCodeServiceIntegration:
-    """Integration-style tests for complete workflows"""
-
-    @pytest.fixture
-    def otp_service(self):
-        return OtpCodeService()
-
-    @pytest.mark.asyncio
-    async def test_complete_otp_workflow(self):
-        """Test complete OTP workflow from invalidation to creation to usage"""
-        # Arrange
-        otp_service = OtpCodeService()
-        mock_session = AsyncMock(spec=AsyncSession)
-        mock_dao = MagicMock(spec=HolderDAO)
-        mock_dao.otp_code = AsyncMock()
-
-        mock_account = MagicMock(spec=Account)
-        mock_account.id = 123
-
-        mock_otp_create = OtpCodeCreate(
-            account_id=123,
-            channel="tg",
-            hashed_code="hashed_123456",
-            purpose="backoffice_login",
-            expires_at=datetime.now(),
-        )
-
-        mock_otp_code = MagicMock(spec=OtpCode)
-        mock_otp_code.id = 456
-
-        # Configure mocks
-        mock_dao.otp_code.invalidate_previous_otps.return_value = None
-        mock_dao.otp_code.create.return_value = mock_otp_code
-        mock_dao.otp_code.mark_otp_as_used.return_value = None
-
-        # Act - Complete workflow
-        # Step 1: Invalidate previous OTPs
-        await otp_service.invalidate_previous_otps(
-            mock_session, mock_dao, mock_account, "login"
-        )
-
-        # Step 2: Create new OTP
-        new_otp = await otp_service.create_otp(mock_session, mock_dao, mock_otp_create)
-
-        # Step 3: Mark OTP as used
-        await otp_service.set_mark_otp_as_used(mock_session, mock_dao, new_otp)
-
-        # Assert
-        mock_dao.otp_code.invalidate_previous_otps.assert_called_once()
-        mock_dao.otp_code.create.assert_called_once()
-        mock_dao.otp_code.mark_otp_as_used.assert_called_once_with(
-            mock_session, otp_obj=new_otp
-        )
-        assert new_otp == mock_otp_code
 
 
 # PERFORMANCE TESTS

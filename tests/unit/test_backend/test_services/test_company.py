@@ -113,13 +113,14 @@ class TestCompanyService:
         # Arrange
         account_id = 1
         mock_account.user_profile = mock_user_role
-
-        mock_dao.account.get_by_id_with_profiles.return_value = mock_account
-        mock_dao.company.create_company_with_owner.return_value = mock_company
-        mock_dao.cashback_config.create.return_value = AsyncMock()
-        mock_dao.tariff_plan.get_trial_plan.return_value = mock_tariff_plan
-        mock_dao.subscription.create.return_value = AsyncMock()
-        mock_dao.company.get_by_id_with_relations.return_value = mock_company
+        mock_dao.account.get_by_id_with_profiles = AsyncMock(return_value=mock_account)
+        mock_dao.company.create_company_with_owner = AsyncMock(
+            return_value=mock_company
+        )
+        mock_dao.cashback_config.create = AsyncMock()
+        mock_dao.tariff_plan.get_trial_plan = AsyncMock(return_value=mock_tariff_plan)
+        mock_dao.subscription.create = AsyncMock()
+        mock_dao.company.get_by_id_with_relations = AsyncMock(return_value=mock_company)
 
         # Act
         result = await company_service.create_company_flow(
