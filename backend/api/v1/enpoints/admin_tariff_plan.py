@@ -11,7 +11,6 @@ from backend.schemas.tariff_plan import (
     TariffPlanResponse,
     TariffPlanUpdate,
 )
-from backend.services import admin_tariff_plan
 from backend.services.admin_tariff_plan import AdminTariffPlanService
 
 # from backend.models.admin_profile import AdminProfile as AdminProfileModel # Не нужен здесь, если get_current_full_system_admin возвращает AdminProfile

@@ -1,29 +1,26 @@
 import datetime
-import logging
-from typing import Optional
+from typing import List, Optional
 
 from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException, status
+from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.core.logger import get_logger
 from backend.dao.holder import HolderDAO
 from backend.enums.back_office import (
     CompanyStatusEnum,
     SubscriptionStatusEnum,
     UserAccessLevelEnum,
 )
-from backend.models.account import Account as AccountModel
-from backend.models.cashback import Cashback as CashbackConfigModel
 from backend.models.company import Company as CompanyModel
-from backend.models.subscription import Subscription as SubscriptionModel
-from backend.models.tariff_plan import TariffPlan as TariffPlanModel
 from backend.models.user_role import UserRole as UserRoleModel
 from backend.schemas.cashback import CashbackConfigCreate
-from backend.schemas.company import CompanyCreateRequest
+from backend.schemas.company import CompanyCreateRequest, CompanyResponse
 from backend.schemas.subscription import SubscriptionCreate
 from backend.schemas.user_role import UserRoleCreate
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class CompanyService:
@@ -34,12 +31,9 @@ class CompanyService:
         dao: HolderDAO,
         company_data: CompanyCreateRequest,
         account_id: int,
-    ) -> CompanyModel:  # Возвращаем SQLAlchemy модель, эндпоинт преобразует в Pydantic
-
-        # Объекты, которые мы создадим и должны будем добавить в сессию
-        new_user_role_obj: Optional[UserRoleModel] = None
-        new_company_obj: Optional[CompanyModel] = None
+    ) -> CompanyResponse:
         async with session.begin():
+
             # 1. Получение или создание UserRole
             current_account = await dao.account.get_by_id_with_profiles(
                 session, id_=account_id
@@ -103,20 +97,33 @@ class CompanyService:
                 next_billing_date=trial_end,
                 auto_renew=False,
             )
-            new_subscription_obj = await dao.subscription.create(
-                session, obj_in=subscription_schema
-            )
+            await dao.subscription.create(session, obj_in=subscription_schema)
 
-        # Загружаем компанию со всеми нужными связями для ответа API
-        # Это гарантирует, что Pydantic схема CompanyResponse получит все данные
+        # 7. Загружаем компанию со всеми нужными связями для ответа API
         company_for_response = await dao.company.get_by_id_with_relations(
             session, company_id=new_company_obj.id
         )
-
         if not company_for_response:
             raise HTTPException(
                 status_code=500,
                 detail="Failed to retrieve newly created company details for response.",
             )
 
-        return company_for_response
+        return CompanyResponse.model_validate(company_for_response)
+
+    async def get_owned_companies(self, user_role: UserRoleModel) -> List[CompanyModel]:
+        return [
+            CompanyResponse.model_validate(company)
+            for company in user_role.companies
+            if not company.is_deleted
+        ]
+
+    async def get_owned_company(self, company: CompanyModel):
+        try:
+            return CompanyResponse.model_validate(company)
+        except ValidationError as e:
+            logger.error(f"Failed to validate company {company.id}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            )

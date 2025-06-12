@@ -1,11 +1,11 @@
 import asyncio
-import logging
 from typing import Optional, Tuple
 
 import typer
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.core.logger import get_logger
 from backend.core.security import get_password_hash
 from backend.core.settings import settings
 from backend.dao.account import AccountDAO  # Используем экземпляры DAO
@@ -13,15 +13,15 @@ from backend.dao.user_role import UserRoleDAO  # Используем экзем
 
 # Импорты из вашего проекта
 from backend.db.session import create_pool
-from backend.enums.back_office import (
+from backend.enums.back_office import (  # Прямой импорт или из backend.enums
     UserAccessLevelEnum,
-)  # Прямой импорт или из backend.enums
+)
 from backend.models.user_role import UserRole  # Используем AdminProfile
 from backend.schemas.account import AccountCreateInternal, AccountUpdate
 from backend.schemas.user_role import UserRoleCreate
 
 cli_app = typer.Typer()
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 async def _create_superuser_logic(
@@ -205,10 +205,14 @@ def create_superuser(
     asyncio.run(_runner())
 
 
+# Проблем с Got unexpected extra argument (create_superuser) решилась, когда добавил в скрипт дополнительную функцию
 @cli_app.command("test_command")
 def test_command(name: str = "World"):
     pass
 
 
 if __name__ == "__main__":
+    """
+    Запуск скрипта командной строки: docker compose exec web python3 -m backend.scripts.cli create_superuser --phone-number "+79991234567" --email "superuser@example.com" --full-name "LeshaKai"
+    """
     cli_app()

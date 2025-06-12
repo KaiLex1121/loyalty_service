@@ -12,10 +12,6 @@ from backend.services.auth import AuthService
 class TestAuthService:
 
     @pytest.fixture
-    def mock_dao() -> MagicMock:
-        return MagicMock()
-
-    @pytest.fixture
     def mock_account():
         return MagicMock(id=1, phone_number="+79999999999", is_active=False)
 

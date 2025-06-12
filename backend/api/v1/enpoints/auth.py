@@ -1,10 +1,9 @@
-import logging
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.dependencies import get_auth_service, get_dao, get_session
+from backend.core.logger import get_logger
 from backend.dao.holder import HolderDAO
 from backend.enums.back_office import OtpPurposeEnum
 from backend.schemas.account import AccountInDBBase
@@ -13,7 +12,7 @@ from backend.schemas.token import Token
 from backend.services.auth import AuthService
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @router.post("/token-for-swagger", response_model=Token)

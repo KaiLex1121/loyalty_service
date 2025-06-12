@@ -1,10 +1,7 @@
-import logging
 from typing import Optional
 
 from aiogram import Bot
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
-logger = logging.getLogger(__name__)
 
 
 class AppContext:

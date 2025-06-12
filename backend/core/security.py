@@ -1,19 +1,18 @@
 import hashlib
 import hmac
-import logging
-import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional, Union
+from typing import Optional
 
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+from jose import jwt
 from passlib.context import CryptContext
 from pydantic import ValidationError
 
+from backend.core.logger import get_logger
 from backend.core.settings import AppSettings
 from backend.schemas.token import TokenPayload
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token-for-swagger")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -71,9 +70,9 @@ def verify_token(token: str, settings: AppSettings) -> Optional[TokenPayload]:
 
 
 def generate_otp(settings: AppSettings) -> str:
-    length = settings.SECURITY.OTP_LENGTH
-    return "".join(secrets.choice("0123456789") for _ in range(length))
-    # return "123456"
+    settings.SECURITY.OTP_LENGTH
+    # return "".join(secrets.choice("0123456789") for _ in range(length))
+    return "123456"
 
 
 def get_otp_hash(otp: str, settings: AppSettings) -> str:

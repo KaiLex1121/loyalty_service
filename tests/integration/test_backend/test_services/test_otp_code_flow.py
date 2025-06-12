@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.dao.holder import HolderDAO
 from backend.models.account import Account
 from backend.models.otp_code import OtpCode
 from backend.schemas.otp_code import OtpCodeCreate

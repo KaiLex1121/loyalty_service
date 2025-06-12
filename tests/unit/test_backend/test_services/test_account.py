@@ -1,5 +1,5 @@
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import HTTPException, status
@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.dao.holder import HolderDAO
 from backend.models.account import Account
-from backend.schemas.account import AccountCreate, AccountUpdate
+from backend.schemas.account import AccountUpdate
 from backend.services.account import AccountService
 
 

@@ -1,11 +1,9 @@
-from typing import List
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 import pytest
 
 from backend.models.account import Account as AccountModel
 from backend.models.company import Company
-from backend.schemas.account import AccountResponse as DashboardAccountInfoResponse
 from backend.schemas.dashboard import DashboardResponse
 from backend.services.dashboard import DashboardService
 

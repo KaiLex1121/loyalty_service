@@ -131,14 +131,9 @@ class CompanyResponse(CompanyBase):
 
     created_at: datetime.datetime
     updated_at: datetime.datetime
-    deleted_at: Optional[datetime.datetime] = (
-        None  # Показываем, если нужно знать о мягком удалении
-    )
-
     # Опционально: можно добавить информацию о текущем тарифе или кэшбэке, если это часто нужно
     # current_tariff_name: Optional[str] = None
     # current_cashback_percentage: Optional[decimal.Decimal] = None
 
     class Config:
-        from_attributes = True  # Для SQLAlchemy > Pydantic преобразования (Pydantic V2)
-        # orm_mode = True # Для Pydantic V1
+        from_attributes = True

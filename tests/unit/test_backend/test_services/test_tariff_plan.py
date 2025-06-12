@@ -6,7 +6,6 @@ from fastapi import HTTPException, status
 from pydantic import ValidationError
 
 from backend.dao.admin_tarrif_plan import TariffPlanDAO
-from backend.dao.holder import HolderDAO
 from backend.enums.back_office import CurrencyEnum, PaymentCycleEnum, TariffStatusEnum
 from backend.models.tariff_plan import TariffPlan as TariffPlanModel
 from backend.schemas.tariff_plan import TariffPlanCreate

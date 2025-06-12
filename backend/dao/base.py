@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from pydantic import BaseModel
-from sqlalchemy import delete, func
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -38,7 +38,7 @@ class BaseDAO(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db_obj: ModelType,  # Существующий объект SQLAlchemy из БД
         obj_in: Union[
             UpdateSchemaType, Dict[str, Any]
-        ]  # Схема Pydantic с обновлениями или словарь
+        ],  # Схема Pydantic с обновлениями или словарь
     ) -> ModelType:
         if hasattr(db_obj, "is_deleted") and db_obj.is_deleted:
             pass

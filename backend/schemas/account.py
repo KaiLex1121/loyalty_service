@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr
 
 
 class AccountBase(BaseModel):
@@ -48,5 +48,3 @@ class AccountResponse(AccountInDBBase):
     """
     Схема Account для ответа API. Ha данный момент совпадает c AccountInDBBase, но можно расширить
     """
-
-    pass

@@ -1,4 +1,4 @@
-from aiogram.filters.state import State, StatesGroup
+from aiogram.filters.state import StatesGroup
 
 
 class MakeBroadcastState(StatesGroup): ...

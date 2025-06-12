@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 
-from backend.enums.back_office import (
+from backend.enums.back_office import (  # Убедитесь, что путь правильный
     UserAccessLevelEnum,
-)  # Убедитесь, что путь правильный
+)
 
 
 class UserRoleBase(BaseModel):
@@ -11,7 +11,6 @@ class UserRoleBase(BaseModel):
 
 class UserRoleCreate(UserRoleBase):
     account_id: int
-    pass
 
 
 class UserRoleUpdate(UserRoleBase):

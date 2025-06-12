@@ -1,7 +1,6 @@
 import os
 from functools import lru_cache  # Для кэширования экземпляра настроек
 from pathlib import Path
-from typing import List, Optional
 
 from pydantic import AnyHttpUrl, PostgresDsn, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict

@@ -1,20 +1,15 @@
-import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.templating import Jinja2Templates
 
 from backend.api.v1.api import api_router_v1
+from backend.core.logger import get_logger
 from backend.core.settings import settings
 from backend.dao.holder import HolderDAO
 from backend.db.session import create_pool
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(filename)s:%(lineno)d #%(levelname)-8s [%(asctime)s] - %(name)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
-logger.level = logging.INFO
+logger = get_logger(__name__)
 
 
 @asynccontextmanager

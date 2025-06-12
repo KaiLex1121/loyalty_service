@@ -1,9 +1,7 @@
-import logging
-from datetime import datetime, timezone
-
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.core.logger import get_logger
 from backend.core.security import (
     create_access_token,
     generate_otp,
@@ -20,7 +18,7 @@ from backend.services.account import AccountService
 from backend.services.otp_code import OtpCodeService
 from backend.services.otp_sending import MockOTPSendingService
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class AuthService:
@@ -120,6 +118,6 @@ class AuthService:
             )
             await self.account_service.set_account_as_active(account=account)
             access_token = create_access_token(
-                data={"sub": account.id}, settings=self.settings
+                data={"sub": str(account.id)}, settings=self.settings
             )
             return access_token

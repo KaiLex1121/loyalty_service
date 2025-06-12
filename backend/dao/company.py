@@ -47,7 +47,7 @@ class CompanyDAO(BaseDAO[Company, CompanyCreateRequest, CompanyUpdateRequest]):
         *,
         obj_in: CompanyCreateRequest,
         owner_user_role_id: int,
-        initial_status: CompanyStatusEnum
+        initial_status: CompanyStatusEnum,
     ) -> Company:
         company_obj = self.model(
             **obj_in.model_dump(exclude={"initial_cashback_percentage"}),

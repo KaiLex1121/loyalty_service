@@ -1,16 +1,29 @@
 import asyncio
-import os
 from logging.config import fileConfig
+from turtle import back
 
-import dotenv
 from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from backend import models
 from backend.core.settings import settings
 from backend.db.base import Base
+from backend.models import (
+    Account,
+    Cashback,
+    Company,
+    CustomerRole,
+    EmployeeRole,
+    NotificationMessage,
+    OtpCode,
+    Outlet,
+    Promotion,
+    Subscription,
+    TariffPlan,
+    Transaction,
+    UserRole,
+)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

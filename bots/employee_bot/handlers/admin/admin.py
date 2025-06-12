@@ -1,13 +1,7 @@
-from aiogram import Bot, F, Router
-from aiogram.filters import StateFilter
+from aiogram import Router
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import default_state
-from aiogram.fsm.storage.redis import Redis
-from aiogram.types import CallbackQuery, ContentType, Message
-from src.database.dao.holder import HolderDAO
+from aiogram.types import CallbackQuery, Message
 from src.filters import admin
-from src.services.broadcaster import broadcast
-from src.states.admin import MakeBroadcastState
 
 router: Router = Router()
 router.message.filter(admin.AdminFilter())

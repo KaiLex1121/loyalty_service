@@ -4,9 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from backend.dao.base import BaseDAO
-from backend.enums.back_office import (
+from backend.enums.back_office import (  # Прямой импорт, если не через __init__
     TariffStatusEnum,
-)  # Прямой импорт, если не через __init__
+)
 from backend.models.tariff_plan import TariffPlan
 from backend.schemas.tariff_plan import (  # Используем наши схемы
     TariffPlanCreate,

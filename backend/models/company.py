@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 
 class Company(Base):
     __tablename__ = "companies"
-
     name: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
     owner_user_role_id: Mapped[int] = mapped_column(
         ForeignKey("user_roles.id", ondelete="CASCADE"), nullable=False

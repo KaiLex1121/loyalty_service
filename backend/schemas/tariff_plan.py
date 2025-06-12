@@ -2,7 +2,7 @@ import datetime
 import decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 from backend.enums.back_office import CurrencyEnum, PaymentCycleEnum, TariffStatusEnum
 
