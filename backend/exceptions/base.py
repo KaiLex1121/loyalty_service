@@ -1,18 +1,18 @@
-class ServiceError(Exception):
-    """Базовое исключение для всех сервисов"""
+from typing import Any, Dict, Optional
 
 
-class ValidationError(ServiceError):
-    """Ошибки валидации данных"""
+class BaseCustomException(Exception):
+    """Базовое исключение для всех кастомных исключений приложения"""
 
-
-class NotFoundError(ServiceError):
-    """Ресурс не найден"""
-
-
-class PermissionDeniedError(ServiceError):
-    """Недостаточно прав"""
-
-
-class AccountNotFoundError(ServiceError):
-    """Аккаунт не найден"""
+    def __init__(
+        self,
+        message: str,
+        status_code: int = 500,
+        detail: Optional[str] = None,
+        headers: Optional[Dict[str, Any]] = None,
+    ):
+        self.message = message
+        self.status_code = status_code
+        self.detail = detail or message
+        self.headers = headers
+        super().__init__(self.message)

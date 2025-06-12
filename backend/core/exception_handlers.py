@@ -3,46 +3,33 @@ from fastapi.responses import JSONResponse
 
 from backend.core.logger import get_logger
 from backend.exceptions.base import (
-    AccountNotFoundError,
-    NotFoundError,
-    PermissionDeniedError,
-    ValidationError,
+    BaseCustomException,
 )
 
 logger = get_logger(__name__)
 
 
+async def custom_exception_handler(
+    request: Request, exc: BaseCustomException
+) -> JSONResponse:
+    """
+    Обработчик кастомных исключений для FastAPI
+    """
+    logger.error(
+        f"Custom exception occurred: {exc.__class__.__name__} - {exc.message}",
+        extra={
+            "exception_type": exc.__class__.__name__,
+            "status_code": exc.status_code,
+            "detail": exc.detail,
+            "path": request.url.path,
+            "method": request.method,
+        },
+    )
+
+    return JSONResponse(
+        status_code=exc.status_code, content={"detail": exc.detail}, headers=exc.headers
+    )
+
+
 def setup_exception_handlers(app: FastAPI):
-
-    @app.exception_handler(NotFoundError)
-    async def not_found_handler(request: Request, exc: NotFoundError):
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND, content={"detail": str(exc)}
-        )
-
-    @app.exception_handler(ValidationError)
-    async def validation_error_handler(request: Request, exc: ValidationError):
-        return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            content={"detail": str(exc)},
-        )
-
-    @app.exception_handler(PermissionDeniedError)
-    async def permission_denied_handler(request: Request, exc: PermissionDeniedError):
-        return JSONResponse(
-            status_code=status.HTTP_403_FORBIDDEN, content={"detail": str(exc)}
-        )
-
-    @app.exception_handler(AccountNotFoundError)
-    async def account_not_found_handler(request: Request, exc: AccountNotFoundError):
-        return JSONResponse(
-            status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": str(exc)}
-        )
-
-    @app.exception_handler(Exception)
-    async def general_exception_handler(request, exc):
-        """Обработчик для всех остальных (системных) исключений"""
-        logger.error(f"Unexpected error: {exc}", exc_info=True)
-        return JSONResponse(
-            status_code=500, content={"detail": "Internal server error"}
-        )
+    app.add_exception_handler(BaseCustomException, custom_exception_handler)

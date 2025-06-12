@@ -66,7 +66,7 @@ class BaseDAO(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def get_active(self, db: AsyncSession, id_: Any) -> Optional[ModelType]:
         result = await db.execute(
             select(self.model).filter(
-                self.model.id_ == id_, self.model.deleted_at.is_(None)
+                self.model.id == id_, self.model.deleted_at.is_(None)
             )
         )
         return result.scalars().first()
@@ -77,13 +77,13 @@ class BaseDAO(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         stmt = select(self.model)
         stmt = stmt.offset(skip).limit(limit)
         result = await db.execute(stmt)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_multi_active(
         self, db: AsyncSession, *, skip: int = 0, limit: int = 100
     ) -> List[ModelType]:
         """Получает список активных (не мягко удаленных) записей."""
-        return await self.get_multi(db, skip=skip, limit=limit, include_deleted=False)
+        return await self.get_multi(db, skip=skip, limit=limit)
 
     async def soft_delete(self, db: AsyncSession, *, id_: Any) -> Optional[ModelType]:
         db_obj = await self.get_active(
@@ -124,18 +124,18 @@ class BaseDAO(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             await db.delete(db_obj)
         return db_obj
 
-    async def count(self) -> int:
-        result = await self.session.execute(select(func.count(self.model.id_)))
+    async def count(self, session: AsyncSession) -> int:
+        result = await session.execute(select(func.count(self.model.id)))
         return result.scalar_one()
 
-    def add(self, obj: ModelType) -> None:
-        self.session.add(obj)
+    def add(self, obj: ModelType, session: AsyncSession) -> None:
+        session.add(obj)
 
-    async def commit(self) -> None:
-        await self.session.commit()
+    async def commit(self, session: AsyncSession) -> None:
+        await session.commit()
 
-    async def flush(self, *objects) -> None:
-        await self.session.flush(objects)
+    async def flush(self, *objects, session: AsyncSession) -> None:
+        await session.flush(objects)
 
-    async def refresh(self, obj: ModelType) -> None:
-        await self.session.refresh(obj)
+    async def refresh(self, obj: ModelType, session: AsyncSession) -> None:
+        await session.refresh(obj)

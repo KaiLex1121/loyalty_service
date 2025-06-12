@@ -8,7 +8,7 @@ from backend.dao.base import BaseDAO
 from backend.models.account import Account
 from backend.models.employee_role import EmployeeRole
 from backend.models.user_role import UserRole
-from backend.schemas.account import AccountCreate, AccountUpdate
+from backend.schemas.account import AccountCreate, AccountCreateInternal, AccountUpdate
 
 
 class AccountDAO(BaseDAO[Account, AccountCreate, AccountUpdate]):
@@ -69,12 +69,16 @@ class AccountDAO(BaseDAO[Account, AccountCreate, AccountUpdate]):
         result = await session.execute(stmt)
         return result.scalars().first()
 
-    async def mark_as_active(self, session: AsyncSession, *, account: Account) -> None:
+    async def mark_as_active(
+        self, session: AsyncSession, *, account: Account
+    ) -> Account:
         account.is_active = True
         session.add(account)
         return account
 
-    async def create(self, session: AsyncSession, *, obj_in: AccountCreate) -> Account:
+    async def create(
+        self, session: AsyncSession, *, obj_in: AccountCreate | AccountCreateInternal
+    ) -> Account:
         obj_in_data = obj_in.model_dump()
         db_obj = self.model(**obj_in_data)
         session.add(db_obj)
@@ -83,7 +87,7 @@ class AccountDAO(BaseDAO[Account, AccountCreate, AccountUpdate]):
         return db_obj
 
     async def update(
-        self, session: AsyncSession, *, db_ojb: Account, obj_in: AccountUpdate | dict
+        self, session: AsyncSession, *, db_obj: Account, obj_in: AccountUpdate | dict
     ) -> Account:
         if isinstance(obj_in, dict):
             update_data = obj_in
@@ -91,6 +95,6 @@ class AccountDAO(BaseDAO[Account, AccountCreate, AccountUpdate]):
             update_data = obj_in.model_dump(exclude_unset=True)
 
         for field, value in update_data.items():
-            setattr(db_ojb, field, value)
-        session.add(db_ojb)
-        return db_ojb
+            setattr(db_obj, field, value)
+        session.add(db_obj)
+        return db_obj

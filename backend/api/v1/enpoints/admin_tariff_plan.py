@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.dependencies import get_session  # Ваша зависимость для сессии
@@ -12,8 +12,6 @@ from backend.schemas.tariff_plan import (
     TariffPlanUpdate,
 )
 from backend.services.admin_tariff_plan import AdminTariffPlanService
-
-# from backend.models.admin_profile import AdminProfile as AdminProfileModel # Не нужен здесь, если get_current_full_system_admin возвращает AdminProfile
 
 router = APIRouter()
 
@@ -30,17 +28,10 @@ async def create_new_tariff_plan_endpoint(
     dao: HolderDAO = Depends(get_dao),
     admin_tariff_plan_service: AdminTariffPlanService = Depends(),
 ):
-    try:
-        new_plan = await admin_tariff_plan_service.create_tariff_plan(
-            session, dao, plan_data
-        )
-        return TariffPlanResponse.model_validate(new_plan)
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+    new_plan = await admin_tariff_plan_service.create_tariff_plan(
+        session, dao, plan_data
+    )
+    return new_plan
 
 
 @router.get(
@@ -48,18 +39,14 @@ async def create_new_tariff_plan_endpoint(
     response_model=TariffPlanResponse,
     dependencies=[Depends(get_current_full_system_admin)],
 )
-async def read_tariff_plan_endpoint(  # Переименовал
+async def read_tariff_plan_endpoint(
     plan_id: int,
     session: AsyncSession = Depends(get_session),
     dao: HolderDAO = Depends(get_dao),
     admin_tariff_plan_service: AdminTariffPlanService = Depends(),
 ):
     plan = await admin_tariff_plan_service.get_tariff_plan(session, dao, plan_id)
-    if not plan:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Tariff plan not found"
-        )
-    return TariffPlanResponse.model_validate(plan)
+    return plan
 
 
 @router.get(
@@ -67,7 +54,7 @@ async def read_tariff_plan_endpoint(  # Переименовал
     response_model=List[TariffPlanResponse],
     dependencies=[Depends(get_current_full_system_admin)],
 )
-async def read_all_tariff_plans_endpoint(  # Переименовал
+async def read_all_tariff_plans_endpoint(
     skip: int = 0,
     limit: int = 100,
     session: AsyncSession = Depends(get_session),
@@ -77,7 +64,7 @@ async def read_all_tariff_plans_endpoint(  # Переименовал
     plans = await admin_tariff_plan_service.get_all_tariff_plans(
         session, dao, skip=skip, limit=limit
     )
-    return [TariffPlanResponse.model_validate(plan) for plan in plans]
+    return [plan for plan in plans]
 
 
 @router.put(
@@ -85,29 +72,18 @@ async def read_all_tariff_plans_endpoint(  # Переименовал
     response_model=TariffPlanResponse,
     dependencies=[Depends(get_current_full_system_admin)],
 )
-async def update_existing_tariff_plan_endpoint(  # Переименовал
+async def update_existing_tariff_plan_endpoint(
     plan_id: int,
     plan_update_data: TariffPlanUpdate,
     session: AsyncSession = Depends(get_session),
     dao: HolderDAO = Depends(get_dao),
     admin_tariff_plan_service: AdminTariffPlanService = Depends(),
 ):
-    try:
-        updated_plan = await admin_tariff_plan_service.update_tariff_plan(
-            session, dao, plan_id, plan_update_data
-        )
-        if not updated_plan:  # Сервис может вернуть None, если план не найден
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Tariff plan not found to update",
-            )
-        return TariffPlanResponse.model_validate(updated_plan)
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+
+    updated_plan = await admin_tariff_plan_service.update_tariff_plan(
+        session, dao, plan_id, plan_update_data
+    )
+    return updated_plan
 
 
 @router.delete(
@@ -116,25 +92,14 @@ async def update_existing_tariff_plan_endpoint(  # Переименовал
     summary="Archive a tariff plan",
     dependencies=[Depends(get_current_full_system_admin)],
 )
-async def archive_tariff_plan_endpoint(  # Переименовал
+async def archive_tariff_plan_endpoint(
     plan_id: int,
     session: AsyncSession = Depends(get_session),
     dao: HolderDAO = Depends(get_dao),
     admin_tariff_plan_service: AdminTariffPlanService = Depends(),
 ):
-    try:
-        archived_plan = await admin_tariff_plan_service.archive_tariff_plan(
-            session, dao, plan_id
-        )
-        if not archived_plan:  # Сервис может вернуть None
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Tariff plan not found to archive",
-            )
-        return TariffPlanResponse.model_validate(archived_plan)
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+
+    archived_plan = await admin_tariff_plan_service.archive_tariff_plan(
+        session, dao, plan_id
+    )
+    return archived_plan

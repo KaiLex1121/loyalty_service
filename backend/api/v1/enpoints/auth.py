@@ -58,7 +58,7 @@ async def request_otp_endpoint(
         account = await auth_service.request_otp_for_login(
             session, dao, phone_number=phone_data.phone_number
         )
-        return AccountInDBBase.model_validate(account)
+        return account
     except HTTPException as e:
         raise e
     except Exception as e:

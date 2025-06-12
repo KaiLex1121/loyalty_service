@@ -6,11 +6,10 @@ from sqlalchemy.future import select
 from backend.dao.base import BaseDAO
 from backend.enums.back_office import TariffStatusEnum
 from backend.models.tariff_plan import TariffPlan
+from backend.schemas.tariff_plan import TariffPlanCreate, TariffPlanUpdate
 
-# Схемы для TariffPlan (Create, Update) могут понадобиться для админки тарифов
 
-
-class TariffPlanDAO(BaseDAO[TariffPlan, TariffPlan, TariffPlan]):
+class TariffPlanDAO(BaseDAO[TariffPlan, TariffPlanCreate, TariffPlanUpdate]):
     def __init__(self):
         super().__init__(TariffPlan)
 

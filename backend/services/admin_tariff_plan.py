@@ -4,14 +4,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.dao.holder import HolderDAO
 from backend.enums.back_office import TariffStatusEnum
 from backend.models.tariff_plan import TariffPlan as TariffPlanModel
-from backend.schemas.tariff_plan import TariffPlanCreate
+from backend.schemas.tariff_plan import TariffPlanCreate, TariffPlanResponse
 
 
 class AdminTariffPlanService:
 
     async def create_tariff_plan(
         self, session: AsyncSession, dao: HolderDAO, plan_data: TariffPlanCreate
-    ) -> TariffPlanModel:
+    ) -> TariffPlanResponse:
         async with session.begin():
             existing_plan = await dao.tariff_plan.get_by_name(
                 session, name=plan_data.name
@@ -29,4 +29,4 @@ class AdminTariffPlanService:
                         detail=f"An active trial plan ('{active_trial_plan.name}') already exists.",
                     )
             new_plan = await dao.tariff_plan.create(session, obj_in=plan_data)
-            return new_plan
+            return TariffPlanResponse.model_validate(new_plan)

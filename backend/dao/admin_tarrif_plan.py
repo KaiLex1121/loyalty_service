@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -59,7 +59,7 @@ class TariffPlanDAO(BaseDAO[TariffPlan, TariffPlanCreate, TariffPlanUpdate]):
             .limit(limit)
         )
         result = await db.execute(stmt)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
 
 tariff_plan_dao = TariffPlanDAO(TariffPlan)

@@ -18,10 +18,10 @@ class OtpCodeCreate(OtpCodeBase):
 
 
 class OtpCodeUpdate(OtpCodeBase):
-    hashed_code: str = None
-    expires_at: datetime = None
-    purpose: OtpPurposeEnum = None
-    account_id: int = None
+    hashed_code: str | None = None
+    expires_at: datetime | None = None
+    purpose: OtpPurposeEnum | None = None
+    account_id: int | None = None
 
 
 class OtpCodeInDBBase(OtpCodeBase):  # Схема для чтения из БД

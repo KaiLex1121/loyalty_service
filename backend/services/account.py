@@ -20,14 +20,14 @@ class AccountService:
     async def get_account_by_id(
         self, db: AsyncSession, dao: HolderDAO, account_id: int
     ) -> Optional[Account]:
-        account = await dao.account.get(db, account_id=account_id)
+        account = await dao.account.get(db, id_=account_id)
         if not account:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="account not found"
             )
         return account
 
-    async def create_account(
+    async def create_account_by_phone(
         self,
         db: AsyncSession,
         dao: HolderDAO,
@@ -40,12 +40,10 @@ class AccountService:
         account = await dao.account.create(db, obj_in=account_in_create)
         return account
 
-    async def get_or_create_account(
+    async def get_account(
         self, db: AsyncSession, dao: HolderDAO, phone_number: str
-    ) -> Account:
+    ) -> Account | None:
         account = await self.get_account_by_phone(db, dao, phone_number=phone_number)
-        if not account:
-            account = await self.create_account(db, dao, phone_number=phone_number)
         return account
 
     async def set_account_as_active(self, account: Account) -> Account:
@@ -60,7 +58,7 @@ class AccountService:
         account_in: AccountUpdate,
     ) -> Account:
         updated_account = await dao.account.update(
-            db, db_obj=account, obj_in=account_in
+            session=db, db_obj=account, obj_in=account_in
         )
         await db.flush()
         await db.refresh(updated_account)

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt
+from jose import ExpiredSignatureError, JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import ValidationError
 
@@ -58,10 +58,10 @@ def verify_token(token: str, settings: AppSettings) -> Optional[TokenPayload]:
         token_data = TokenPayload(**payload_dict)
         return token_data
 
-    except jwt.ExpiredSignatureError:
+    except ExpiredSignatureError:
         logger.info("Token has expired.")
         return None
-    except jwt.JWTError as e:
+    except JWTError as e:
         logger.error(f"JWT decoding error: {e}")
         return None
     except ValidationError as e:
