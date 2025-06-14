@@ -25,15 +25,7 @@ async def get_backoffice_dashboard(
     Возвращает информацию о текущем пользователе, его компаниях (владелец/сотрудник)
     и возможности создания новой компании.
     """
-    try:
-        dashboard_data = await dashboard_service.get_dashboard_data(
-            current_account=current_account
-        )
-        return dashboard_data
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        logger.error(f"Error in get_backoffice_dashboard: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail="An error occurred while fetching dashboard data."
-        )
+    dashboard_data = await dashboard_service.get_dashboard_data(
+        current_account=current_account
+    )
+    return dashboard_data

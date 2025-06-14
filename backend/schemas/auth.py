@@ -49,4 +49,4 @@ class OTPVerifyRequest(PhoneNumber):
     purpose: OtpPurposeEnum = Field(
         default=OtpPurposeEnum.BACKOFFICE_LOGIN,
         examples=[OtpPurposeEnum.BACKOFFICE_LOGIN],
-    )  # Или OtpPurposeEnum.BACKOFFICE_LOGIN
+    )

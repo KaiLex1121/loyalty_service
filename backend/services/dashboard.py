@@ -13,27 +13,31 @@ class DashboardService:
     async def get_dashboard_data(
         self, current_account: AccountModel
     ) -> DashboardResponse:
+
         account_info = DashboardAccountInfoResponse.model_validate(
             current_account
         )  # Создаем объект DashboardAccountInfoResponse из данных current_account, проверяя их на соответствие схеме.
         owned_companies_response: List[DashboardCompanyAdminResponse] = []
+
         if (
             current_account.user_profile
             and current_account.user_profile.companies_owned
         ):
             for company in current_account.user_profile.companies_owned:
+
                 if not company.is_deleted:
                     owned_companies_response.append(
                         DashboardCompanyAdminResponse.model_validate(company)
                     )
-
         employee_in_companies_response: List[DashboardCompanyEmployeeResponse] = []
+
         if (
             current_account.employee_profile
             and current_account.employee_profile.company
         ):
             employee_role = current_account.employee_profile
             company_as_employee = employee_role.company
+
             if not company_as_employee.is_deleted:
                 employee_in_companies_response.append(
                     DashboardCompanyEmployeeResponse(

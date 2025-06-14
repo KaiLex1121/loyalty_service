@@ -25,24 +25,15 @@ async def login_for_swagger_ui(
     phone_number: str = form_data.username
     otp_code: str = form_data.password
 
-    try:
-        otp_request = OTPVerifyRequest(
-            otp_code=otp_code,
-            purpose=OtpPurposeEnum.BACKOFFICE_LOGIN,
-            phone_number=phone_number,
-        )
-        access_token = await auth_service.verify_otp_and_login(
-            session, dao, otp_data=otp_request
-        )
-        return Token(access_token=access_token, token_type="bearer")
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        logger.error(f"Error in verify_otp_endpoint: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred.",
-        )
+    otp_request = OTPVerifyRequest(
+        otp_code=otp_code,
+        purpose=OtpPurposeEnum.BACKOFFICE_LOGIN,
+        phone_number=phone_number,
+    )
+    access_token = await auth_service.verify_otp_and_login(
+        session, dao, otp_data=otp_request
+    )
+    return Token(access_token=access_token, token_type="bearer")
 
 
 @router.post(
@@ -54,19 +45,11 @@ async def request_otp_endpoint(
     session: AsyncSession = Depends(get_session),
     dao: HolderDAO = Depends(get_dao),
 ):
-    try:
-        account = await auth_service.request_otp_for_login(
-            session, dao, phone_number=phone_data.phone_number
-        )
-        return account
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        logger.error(f"Unexpected error in request_otp_endpoint: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected server error occurred.",
-        )
+
+    account = await auth_service.request_otp_for_login(
+        session, dao, phone_number=phone_data.phone_number
+    )
+    return AccountInDBBase.model_validate(account)
 
 
 @router.post("/verify-otp", response_model=Token, status_code=status.HTTP_200_OK)
@@ -76,16 +59,6 @@ async def verify_otp_endpoint(
     session: AsyncSession = Depends(get_session),
     dao: HolderDAO = Depends(get_dao),
 ):
-    try:
-        access_token = await auth_svc.verify_otp_and_login(
-            session, dao, otp_data=otp_data
-        )
-        return Token(access_token=access_token, token_type="bearer")
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        logger.error(f"Error in verify_otp_endpoint: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred.",
-        )
+
+    access_token = await auth_svc.verify_otp_and_login(session, dao, otp_data=otp_data)
+    return Token(access_token=access_token, token_type="bearer")

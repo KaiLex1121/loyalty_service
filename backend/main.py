@@ -1,9 +1,9 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.templating import Jinja2Templates
 
 from backend.api.v1.api import api_router_v1
+from backend.core.exception_handlers import setup_exception_handlers
 from backend.core.logger import get_logger
 from backend.core.settings import settings
 from backend.dao.holder import HolderDAO
@@ -20,7 +20,6 @@ async def lifespan(app: FastAPI):
 
 
 def create_app():
-    templates = Jinja2Templates(directory=str(settings.WEB_APP.TEMPLATES_DIR))
     pool = create_pool(settings)
     dao = HolderDAO()
     app = FastAPI(
@@ -36,7 +35,7 @@ def create_app():
 
     app.state.dao = dao
     app.state.pool = pool
-    app.state.templates = templates
+    setup_exception_handlers(app)
 
     return app
 
