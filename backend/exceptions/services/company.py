@@ -77,8 +77,25 @@ class InnConflictException(ConflictException):
         internal_details: Optional[Dict[str, Any]] = None,
     ) -> None:
         if not detail:
-            detail = f"Can't update company. Company with INN '{inn}' already exists."
+            detail = f"Company with INN '{inn}' already exists."
         _internal_details = {"INN": inn}
+        if internal_details:
+            _internal_details.update(internal_details)
+        super().__init__(detail=detail, internal_details=_internal_details)
+
+
+class OgrnConflictException(ConflictException):
+    detail = "Company with this OGRN already exists."
+
+    def __init__(
+        self,
+        ogrn: str,
+        detail: Optional[str] = None,
+        internal_details: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        if not detail:
+            detail = f"Company with OGRN '{ogrn}' already exists."
+        _internal_details = {"OGRN": ogrn}
         if internal_details:
             _internal_details.update(internal_details)
         super().__init__(detail=detail, internal_details=_internal_details)

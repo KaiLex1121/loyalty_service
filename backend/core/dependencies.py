@@ -1,3 +1,4 @@
+from curses.ascii import US
 from typing import Optional
 
 from fastapi import Depends, HTTPException, Request, status
@@ -12,8 +13,11 @@ from backend.core.settings import AppSettings, get_settings
 from backend.dao.holder import HolderDAO
 from backend.db.session import create_pool
 from backend.enums.back_office import UserAccessLevelEnum
+from backend.exceptions.common import UnauthorizedException
+from backend.exceptions.services.outlet import OutletNotFoundException
 from backend.models.account import Account
 from backend.models.company import Company
+from backend.models.outlet import Outlet
 from backend.models.subscription import Subscription
 from backend.models.user_role import UserRole
 from backend.services.account import AccountService
@@ -22,6 +26,7 @@ from backend.services.company import CompanyService
 from backend.services.dashboard import DashboardService
 from backend.services.otp_code import OtpCodeService
 from backend.services.otp_sending import MockOTPSendingService
+from backend.services.outlet import OutletService
 
 logger = get_logger(__name__)
 
@@ -32,6 +37,7 @@ async def get_session(settings: AppSettings = Depends(get_settings)):
     async with session_maker() as session:
         try:
             yield session
+            await session.commit()
 
         except SQLAlchemyError as db_error:
             await session.rollback()
@@ -120,7 +126,7 @@ async def get_current_active_account_with_profiles(
 
 
 async def get_current_user_profile_from_account(
-    current_account: Account = Depends(get_current_account_with_profiles),
+    current_account: Account = Depends(get_current_active_account_with_profiles),
 ) -> UserRole:
     if current_account.user_profile is None:
         raise HTTPException(
@@ -142,6 +148,7 @@ async def get_current_full_system_admin(
 
 
 async def get_owned_company(
+    # company_id берется из параметра пути с тем же именем (тот, что в эндпоинте)
     company_id: int,
     session: AsyncSession = Depends(get_session),
     current_user_role: UserRole = Depends(get_current_user_profile_from_account),
@@ -183,6 +190,55 @@ async def get_owned_company(
     return company
 
 
+async def get_verified_outlet_for_user(
+    # outlet_id берется из параметра пути с тем же именем (тот, что в эндпоинте)
+    outlet_id: int,
+    session: AsyncSession = Depends(get_session),
+    current_user_role: UserRole = Depends(
+        get_current_user_profile_from_account
+    ),  # Получаем UserRole текущего пользователя
+    dao: HolderDAO = Depends(get_dao),
+) -> Outlet:
+    """
+    1. Находит активную (не мягко удаленную) торговую точку по ID.
+    2. Проверяет, имеет ли текущий аутентифицированный пользователь (UserRole)
+       право доступа к этой торговой точке (через владение родительской компанией
+       или если он FULL_SYSTEM_ADMIN).
+    3. Возвращает объект OutletModel, если все проверки пройдены.
+    4. Выбрасывает OutletNotFoundException или AuthorizationException в случае неудачи.
+    """
+
+    # 1. Найти активную торговую точку
+    # Метод get_active из CRUDBase для OutletDAO уже проверяет deleted_at.is_(None)
+    outlet = await dao.outlet.get_active(session, id_=outlet_id)
+    if not outlet:
+        raise OutletNotFoundException(identifier=outlet_id)
+
+    # 2. Проверить права доступа
+    user_has_access = False
+
+    # 2.1. Проверка на FULL_SYSTEM_ADMIN
+    if current_user_role.access_level == UserAccessLevelEnum.FULL_ADMIN:
+        user_has_access = True
+    else:
+        # 2.2. Проверка, является ли пользователь владельцем компании, к которой принадлежит ТТ
+        if current_user_role.companies_owned:
+            for owned_company in current_user_role.companies_owned:
+                if (
+                    owned_company.id == outlet.company_id
+                    and not owned_company.is_deleted
+                ):
+                    user_has_access = True
+                    break
+
+    if not user_has_access:
+        raise UnauthorizedException(
+            detail=f"You do not have permission to access outlet ID {outlet_id}."
+        )
+
+    return outlet
+
+
 def get_otp_sending_service() -> MockOTPSendingService:
     return MockOTPSendingService()
 
@@ -197,6 +253,12 @@ def get_otp_code_service() -> OtpCodeService:
 
 def get_dashboard_service() -> DashboardService:
     return DashboardService()
+
+
+def get_outlet_service(
+    dao: HolderDAO = Depends(get_dao),
+) -> OutletService:
+    return OutletService(dao=dao)
 
 
 def get_company_service(

@@ -4,6 +4,7 @@ from backend.dao.account import AccountDAO
 from backend.dao.cashback import CashbackConfigDAO
 from backend.dao.company import CompanyDAO
 from backend.dao.otp_code import OtpCodeDAO
+from backend.dao.outlet import OutletDAO
 from backend.dao.subscription import SubscriptionDAO
 from backend.dao.tariff_plan import TariffPlanDAO
 from backend.dao.user_role import UserRoleDAO
@@ -18,6 +19,7 @@ class HolderDAO:
     cashback_config: CashbackConfigDAO = field(init=False)
     tariff_plan: TariffPlanDAO = field(init=False)
     subscription: SubscriptionDAO = field(init=False)
+    outlet: OutletDAO = field(init=False)
 
     def __post_init__(self):
         self.account = AccountDAO()
@@ -27,3 +29,4 @@ class HolderDAO:
         self.cashback_config = CashbackConfigDAO()
         self.tariff_plan = TariffPlanDAO()
         self.subscription = SubscriptionDAO()
+        self.outlet = OutletDAO()

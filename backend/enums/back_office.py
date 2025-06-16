@@ -30,6 +30,7 @@ class OutletStatusEnum(str, enum.Enum):
     """Статус торговой точки."""
 
     ACTIVE = "active"  # Активна и работает
+    CLOSED_TEMPORARILY = "closed_temporarily"  # Закрыта временно
     ARCHIVED = "archived"  # Закрыта навсегда (архивирована)
 
 

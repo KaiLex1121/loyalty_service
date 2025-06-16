@@ -24,6 +24,16 @@ class CompanyDAO(BaseDAO[Company, CompanyCreate, CompanyUpdate]):
         )
         return result.scalars().first()
 
+    async def get_by_ogrn(
+        self, session: AsyncSession, *, ogrn: str
+    ) -> Optional[Company]:
+        result = await session.execute(
+            select(self.model).filter(
+                self.model.ogrn == ogrn, self.model.deleted_at.is_(None)
+            )
+        )
+        return result.scalars().first()
+
     async def get_company_detailed_by_id(
         self, session: AsyncSession, *, company_id: int
     ) -> Optional[Company]:

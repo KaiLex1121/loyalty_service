@@ -1,8 +1,8 @@
-"""First
+"""Fix
 
-Revision ID: 0c5bb8f3be93
+Revision ID: 0fd3021a2bbe
 Revises:
-Create Date: 2025-06-15 16:31:12.592854
+Create Date: 2025-06-16 23:32:55.687779
 
 """
 
@@ -13,7 +13,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = "0c5bb8f3be93"
+revision: str = "0fd3021a2bbe"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -471,7 +471,18 @@ def upgrade() -> None:
         "outlets",
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("address", sa.String(length=500), nullable=False),
-        sa.Column("is_active", sa.Boolean(), nullable=False),
+        sa.Column(
+            "status",
+            sa.Enum(
+                "ACTIVE",
+                "CLOSED_TEMPORARILY",
+                "ARCHIVED",
+                name="outlet_status_enum",
+                inherit_schema=True,
+                create_constraint=True,
+            ),
+            nullable=False,
+        ),
         sa.Column("company_id", sa.BigInteger(), nullable=False),
         sa.Column("id", sa.BigInteger(), autoincrement=True, nullable=False),
         sa.Column(
@@ -499,6 +510,7 @@ def upgrade() -> None:
         op.f("ix__outlets_deleted_at"), "outlets", ["deleted_at"], unique=False
     )
     op.create_index(op.f("ix__outlets_id"), "outlets", ["id"], unique=False)
+    op.create_index(op.f("ix__outlets_status"), "outlets", ["status"], unique=False)
     op.create_table(
         "promotions",
         sa.Column("name", sa.String(length=255), nullable=False),
@@ -762,6 +774,7 @@ def downgrade() -> None:
     op.drop_index(op.f("ix__promotions_id"), table_name="promotions")
     op.drop_index(op.f("ix__promotions_deleted_at"), table_name="promotions")
     op.drop_table("promotions")
+    op.drop_index(op.f("ix__outlets_status"), table_name="outlets")
     op.drop_index(op.f("ix__outlets_id"), table_name="outlets")
     op.drop_index(op.f("ix__outlets_deleted_at"), table_name="outlets")
     op.drop_table("outlets")

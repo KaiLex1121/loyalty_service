@@ -13,28 +13,6 @@ class OtpCodeDAO(BaseDAO[OtpCode, OtpCodeCreate, OtpCodeUpdate]):
     def __init__(self):
         super().__init__(OtpCode)
 
-    async def create_otp(
-        self,
-        session: AsyncSession,
-        *,
-        hashed_otp: str,
-        expires_at: datetime,
-        purpose: str,
-        account_id: int,
-        channel: str,
-    ) -> OtpCode:
-        db_obj = self.model(
-            hashed_code=hashed_otp,
-            expires_at=expires_at,
-            purpose=purpose,
-            account_id=account_id,
-            channel=channel,
-        )
-        session.add(db_obj)
-        await session.flush()
-        await session.refresh(db_obj)
-        return db_obj
-
     async def get_active_otp_by_account_and_purpose(
         self,
         session: AsyncSession,

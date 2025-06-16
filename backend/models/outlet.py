@@ -2,8 +2,10 @@ from typing import TYPE_CHECKING, List
 
 from sqlalchemy import Boolean, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.types import Enum as SQLAlchemyEnum
 
 from backend.db.base import Base
+from backend.enums.back_office import OutletStatusEnum
 from backend.models.association_tables import employee_role_outlet_association
 
 if TYPE_CHECKING:
@@ -17,7 +19,17 @@ class Outlet(Base):
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     address: Mapped[str] = mapped_column(String(500), nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    status: Mapped[OutletStatusEnum] = mapped_column(
+        SQLAlchemyEnum(
+            OutletStatusEnum,
+            name="outlet_status_enum",
+            create_constraint=True,
+            inherit_schema=True,
+        ),
+        default=OutletStatusEnum.ACTIVE,
+        nullable=False,
+        index=True,
+    )
     company_id: Mapped[int] = mapped_column(
         ForeignKey("companies.id", ondelete="CASCADE"), nullable=False
     )

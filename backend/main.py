@@ -14,8 +14,6 @@ logger = get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.include_router(api_router_v1, prefix="/api/v1")
-    setup_exception_handlers(app)
 
     logger.info("Application startup")
     yield
@@ -32,6 +30,9 @@ def create_app():
         debug=settings.API.DEBUG,
         lifespan=lifespan,
     )
+    app.include_router(api_router_v1, prefix="/api/v1")
+    setup_exception_handlers(app)
+
     return app
 
 

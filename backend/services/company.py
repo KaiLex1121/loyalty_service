@@ -26,6 +26,7 @@ from backend.exceptions.services.cashback import CashbackNotConfiguredException
 from backend.exceptions.services.company import (
     ActiveSubscriptionsNotFoundException,
     InnConflictException,
+    OgrnConflictException,
     SubscriptionsNotFoundException,
 )
 from backend.models.cashback import Cashback
@@ -41,6 +42,7 @@ from backend.schemas.subscription import (
 )
 from backend.schemas.tariff_plan import TariffPlanResponseForCompany
 from backend.schemas.user_role import UserRoleCreate
+from backend.utils.subscription_utils import get_current_subscription
 
 logger = get_logger(__name__)
 
@@ -50,48 +52,13 @@ class CompanyService:
         self.settings = settings
         self.dao = dao
 
-    def _get_current_subscription(  # Переименовал, чтобы не конфликтовать с @property в модели
-        self, company_model: CompanyModel
-    ) -> Subscription:
-        """Выбирает 'текущую' подписку для отображения из загруженных."""
-
-        if not company_model.subscriptions:
-            raise SubscriptionsNotFoundException(
-                identifier=company_model.id, identifier_type="ID"
-            )
-
-        valid_subscriptions = [
-            sub for sub in company_model.subscriptions if not sub.is_deleted
-        ]
-
-        if not valid_subscriptions:
-            raise ActiveSubscriptionsNotFoundException(
-                identifier=company_model.id, identifier_type="ID"
-            )
-
-        # Сортируем: сначала активные, потом триалы, потом просроченные, затем по дате начала (новейшие первые)
-        def sort_key(sub: Subscription):
-            status_priority = {
-                SubscriptionStatusEnum.ACTIVE: 0,
-                SubscriptionStatusEnum.TRIALING: 1,
-                SubscriptionStatusEnum.PAST_DUE: 2,
-                SubscriptionStatusEnum.CANCELED: 3,
-                SubscriptionStatusEnum.EXPIRED: 4,
-                SubscriptionStatusEnum.INCOMPLETE: 5,
-                SubscriptionStatusEnum.INCOMPLETE_EXPIRED: 6,
-                SubscriptionStatusEnum.UNPAID: 7,
-            }
-            return (status_priority.get(sub.status, 99), -sub.start_date.toordinal())
-
-        return sorted(valid_subscriptions, key=sort_key)[0]
-
     def _build_company_response(
         self,
         company_model: CompanyModel,
     ) -> CompanyResponse:
         """Собирает CompanyResponse из CompanyModel и ее связей."""
 
-        subscription_model = self._get_current_subscription(company_model)
+        subscription_model = get_current_subscription(company_model)
 
         tariff_plan_info = TariffPlanResponseForCompany.model_validate(
             subscription_model.tariff_plan
@@ -188,11 +155,24 @@ class CompanyService:
                 internal_details={"account_id": account_id},
             )
 
+        existing_company_by_inn = await self.dao.company.get_by_inn(
+            session, inn=company_data.inn
+        )
+        if existing_company_by_inn:
+            raise InnConflictException(inn=company_data.inn)
+
+        if company_data.ogrn:
+            existing_company_by_ogrn = await self.dao.company.get_by_ogrn(
+                session, ogrn=company_data.ogrn
+            )
+            if existing_company_by_ogrn:
+                raise OgrnConflictException(ogrn=company_data.ogrn)
+
         new_company_obj = await self.dao.company.create_company_with_owner(
             session,
             obj_in=company_data,
             owner_user_role_id=user_role.id,
-            initial_status=CompanyStatusEnum.PENDING_VERIFICATION,
+            initial_status=CompanyStatusEnum.ACTIVE,
         )
 
         cashback_config_schema = CashbackConfigCreate(
@@ -261,7 +241,6 @@ class CompanyService:
         update_data: CompanyUpdate,
     ) -> CompanyResponse:
         update_data_dict = update_data.model_dump(exclude_unset=True)
-        print(update_data_dict)
         if (
             "inn" in update_data_dict
             and update_data_dict["inn"] != company_to_update.inn
@@ -278,7 +257,6 @@ class CompanyService:
         updated_company = await self.dao.company.update(
             session, db_obj=company_to_update, obj_in=update_data_dict
         )
-        await session.commit()
 
         company_for_response = await self.dao.company.get_company_detailed_by_id(
             session, company_id=updated_company.id

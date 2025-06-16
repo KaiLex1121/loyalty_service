@@ -1,5 +1,7 @@
 import datetime
 import decimal
+from math import e
+from operator import eq, gt
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -15,9 +17,9 @@ class TariffPlanBase(BaseModel):
     currency: CurrencyEnum = CurrencyEnum.RUB
     billing_period: PaymentCycleEnum = PaymentCycleEnum.MONTHLY
 
-    max_outlets: Optional[int] = Field(0, ge=0)
-    max_employees: Optional[int] = Field(0, ge=0)
-    max_active_promotions: Optional[int] = Field(0, ge=0)
+    max_outlets: Optional[int] = Field(default=1, ge=1, le=1)
+    max_employees: Optional[int] = Field(default=3, ge=3, le=3)
+    max_active_promotions: Optional[int] = Field(default=5, ge=5, le=5)
     features: Optional[List[str]] = Field(default_factory=list)
 
     status: TariffStatusEnum = TariffStatusEnum.ACTIVE
