@@ -8,6 +8,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 BASE_DIR = Path(__file__).resolve().parent.parent.parent  # -> . (корень проекта)
 
 
+class TrialPlanSettings(BaseSettings):
+    DEFAULT_DURATION_DAYS: int
+    INTERNAL_NAME: str
+
+    model_config = SettingsConfigDict(env_prefix="TRIAL_")
+
+
 class ServerSettings(BaseSettings):
     HOST: str
     PORT: int
@@ -84,6 +91,7 @@ class AppSettings(BaseSettings):
     DB: DatabaseSettings
     WEB_APP: WebAppSettings
     REDIS: RedisSettings
+    TRIAL_PLAN: TrialPlanSettings
 
     model_config = SettingsConfigDict(
         env_file=".env.test" if os.getenv("TEST_MODE") == "true" else ".env",
@@ -101,6 +109,7 @@ def get_settings() -> AppSettings:
         DB=DatabaseSettings(),
         WEB_APP=WebAppSettings(),
         REDIS=RedisSettings(),
+        TRIAL_PLAN=TrialPlanSettings(),
     )
 
 

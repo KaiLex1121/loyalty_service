@@ -6,22 +6,23 @@ from backend.core.dependencies import get_auth_service, get_dao, get_session
 from backend.core.logger import get_logger
 from backend.dao.holder import HolderDAO
 from backend.enums.back_office import OtpPurposeEnum
-from backend.schemas.account import AccountInDBBase
+from backend.schemas.account import AccountInDBBase, AccountResponse
 from backend.schemas.auth import OTPVerifyRequest, PhoneNumberRequest
-from backend.schemas.token import Token
+from backend.schemas.token import TokenResponse
 from backend.services.auth import AuthService
 
 router = APIRouter()
 logger = get_logger(__name__)
 
 
-@router.post("/token-for-swagger", response_model=Token)
+@router.post("/token-for-swagger", response_model=TokenResponse)
 async def login_for_swagger_ui(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_session),
     auth_service: AuthService = Depends(get_auth_service),
     dao: HolderDAO = Depends(get_dao),
-) -> Token:
+) -> TokenResponse:
+
     phone_number: str = form_data.username
     otp_code: str = form_data.password
 
@@ -33,11 +34,11 @@ async def login_for_swagger_ui(
     access_token = await auth_service.verify_otp_and_login(
         session, dao, otp_data=otp_request
     )
-    return Token(access_token=access_token, token_type="bearer")
+    return access_token
 
 
 @router.post(
-    "/request-otp", response_model=AccountInDBBase, status_code=status.HTTP_200_OK
+    "/request-otp", response_model=AccountResponse, status_code=status.HTTP_200_OK
 )
 async def request_otp_endpoint(
     phone_data: PhoneNumberRequest,
@@ -49,10 +50,12 @@ async def request_otp_endpoint(
     account = await auth_service.request_otp_for_login(
         session, dao, phone_number=phone_data.phone_number
     )
-    return AccountInDBBase.model_validate(account)
+    return account
 
 
-@router.post("/verify-otp", response_model=Token, status_code=status.HTTP_200_OK)
+@router.post(
+    "/verify-otp", response_model=TokenResponse, status_code=status.HTTP_200_OK
+)
 async def verify_otp_endpoint(
     otp_data: OTPVerifyRequest,
     auth_svc: AuthService = Depends(get_auth_service),
@@ -61,4 +64,4 @@ async def verify_otp_endpoint(
 ):
 
     access_token = await auth_svc.verify_otp_and_login(session, dao, otp_data=otp_data)
-    return Token(access_token=access_token, token_type="bearer")
+    return access_token

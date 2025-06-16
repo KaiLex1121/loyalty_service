@@ -1,3 +1,4 @@
+from calendar import c
 from typing import List
 
 from fastapi import APIRouter, Depends, status
@@ -12,10 +13,9 @@ from backend.core.dependencies import (
     get_session,
 )
 from backend.core.logger import get_logger
-from backend.dao.holder import HolderDAO
 from backend.models.company import Company
 from backend.models.user_role import UserRole
-from backend.schemas.company import CompanyCreateRequest, CompanyResponse
+from backend.schemas.company import CompanyCreate, CompanyResponse, CompanyUpdate
 from backend.services.company import CompanyService
 
 router = APIRouter()
@@ -30,19 +30,34 @@ logger = get_logger(__name__)
     summary="Создать новую компанию",
 )
 async def create_company_endpoint(
-    company_data: CompanyCreateRequest,
+    company_data: CompanyCreate,
     session: AsyncSession = Depends(get_session),
-    dao: HolderDAO = Depends(get_dao),
     account_id: int = Depends(get_account_id_from_token),
     company_service: CompanyService = Depends(get_company_service),
 ):
     new_company = await company_service.create_company_flow(
         session=session,
-        dao=dao,
         company_data=company_data,
         account_id=account_id,
     )
     return new_company
+
+
+@router.put(
+    "/{company_id}",
+    response_model=CompanyResponse,
+    summary="Обновить информацию о компании",
+)
+async def update_company_endpoint(
+    update_data: CompanyUpdate,
+    session: AsyncSession = Depends(get_session),
+    company_to_update: Company = Depends(get_owned_company),
+    company_service: CompanyService = Depends(get_company_service),
+):
+    updated_company = await company_service.update_company(
+        session=session, company_to_update=company_to_update, update_data=update_data
+    )
+    return updated_company
 
 
 @router.get(
@@ -53,8 +68,11 @@ async def create_company_endpoint(
 async def get_owned_companies_endpoint(
     current_user_role: UserRole = Depends(get_current_user_profile_from_account),
     company_service: CompanyService = Depends(get_company_service),
+    session: AsyncSession = Depends(get_session),
 ):
-    owned_companies = await company_service.get_owned_companies(current_user_role)
+    owned_companies = await company_service.get_owned_companies(
+        user_role=current_user_role, session=session
+    )
     return owned_companies
 
 

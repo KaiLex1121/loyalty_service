@@ -73,21 +73,21 @@ class AccountService:
 
     async def update_account(
         self,
-        db: AsyncSession,
+        session: AsyncSession,
         dao: HolderDAO,
-        account: Account,
+        account_db: Account,
         account_in: AccountUpdate,
     ) -> Account:
         try:
             updated_account = await dao.account.update(
-                session=db, db_obj=account, obj_in=account_in
+                session=session, db_obj=account_db, obj_in=account_in
             )
-            await db.flush()  # flush может вызвать ошибки Constraints
-            await db.refresh(updated_account)
+            await session.flush()  # flush может вызвать ошибки Constraints
+            await session.refresh(updated_account)
             return updated_account
         except Exception as e:  # Ловим общую ошибку от DAO/DB
             raise AccountUpdateException(
-                account_id=account.id,
+                account_id=account_db.id,
                 reason=str(e),
                 internal_details={
                     "update_data": account_in.model_dump(exclude_unset=True),

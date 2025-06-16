@@ -16,6 +16,7 @@ class AccountCreate(AccountBase):
 
 
 class AccountUpdate(BaseModel):
+    hashed_password: Optional[str] = None
     phone_number: Optional[str] = None
     email: Optional[EmailStr] = None
     full_name: Optional[str] = None

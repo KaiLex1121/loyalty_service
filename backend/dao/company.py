@@ -8,10 +8,11 @@ from backend.dao.base import BaseDAO
 from backend.enums.back_office import CompanyStatusEnum
 from backend.models.company import Company
 from backend.models.subscription import Subscription as SubscriptionModel
-from backend.schemas.company import CompanyCreateRequest, CompanyUpdateRequest
+from backend.models.user_role import UserRole
+from backend.schemas.company import CompanyCreate, CompanyUpdate
 
 
-class CompanyDAO(BaseDAO[Company, CompanyCreateRequest, CompanyUpdateRequest]):
+class CompanyDAO(BaseDAO[Company, CompanyCreate, CompanyUpdate]):
     def __init__(self):
         super().__init__(Company)
 
@@ -23,9 +24,16 @@ class CompanyDAO(BaseDAO[Company, CompanyCreateRequest, CompanyUpdateRequest]):
         )
         return result.scalars().first()
 
-    async def get_by_id_with_relations(
+    async def get_company_detailed_by_id(
         self, session: AsyncSession, *, company_id: int
     ) -> Optional[Company]:
+        """
+        Получает компанию с подробной информацией о ее подписках и кэшбеке.
+        Args:
+            company_id: ID компании
+        Returns:
+            Company с загруженными связанными данными или None
+        """
         stmt = (
             select(self.model)
             .options(
@@ -45,7 +53,7 @@ class CompanyDAO(BaseDAO[Company, CompanyCreateRequest, CompanyUpdateRequest]):
         self,
         db: AsyncSession,
         *,
-        obj_in: CompanyCreateRequest,
+        obj_in: CompanyCreate,
         owner_user_role_id: int,
         initial_status: CompanyStatusEnum,
     ) -> Company:

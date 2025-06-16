@@ -9,8 +9,9 @@ from backend.enums.back_office import CurrencyEnum, PaymentCycleEnum, TariffStat
 
 class TariffPlanBase(BaseModel):
     name: str = Field(min_length=3, max_length=100)
+    internal_name: str = Field(min_length=3, max_length=100)
     description: Optional[str] = None
-    price: decimal.Decimal = Field(ge=decimal.Decimal("0.00"))
+    default_price: decimal.Decimal = Field(ge=decimal.Decimal("0.00"))
     currency: CurrencyEnum = CurrencyEnum.RUB
     billing_period: PaymentCycleEnum = PaymentCycleEnum.MONTHLY
 
@@ -21,8 +22,6 @@ class TariffPlanBase(BaseModel):
 
     status: TariffStatusEnum = TariffStatusEnum.ACTIVE
     is_public: bool = True
-    is_trial: bool = False
-    trial_duration_days: Optional[int] = Field(None, ge=1)
     sort_order: int = 0
 
 
@@ -42,7 +41,6 @@ class TariffPlanUpdate(BaseModel):  # Все поля опциональны д�
     features: Optional[List[str]] = None
     status: Optional[TariffStatusEnum] = None
     is_public: Optional[bool] = None
-    trial_duration_days: Optional[int] = Field(None, ge=1)
     sort_order: Optional[int] = None
 
 
@@ -50,7 +48,19 @@ class TariffPlanResponse(TariffPlanBase):
     id: int
     created_at: datetime.datetime
     updated_at: datetime.datetime
-    # deleted_at: Optional[datetime.datetime] # Обычно не показываем
+
+    class Config:
+        from_attributes = True
+
+
+class TariffPlanInDB(TariffPlanResponse):
+    deleted_at: Optional[datetime.datetime]
+
+
+class TariffPlanResponseForCompany(BaseModel):
+    id: int
+    name: str
+    description: str
 
     class Config:
         from_attributes = True

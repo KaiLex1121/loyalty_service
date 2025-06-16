@@ -43,13 +43,14 @@ class BaseDAO(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if hasattr(db_obj, "is_deleted") and db_obj.is_deleted:
             pass
         obj_data = db_obj.as_dict()
+
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
             update_data = obj_in.model_dump(
                 exclude_unset=True
             )  # exclude_unset=True чтобы обновлять только переданные поля
-        for field, value in obj_data:
+        for field, value in update_data.items():
             if field in update_data:
                 setattr(db_obj, field, value)
         session.add(

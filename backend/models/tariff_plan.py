@@ -1,4 +1,6 @@
 import decimal
+from email.policy import default
+from sys import intern
 from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import JSON, Boolean, Integer, Numeric, String, Text
@@ -16,8 +18,12 @@ class TariffPlan(Base):
     __tablename__ = "tariff_plans"
 
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    internal_name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    price: Mapped[decimal.Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    default_price: Mapped[decimal.Decimal] = mapped_column(
+        Numeric(10, 2), nullable=False
+    )  # Это стандартная, базовая цена для данного тарифного плана
+    # Это та цена, которая указывается на сайте.
     currency: Mapped[CurrencyEnum] = mapped_column(
         SQLAlchemyEnum(
             CurrencyEnum,
@@ -60,8 +66,6 @@ class TariffPlan(Base):
         index=True,
     )
     is_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    is_trial: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    trial_duration_days: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     subscriptions: Mapped[List["Subscription"]] = relationship(
         "Subscription", back_populates="tariff_plan"

@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 from typing import List, Optional
 
 from dateutil.relativedelta import relativedelta
@@ -6,6 +7,7 @@ from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.logger import get_logger
+from backend.core.settings import AppSettings
 from backend.dao.holder import HolderDAO
 from backend.enums.back_office import (
     CompanyStatusEnum,
@@ -14,107 +16,221 @@ from backend.enums.back_office import (
 )
 from backend.exceptions import (
     AccountNotFoundException,
+    BasePlanNotConfiguredException,
     CompanyFlowException,
     CompanyNotFoundException,
     ForbiddenException,
     InternalServerError,
-    TrialPlanNotConfiguredException,
 )
+from backend.exceptions.services.cashback import CashbackNotConfiguredException
+from backend.exceptions.services.company import (
+    ActiveSubscriptionsNotFoundException,
+    InnConflictException,
+    SubscriptionsNotFoundException,
+)
+from backend.models.cashback import Cashback
 from backend.models.company import Company as CompanyModel
+from backend.models.subscription import Subscription
+from backend.models.tariff_plan import TariffPlan
 from backend.models.user_role import UserRole as UserRoleModel
-from backend.schemas.cashback import CashbackConfigCreate
-from backend.schemas.company import CompanyCreateRequest, CompanyResponse
-from backend.schemas.subscription import SubscriptionCreate
+from backend.schemas.cashback import CashbackConfigCreate, CashbackConfigResponse
+from backend.schemas.company import CompanyCreate, CompanyResponse, CompanyUpdate
+from backend.schemas.subscription import (
+    SubscriptionCreate,
+    SubscriptionResponseForCompany,
+)
+from backend.schemas.tariff_plan import TariffPlanResponseForCompany
 from backend.schemas.user_role import UserRoleCreate
 
 logger = get_logger(__name__)
 
 
 class CompanyService:
+    def __init__(self, settings: AppSettings, dao: HolderDAO):
+        self.settings = settings
+        self.dao = dao
+
+    def _get_current_subscription(  # Переименовал, чтобы не конфликтовать с @property в модели
+        self, company_model: CompanyModel
+    ) -> Subscription:
+        """Выбирает 'текущую' подписку для отображения из загруженных."""
+
+        if not company_model.subscriptions:
+            raise SubscriptionsNotFoundException(
+                identifier=company_model.id, identifier_type="ID"
+            )
+
+        valid_subscriptions = [
+            sub for sub in company_model.subscriptions if not sub.is_deleted
+        ]
+
+        if not valid_subscriptions:
+            raise ActiveSubscriptionsNotFoundException(
+                identifier=company_model.id, identifier_type="ID"
+            )
+
+        # Сортируем: сначала активные, потом триалы, потом просроченные, затем по дате начала (новейшие первые)
+        def sort_key(sub: Subscription):
+            status_priority = {
+                SubscriptionStatusEnum.ACTIVE: 0,
+                SubscriptionStatusEnum.TRIALING: 1,
+                SubscriptionStatusEnum.PAST_DUE: 2,
+                SubscriptionStatusEnum.CANCELED: 3,
+                SubscriptionStatusEnum.EXPIRED: 4,
+                SubscriptionStatusEnum.INCOMPLETE: 5,
+                SubscriptionStatusEnum.INCOMPLETE_EXPIRED: 6,
+                SubscriptionStatusEnum.UNPAID: 7,
+            }
+            return (status_priority.get(sub.status, 99), -sub.start_date.toordinal())
+
+        return sorted(valid_subscriptions, key=sort_key)[0]
+
+    def _build_company_response(
+        self,
+        company_model: CompanyModel,
+    ) -> CompanyResponse:
+        """Собирает CompanyResponse из CompanyModel и ее связей."""
+
+        subscription_model = self._get_current_subscription(company_model)
+
+        tariff_plan_info = TariffPlanResponseForCompany.model_validate(
+            subscription_model.tariff_plan
+        )
+
+        if not tariff_plan_info:
+            raise BasePlanNotConfiguredException(
+                detail="Tariff plan is not configured.",
+                internal_details={"context": "CompanyService._build_company_response"},
+            )
+
+        current_subscription_response = SubscriptionResponseForCompany(
+            id=subscription_model.id,
+            status=subscription_model.status,
+            next_billing_date=subscription_model.next_billing_date,
+            auto_renew=subscription_model.auto_renew,
+            tariff_plan=tariff_plan_info,
+        )
+
+        cashback_response = CashbackConfigResponse.model_validate(
+            company_model.cashback
+        )
+
+        if not cashback_response:
+            raise CashbackNotConfiguredException(
+                detail="Cashback is not configured.",
+                internal_details={"context": "CompanyService._build_company_response"},
+            )
+
+        company_base_data = {
+            field: getattr(company_model, field)
+            for field in CompanyResponse.model_fields
+            if hasattr(company_model, field)
+            and field
+            not in [
+                "owner_user_role",
+                "current_subscription",
+                "cashback",
+                "created_at",
+                "updated_at",
+                "id",
+                "status",
+            ]
+        }
+
+        return CompanyResponse(
+            id=company_model.id,
+            status=company_model.status,
+            created_at=company_model.created_at,
+            updated_at=company_model.updated_at,
+            current_subscription=current_subscription_response,
+            cashback=cashback_response,
+            **company_base_data,
+        )
+
     async def create_company_flow(
         self,
         session: AsyncSession,
-        dao: HolderDAO,
-        company_data: CompanyCreateRequest,
+        company_data: CompanyCreate,
         account_id: int,
     ) -> CompanyResponse:
-        async with session.begin():
-            current_account = await dao.account.get_by_id_with_profiles(
-                session, id_=account_id
-            )
-            if (
-                not current_account
-                or not current_account.is_active
-                or current_account.is_deleted
-            ):
-                # Если аккаунт не найден, это AccountNotFoundException.
-                # Если найден, но неактивен/удален - это ForbiddenException.
-                if not current_account:
-                    raise AccountNotFoundException(
-                        identifier=account_id, identifier_type="ID"
-                    )
-                raise ForbiddenException(
-                    detail="Account is inactive or deleted, cannot create company.",
-                    internal_details={"account_id": account_id, "status_issue": True},
+        current_account = await self.dao.account.get_by_id_with_profiles(
+            session, id_=account_id
+        )
+        if (
+            not current_account
+            or not current_account.is_active
+            or current_account.is_deleted
+        ):
+            if not current_account:
+                raise AccountNotFoundException(
+                    identifier=account_id, identifier_type="ID"
                 )
-
-            user_role: Optional[UserRoleModel] = current_account.user_profile
-
-            if not user_role:
-                user_role_schema = UserRoleCreate(
-                    access_level=UserAccessLevelEnum.COMPANY_OWNER,
-                    account_id=account_id,
-                )
-                new_user_role_obj = await dao.user_role.create(
-                    session, obj_in=user_role_schema
-                )
-                user_role = new_user_role_obj
-
-            if not user_role or not user_role.id:
-                # Это серьезная внутренняя проблема, если UserRole не удалось создать/получить
-                raise CompanyFlowException(
-                    reason="UserRole could not be established for the account.",
-                    internal_details={"account_id": account_id},
-                )
-
-            new_company_obj = await dao.company.create_company_with_owner(
-                session,
-                obj_in=company_data,
-                owner_user_role_id=user_role.id,
-                initial_status=CompanyStatusEnum.PENDING_VERIFICATION,
+            raise ForbiddenException(
+                detail="Account is inactive or deleted, cannot create company.",
+                internal_details={"account_id": account_id, "status_issue": True},
             )
 
-            cashback_config_schema = CashbackConfigCreate(
-                company_id=new_company_obj.id,
-                default_percentage=company_data.initial_cashback_percentage,
+        user_role: Optional[UserRoleModel] = current_account.user_profile
+
+        if not user_role:
+            user_role_schema = UserRoleCreate(
+                access_level=UserAccessLevelEnum.COMPANY_OWNER,
+                account_id=account_id,
             )
-            await dao.cashback_config.create(session, obj_in=cashback_config_schema)
-
-            trial_plan = await dao.tariff_plan.get_trial_plan(session)
-            if not trial_plan:
-                raise TrialPlanNotConfiguredException(
-                    internal_details={"context": "Company creation flow"}
-                )
-
-            today = datetime.date.today()
-            trial_end = today + relativedelta(months=3)
-
-            subscription_schema = SubscriptionCreate(
-                company_id=new_company_obj.id,
-                tariff_plan_id=trial_plan.id,
-                status=SubscriptionStatusEnum.TRIALING,
-                start_date=today,
-                trial_end_date=trial_end,
-                next_billing_date=trial_end,
-                auto_renew=False,
+            new_user_role_obj = await self.dao.user_role.create(
+                session, obj_in=user_role_schema
             )
-            await dao.subscription.create(session, obj_in=subscription_schema)
+            user_role = new_user_role_obj
 
-        company_for_response = await dao.company.get_by_id_with_relations(
+        if not user_role or not user_role.id:
+            raise CompanyFlowException(
+                reason="UserRole could not be established for the account.",
+                internal_details={"account_id": account_id},
+            )
+
+        new_company_obj = await self.dao.company.create_company_with_owner(
+            session,
+            obj_in=company_data,
+            owner_user_role_id=user_role.id,
+            initial_status=CompanyStatusEnum.PENDING_VERIFICATION,
+        )
+
+        cashback_config_schema = CashbackConfigCreate(
+            company_id=new_company_obj.id,
+            default_percentage=company_data.initial_cashback_percentage,
+        )
+        await self.dao.cashback_config.create(session, obj_in=cashback_config_schema)
+
+        tariff_plan_name = self.settings.TRIAL_PLAN.INTERNAL_NAME
+        base_tariff_plan_model = await self.dao.tariff_plan.get_by_internal_name(
+            session, internal_name=tariff_plan_name
+        )
+
+        if not base_tariff_plan_model:
+            raise BasePlanNotConfiguredException(
+                internal_details={"context": "CompanyService.create_company_flow"}
+            )
+
+        trial_start = datetime.date.today()
+        trial_period_days = self.settings.TRIAL_PLAN.DEFAULT_DURATION_DAYS
+        trial_end = trial_start + relativedelta(days=trial_period_days)
+
+        subscription_schema = SubscriptionCreate(
+            company_id=new_company_obj.id,
+            tariff_plan_id=base_tariff_plan_model.id,
+            status=SubscriptionStatusEnum.TRIALING,
+            start_date=trial_start,
+            trial_end_date=trial_end,
+            next_billing_date=trial_end,
+            auto_renew=True,
+            current_price=Decimal("0.00"),
+        )
+        await self.dao.subscription.create(session, obj_in=subscription_schema)
+
+        company_for_response = await self.dao.company.get_company_detailed_by_id(
             session, company_id=new_company_obj.id
         )
         if not company_for_response:
-            # Это тоже внутренняя проблема, если только что созданная компания не найдена
             raise CompanyNotFoundException(
                 identifier=new_company_obj.id,
                 detail="Failed to retrieve newly created company details for response.",
@@ -122,7 +238,9 @@ class CompanyService:
             )
 
         try:
-            return CompanyResponse.model_validate(company_for_response)
+            return self._build_company_response(
+                company_model=company_for_response,
+            )
         except ValidationError as e:
             logger.error(
                 f"Failed to validate company {company_for_response.id} for response: {e}",
@@ -136,18 +254,66 @@ class CompanyService:
                 },
             )
 
+    async def update_company(
+        self,
+        session: AsyncSession,
+        company_to_update: CompanyModel,
+        update_data: CompanyUpdate,
+    ) -> CompanyResponse:
+        update_data_dict = update_data.model_dump(exclude_unset=True)
+        print(update_data_dict)
+        if (
+            "inn" in update_data_dict
+            and update_data_dict["inn"] != company_to_update.inn
+        ):
+            existing_company = await self.dao.company.get_by_inn(
+                session, inn=update_data_dict["inn"]
+            )
+            if existing_company and existing_company.id != company_to_update.id:
+                raise InnConflictException(
+                    inn=update_data_dict["inn"],
+                    internal_details={"company_id": existing_company.id},
+                )
+
+        updated_company = await self.dao.company.update(
+            session, db_obj=company_to_update, obj_in=update_data_dict
+        )
+        await session.commit()
+
+        company_for_response = await self.dao.company.get_company_detailed_by_id(
+            session, company_id=updated_company.id
+        )
+
+        if not company_for_response:
+            raise CompanyNotFoundException(
+                identifier=updated_company.id,
+                detail="Failed to retrieve updated company details for response.",
+                internal_details={"context": "Post-company update retrieval"},
+            )
+
+        return self._build_company_response(company_model=company_for_response)
+
     async def get_owned_companies(
-        self, user_role: UserRoleModel
+        self, user_role: UserRoleModel, session: AsyncSession
     ) -> List[CompanyResponse]:
-        # Валидация здесь происходит при создании CompanyResponse.
-        # Если данные из БД не проходят валидацию в схему ответа, это внутренняя ошибка.
-        # Обработчик ValidationError позаботится об этом, если он не обернут.
-        # Либо можно обернуть здесь в InternalServerError.
+
+        user_role_with_detailed_companies = (
+            await self.dao.user_role.get_user_role_companies_detailed(
+                user_role_id=user_role.id, session=session
+            )
+        )
+
+        if (
+            not user_role_with_detailed_companies
+            or not user_role_with_detailed_companies.companies_owned
+        ):
+            return []
+
         companies_validated = []
-        for company in user_role.companies_owned:
+        for company in user_role_with_detailed_companies.companies_owned:
             if not company.is_deleted:
                 try:
-                    companies_validated.append(CompanyResponse.model_validate(company))
+                    companies_validated.append(self._build_company_response(company))
                 except ValidationError as e:
                     logger.error(
                         f"Failed to validate company {company.id} in get_owned_companies: {e}",
@@ -164,7 +330,7 @@ class CompanyService:
 
     async def get_owned_company(self, company: CompanyModel) -> CompanyResponse:
         try:
-            return CompanyResponse.model_validate(company)
+            return self._build_company_response(company)
         except ValidationError as e:
             logger.error(
                 f"Failed to validate company {company.id} in get_owned_company: {e}",

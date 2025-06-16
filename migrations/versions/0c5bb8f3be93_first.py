@@ -1,8 +1,8 @@
-"""New models
+"""First
 
-Revision ID: e4d76f34af08
+Revision ID: 0c5bb8f3be93
 Revises:
-Create Date: 2025-05-30 14:44:56.208669
+Create Date: 2025-06-15 16:31:12.592854
 
 """
 
@@ -13,7 +13,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = "e4d76f34af08"
+revision: str = "0c5bb8f3be93"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -56,8 +56,9 @@ def upgrade() -> None:
     op.create_table(
         "tariff_plans",
         sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("internal_name", sa.String(length=255), nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
-        sa.Column("price", sa.Numeric(precision=10, scale=2), nullable=False),
+        sa.Column("default_price", sa.Numeric(precision=10, scale=2), nullable=False),
         sa.Column(
             "currency",
             sa.Enum("RUB", "USD", "EUR", name="currency_enum", inherit_schema=True),
@@ -92,8 +93,6 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("is_public", sa.Boolean(), nullable=False),
-        sa.Column("is_trial", sa.Boolean(), nullable=False),
-        sa.Column("trial_duration_days", sa.Integer(), nullable=True),
         sa.Column("sort_order", sa.Integer(), nullable=False),
         sa.Column("id", sa.BigInteger(), autoincrement=True, nullable=False),
         sa.Column(
@@ -110,6 +109,9 @@ def upgrade() -> None:
         ),
         sa.Column("deleted_at", postgresql.TIMESTAMP(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint("id", name=op.f("pk__tariff_plans")),
+        sa.UniqueConstraint(
+            "internal_name", name=op.f("uq__tariff_plans__internal_name")
+        ),
         sa.UniqueConstraint("name", name=op.f("uq__tariff_plans__name")),
     )
     op.create_index(

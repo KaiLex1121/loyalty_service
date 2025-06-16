@@ -5,6 +5,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 from backend.enums.back_office import PaymentCycleEnum, SubscriptionStatusEnum
+from backend.schemas.tariff_plan import TariffPlanResponseForCompany
 
 
 class SubscriptionBase(BaseModel):
@@ -32,6 +33,17 @@ class SubscriptionResponse(SubscriptionBase):
     # tariff_plan_name: Optional[str] = None
     created_at: datetime.datetime
     updated_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+class SubscriptionResponseForCompany(BaseModel):
+    id: int
+    status: SubscriptionStatusEnum
+    next_billing_date: Optional[datetime.date]
+    auto_renew: bool
+    tariff_plan: Optional[TariffPlanResponseForCompany]
 
     class Config:
         from_attributes = True

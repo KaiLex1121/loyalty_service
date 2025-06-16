@@ -24,15 +24,15 @@ class OtpCodeUpdate(OtpCodeBase):
     account_id: int | None = None
 
 
-class OtpCodeInDBBase(OtpCodeBase):  # Схема для чтения из БД
+class OtpCodeResponse(OtpCodeBase):
     id: int
     is_used: bool
     created_at: datetime
     updated_at: datetime
 
     class Config:
-        from_attributes = True  # Для SQLAlchemy моделей (orm_mode в Pydantic v1)
+        from_attributes = True
 
 
-class OtpCodeResponse(OtpCodeInDBBase):
+class OtpCodeInDBBase(OtpCodeResponse):
     pass

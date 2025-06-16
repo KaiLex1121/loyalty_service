@@ -46,7 +46,7 @@ def test_settings() -> AppSettings:
 
 
 @pytest_asyncio.fixture(scope="session")
-def event_loop() -> Generator[asyncio.AbstractEventLoop, Any, None]:
+async def event_loop() -> AsyncGenerator[asyncio.AbstractEventLoop, Any]:
     """
     Создает event loop для сессии pytest.
     Необходимо для асинхронных фикстур с областью видимости "session".
@@ -68,7 +68,7 @@ async def database_engine(
 
 @pytest_asyncio.fixture(scope="session")
 async def session_factory(
-    database_engine: database_engine,
+    database_engine: AsyncEngine,
 ) -> AsyncGenerator[async_sessionmaker[AsyncSession], None]:
     pool: async_sessionmaker[AsyncSession] = async_sessionmaker(
         bind=database_engine,

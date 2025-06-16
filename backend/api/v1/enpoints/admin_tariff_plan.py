@@ -23,13 +23,13 @@ router = APIRouter()
     dependencies=[Depends(get_current_full_system_admin)],
 )
 async def create_new_tariff_plan_endpoint(
-    plan_data: TariffPlanCreate,
+    tariff_plan_data: TariffPlanCreate,
     session: AsyncSession = Depends(get_session),
     dao: HolderDAO = Depends(get_dao),
     admin_tariff_plan_service: AdminTariffPlanService = Depends(),
 ):
     new_plan = await admin_tariff_plan_service.create_tariff_plan(
-        session, dao, plan_data
+        session, dao, tariff_plan_data
     )
     return new_plan
 

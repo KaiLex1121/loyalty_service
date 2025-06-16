@@ -1,5 +1,8 @@
+import datetime
+import time
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
+from venv import create
 
 import pytest
 from fastapi import HTTPException, status
@@ -8,7 +11,7 @@ from pydantic import ValidationError
 from backend.dao.admin_tarrif_plan import TariffPlanDAO
 from backend.enums.back_office import CurrencyEnum, PaymentCycleEnum, TariffStatusEnum
 from backend.models.tariff_plan import TariffPlan as TariffPlanModel
-from backend.schemas.tariff_plan import TariffPlanCreate
+from backend.schemas.tariff_plan import TariffPlanCreate, TariffPlanResponse
 from backend.services.admin_tariff_plan import AdminTariffPlanService
 
 
@@ -59,6 +62,7 @@ class TestTariffPlanService:
     @pytest.fixture
     def tariff_plan_model(self):
         return TariffPlanModel(
+            id=1,
             name="Test Tariff Plan",
             description="Test description",
             price=Decimal("123"),
@@ -73,6 +77,8 @@ class TestTariffPlanService:
             is_trial=True,
             trial_duration_days=30,
             sort_order=0,
+            created_at=datetime.datetime.now(),
+            updated_at=datetime.datetime.now(),
         )
 
     # POSITIVE TESTS
@@ -97,7 +103,15 @@ class TestTariffPlanService:
         )
 
         # Assert
-        assert result == tariff_plan_model
+        assert isinstance(result, TariffPlanResponse)
+        assert result.id == tariff_plan_model.id
+        assert result.name == tariff_plan_model.name
+        assert result.description == tariff_plan_model.description
+        assert result.price == tariff_plan_model.price
+        assert result.is_trial == tariff_plan_model.is_trial
+        assert result.status == tariff_plan_model.status
+        # добавьте другие важные поля
+
         mock_dao.tariff_plan.get_by_name.assert_called_once_with(
             mock_session, name=tariff_plan_data.name
         )

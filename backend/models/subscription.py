@@ -2,14 +2,12 @@ import datetime
 import decimal
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Date  # DateTime для created/updated от Base
-from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 
-from backend.db.base import Base  # Ваш базовый класс
-from backend.enums.back_office import PaymentCycleEnum  # Импортируем Enum'ы
-from backend.enums.back_office import SubscriptionStatusEnum
+from backend.db.base import Base
+from backend.enums.back_office import PaymentCycleEnum, SubscriptionStatusEnum
 
 if TYPE_CHECKING:
     from .company import Company
@@ -24,7 +22,7 @@ class Subscription(Base):
     )
     tariff_plan_id: Mapped[int] = mapped_column(
         ForeignKey("tariff_plans.id", ondelete="RESTRICT"), nullable=False, index=True
-    )  # RESTRICT, чтобы нельзя было удалить тариф, если на него есть активные подписки
+    )
 
     status: Mapped[SubscriptionStatusEnum] = mapped_column(
         SQLAlchemyEnum(
@@ -52,14 +50,15 @@ class Subscription(Base):
     )  # Дата следующего списания
     current_price: Mapped[Optional[decimal.Decimal]] = mapped_column(
         Numeric(10, 2), nullable=True
-    )
+    )  # Это поле позволяет переопределить стандартную цену тарифа для конкретной подписки.
+    # Оно хранит индивидуальную цену, по которой компания оплачивает данный тариф в рамках этой конкретной подписки
     current_billing_cycle: Mapped[Optional[PaymentCycleEnum]] = mapped_column(
         SQLAlchemyEnum(
             PaymentCycleEnum,
             name="subscription_payment_cycle_enum",
             create_constraint=False,
             inherit_schema=True,
-        ),  # Отдельное имя для типа Enum в БД
+        ),
         nullable=True,
     )
     auto_renew: Mapped[bool] = mapped_column(
@@ -83,7 +82,7 @@ class Subscription(Base):
         if self.current_price is not None:
             return self.current_price
         if self.tariff_plan:
-            return self.tariff_plan.price
+            return self.tariff_plan.default_price
         return None
 
     # Свойство для получения актуального биллингового цикла

@@ -1,18 +1,18 @@
-# backend/schemas/company.py
-import datetime  # Для created_at, updated_at в CompanyResponse
-import decimal  # Для initial_cashback_percentage
-from typing import (  # List нужен для CompanyResponse, если будем включать связи
+import datetime
+import decimal
+from typing import (
     List,
     Optional,
 )
 
 from pydantic import BaseModel, Field, field_validator
 
-# Импортируем Enum'ы из вашего расположения
+from backend.dao import cashback
 from backend.enums.back_office import CompanyStatusEnum, LegalFormEnum
+from backend.schemas.cashback import CashbackConfigResponse
+from backend.schemas.subscription import SubscriptionResponseForCompany
 
 
-# --- Базовая схема с полями, которые могут приходить от клиента или использоваться для обновления ---
 class CompanyBase(BaseModel):
     name: str = Field(
         ..., description="Отображаемое название компании", min_length=1, max_length=255
@@ -59,8 +59,7 @@ class CompanyBase(BaseModel):
     )  # Используем payment_account как в модели
 
 
-# --- Схема для создания новой компании ---
-class CompanyCreateRequest(CompanyBase):
+class CompanyCreate(CompanyBase):
     initial_cashback_percentage: decimal.Decimal = Field(
         ...,
         gt=0,
@@ -79,7 +78,7 @@ class CompanyCreateRequest(CompanyBase):
         return v
 
 
-class CompanyUpdateRequest(BaseModel):
+class CompanyUpdate(CompanyBase):
     name: Optional[str] = Field(
         None, description="Отображаемое название компании", min_length=1, max_length=255
     )
@@ -122,8 +121,6 @@ class CompanyUpdateRequest(BaseModel):
     )
 
 
-# --- Схема для ответа API (отображение компании) ---
-# Включает поля из CompanyBase, а также системные поля и, возможно, некоторые связи
 class CompanyResponse(CompanyBase):
     id: int
     owner_user_role_id: int  # ID профиля владельца
@@ -131,9 +128,12 @@ class CompanyResponse(CompanyBase):
 
     created_at: datetime.datetime
     updated_at: datetime.datetime
-    # Опционально: можно добавить информацию о текущем тарифе или кэшбэке, если это часто нужно
-    # current_tariff_name: Optional[str] = None
-    # current_cashback_percentage: Optional[decimal.Decimal] = None
+    current_subscription: Optional[SubscriptionResponseForCompany]
+    cashback: Optional[CashbackConfigResponse]
 
     class Config:
         from_attributes = True
+
+
+class CompanyInDBBase(CompanyResponse):
+    pass

@@ -2,6 +2,7 @@ from typing import Optional
 
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -9,6 +10,7 @@ from backend.core.logger import get_logger
 from backend.core.security import oauth2_scheme, verify_token
 from backend.core.settings import AppSettings, get_settings
 from backend.dao.holder import HolderDAO
+from backend.db.session import create_pool
 from backend.enums.back_office import UserAccessLevelEnum
 from backend.models.account import Account
 from backend.models.company import Company
@@ -24,17 +26,29 @@ from backend.services.otp_sending import MockOTPSendingService
 logger = get_logger(__name__)
 
 
-async def get_session(request: Request):
-    pool = request.app.state.pool
-    async with pool() as session:
+async def get_session(settings: AppSettings = Depends(get_settings)):
+    session_maker = create_pool(settings)
+
+    async with session_maker() as session:
         try:
             yield session
+
+        except SQLAlchemyError as db_error:
+            await session.rollback()
+            logger.error(f"Database error, transaction rolled back: {db_error}")
+            raise
+
+        except Exception as general_error:
+            await session.rollback()
+            logger.error(f"General error, transaction rolled back: {general_error}")
+            raise
+
         finally:
             await session.close()
 
 
-async def get_dao(request: Request) -> HolderDAO:
-    dao = request.app.state.dao
+async def get_dao() -> HolderDAO:
+    dao = HolderDAO()
     return dao
 
 
@@ -67,8 +81,7 @@ async def get_current_account_without_relations(
     """
     Зависимость для получения текущего пользователя на основе JWT токена.
     """
-    async with session.begin():
-        account = await dao.account.get_by_id_without_relations(session, id_=account_id)
+    account = await dao.account.get_by_id_without_relations(session, id_=account_id)
     return account
 
 
@@ -91,8 +104,7 @@ async def get_current_account_with_profiles(
     """
     Зависимость для получения текущего пользователя на основе JWT токена.
     """
-    async with session.begin():
-        account = await dao.account.get_by_id_with_profiles(session, id_=account_id)
+    account = await dao.account.get_by_id_with_profiles(session, id_=account_id)
     return account
 
 
@@ -132,7 +144,6 @@ async def get_current_full_system_admin(
 async def get_owned_company(
     company_id: int,
     session: AsyncSession = Depends(get_session),
-    dao: HolderDAO = Depends(get_dao),
     current_user_role: UserRole = Depends(get_current_user_profile_from_account),
 ) -> Company:
     """
@@ -188,8 +199,11 @@ def get_dashboard_service() -> DashboardService:
     return DashboardService()
 
 
-def get_company_service() -> CompanyService:
-    return CompanyService()
+def get_company_service(
+    settings: AppSettings = Depends(get_settings),
+    dao: HolderDAO = Depends(get_dao),
+) -> CompanyService:
+    return CompanyService(settings=settings, dao=dao)
 
 
 def get_auth_service(

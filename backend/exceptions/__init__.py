@@ -1,3 +1,14 @@
+from backend.exceptions.base import BaseAppException
+from backend.exceptions.common import (
+    BadRequestException,
+    ConflictException,
+    ForbiddenException,
+    InternalServerError,
+    NotFoundException,
+    ServiceUnavailableException,
+    UnauthorizedException,
+    ValidationException,
+)
 from backend.exceptions.services.account import (
     AccountAlreadyExistsException,
     AccountCreationException,
@@ -11,26 +22,16 @@ from backend.exceptions.services.auth import (
     OTPSendingException,
 )
 from backend.exceptions.services.company import (
+    BasePlanNotConfiguredException,
     CompanyDataValidationException,
     CompanyFlowException,
     CompanyNotFoundException,
-    TrialPlanNotConfiguredException,
 )
-
-from .base import BaseAppException
-from .common import (
-    BadRequestException,
-    ConflictException,
-    ForbiddenException,
-    InternalServerError,
-    NotFoundException,
-    ServiceUnavailableException,
-    UnauthorizedException,
-    ValidationException,
-)
+from backend.exceptions.services.subscription import SubscriptionNotFoundException
 
 __all__ = [
     "BaseAppException",
+    "SubscriptionNotFoundException",
     "BadRequestException",
     "ConflictException",
     "ForbiddenException",
@@ -48,7 +49,8 @@ __all__ = [
     "OTPNotFoundException",
     "OTPSendingException",
     "CompanyFlowException",
-    "TrialPlanNotConfiguredException",
     "CompanyDataValidationException",
     "CompanyNotFoundException",
+    "SubscriptionNotFoundException",
+    "BasePlanNotConfiguredException",
 ]

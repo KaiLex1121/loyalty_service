@@ -1,6 +1,7 @@
 from typing import Any, Dict, Optional
 
 from backend.exceptions.common import (
+    ConflictException,
     InternalServerError,
     NotFoundException,
     ValidationException,
@@ -23,8 +24,8 @@ class CompanyFlowException(
         super().__init__(detail=detail, internal_details=internal_details)
 
 
-class TrialPlanNotConfiguredException(InternalServerError):
-    detail = "Trial tariff plan is not configured in the system."
+class BasePlanNotConfiguredException(InternalServerError):
+    detail = "Base tariff plan is not configured in the system."
 
     def __init__(
         self,
@@ -60,6 +61,59 @@ class CompanyNotFoundException(NotFoundException):
             detail = f"Company with {identifier_type} '{identifier}' not found."
         super().__init__(
             resource_name="Company",
+            identifier=identifier,
+            detail=detail,
+            internal_details=internal_details,
+        )
+
+
+class InnConflictException(ConflictException):
+    detail = "Company with this INN already exists."
+
+    def __init__(
+        self,
+        inn: str,
+        detail: Optional[str] = None,
+        internal_details: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        if not detail:
+            detail = f"Can't update company. Company with INN '{inn}' already exists."
+        _internal_details = {"INN": inn}
+        if internal_details:
+            _internal_details.update(internal_details)
+        super().__init__(detail=detail, internal_details=_internal_details)
+
+
+class SubscriptionsNotFoundException(NotFoundException):
+    def __init__(
+        self,
+        identifier: Any,
+        identifier_type: str = "ID",
+        detail: Optional[str] = None,
+        internal_details: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        if not detail:
+            detail = f"Subscriptions of company with {identifier_type} '{identifier}' not found."
+        super().__init__(
+            resource_name="Subscriptions",
+            identifier=identifier,
+            detail=detail,
+            internal_details=internal_details,
+        )
+
+
+class ActiveSubscriptionsNotFoundException(NotFoundException):
+    def __init__(
+        self,
+        identifier: Any,
+        identifier_type: str = "ID",
+        detail: Optional[str] = None,
+        internal_details: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        if not detail:
+            detail = f"Active subscriptions of company with {identifier_type} '{identifier}' not found."
+        super().__init__(
+            resource_name="Subscriptions",
             identifier=identifier,
             detail=detail,
             internal_details=internal_details,

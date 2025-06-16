@@ -13,21 +13,21 @@ class TariffPlanDAO(BaseDAO[TariffPlan, TariffPlanCreate, TariffPlanUpdate]):
     def __init__(self):
         super().__init__(TariffPlan)
 
-    async def get_trial_plan(self, db: AsyncSession) -> Optional[TariffPlan]:
-        result = await db.execute(
-            select(self.model)
-            .filter(
-                self.model.is_trial == True,
-                self.model.status == TariffStatusEnum.ACTIVE,
-            )
-            .order_by(self.model.created_at.desc())
-        )
-        return result.scalars().first()
-
     async def get_by_name(self, db: AsyncSession, *, name: str) -> Optional[TariffPlan]:
         result = await db.execute(
             select(self.model).filter(
                 self.model.name == name, self.model.deleted_at.is_(None)
+            )
+        )
+        return result.scalars().first()
+
+    async def get_by_internal_name(
+        self, db: AsyncSession, *, internal_name: str
+    ) -> Optional[TariffPlan]:
+        result = await db.execute(
+            select(self.model).filter(
+                self.model.internal_name == internal_name,
+                self.model.deleted_at.is_(None),
             )
         )
         return result.scalars().first()

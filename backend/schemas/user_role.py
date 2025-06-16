@@ -24,3 +24,7 @@ class UserRoleResponse(UserRoleBase):
     # is_active: bool # У нас нет is_active в UserRole
     class Config:
         from_attributes = True
+
+
+class UserRoleInDB(UserRoleResponse):
+    pass

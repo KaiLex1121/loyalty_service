@@ -58,10 +58,6 @@ async def _create_superuser_logic(
                 is_active=True,
             )
             account = await account_dao.create(session, obj_in=account_data)
-            # После создания снова загружаем с профилями
-            account = await account_dao.get_by_phone_number_with_profiles(
-                session, phone_number=phone_number
-            )
 
             # Создаем профиль суперпользователя
             user_profile_data = UserRoleCreate(
@@ -84,7 +80,7 @@ async def _create_superuser_logic(
                 email=email,
                 full_name=full_name,
             )
-            await account_dao.update(session, db_ojb=account, obj_in=updated_account)
+            await account_dao.update(session, db_obj=account, obj_in=updated_account)
 
             # Проверяем существующий профиль
             if account.user_profile:

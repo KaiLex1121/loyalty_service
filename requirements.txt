@@ -23,6 +23,8 @@ flake8==7.2.0
 frozenlist==1.6.0
 greenlet==3.2.1
 h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
 idna==3.10
 iniconfig==2.1.0
 isort==6.0.1
@@ -51,6 +53,7 @@ pydantic_core==2.33.2
 pyflakes==3.3.2
 Pygments==2.19.1
 pytest==8.3.5
+pytest-asyncio==1.0.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
 python-jose==3.4.0
