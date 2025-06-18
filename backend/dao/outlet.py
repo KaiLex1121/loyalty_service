@@ -51,6 +51,28 @@ class OutletDAO(BaseDAO[Outlet, OutletCreate, OutletUpdate]):
         result = await session.execute(stmt)
         return list(result.scalars().all())
 
+    async def get_active_outlets_by_ids_and_company_id(
+        self, session: AsyncSession, outlet_ids: List[int], company_id: int
+    ) -> List[Outlet]:
+        """
+        Получить активные торговые точки по списку ID для определенной компании.
+
+        Args:
+            session: Асинхронная сессия базы данных
+            outlet_ids: Список ID торговых точек
+            company_id: ID компании
+
+        Returns:
+            Список найденных торговых точек
+        """
+        stmt = select(Outlet).filter(
+            Outlet.id.in_(outlet_ids),  # Ищем по списку ID
+            Outlet.company_id == company_id,  # Принадлежат нужной компании
+            Outlet.deleted_at.is_(None),  # Не удалены
+        )
+        result = await session.execute(stmt)
+        return list(result.scalars().all())
+
     async def get_active_by_id_and_company_id(
         self, session: AsyncSession, *, outlet_id: int, company_id: int
     ) -> Optional[Outlet]:

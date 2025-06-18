@@ -1,4 +1,3 @@
-from curses.ascii import US
 from typing import Optional
 
 from fastapi import Depends, HTTPException, Request, status
@@ -14,9 +13,11 @@ from backend.dao.holder import HolderDAO
 from backend.db.session import create_pool
 from backend.enums.back_office import UserAccessLevelEnum
 from backend.exceptions.common import UnauthorizedException
+from backend.exceptions.services.employee import EmployeeNotFoundException
 from backend.exceptions.services.outlet import OutletNotFoundException
 from backend.models.account import Account
 from backend.models.company import Company
+from backend.models.employee_role import EmployeeRole
 from backend.models.outlet import Outlet
 from backend.models.subscription import Subscription
 from backend.models.user_role import UserRole
@@ -24,6 +25,7 @@ from backend.services.account import AccountService
 from backend.services.auth import AuthService
 from backend.services.company import CompanyService
 from backend.services.dashboard import DashboardService
+from backend.services.employee import EmployeeService
 from backend.services.otp_code import OtpCodeService
 from backend.services.otp_sending import MockOTPSendingService
 from backend.services.outlet import OutletService
@@ -239,6 +241,54 @@ async def get_verified_outlet_for_user(
     return outlet
 
 
+async def get_owned_employee_role(
+    employee_role_id: int,
+    session: AsyncSession = Depends(get_session),
+    current_user_role: UserRole = Depends(get_current_user_profile_from_account),
+    dao: HolderDAO = Depends(get_dao)
+) -> EmployeeRole:
+    """
+    Проверяет, принадлежит ли EmployeeRole компании, которой владеет current_user_role,
+    или если current_user_role является FULL_SYSTEM_ADMIN.
+    Возвращает EmployeeRoleModel с загруженными account и assigned_outlets.
+    """
+    # get_by_id_with_details загружает EmployeeRole с его Account и assigned_outlets
+    employee_role = await dao.employee_role.get_by_id_with_details(session, employee_role_id=employee_role_id)
+
+    if not employee_role:
+        raise EmployeeNotFoundException(identifier=employee_role_id)
+
+    # Проверка прав: либо суперадмин, либо владелец компании, к которой принадлежит сотрудник
+    if current_user_role.access_level != UserAccessLevelEnum.FULL_ADMIN:
+        # current_user_role.companies_owned должны быть уже загружены благодаря get_current_user_role
+        if not current_user_role.companies_owned: # На случай, если список пуст или не загружен (хотя не должен)
+            raise UnauthorizedException(
+                detail=f"You do not own any companies to manage employees."
+            )
+
+        is_owner_of_employee_company = any(
+            owned_company.id == employee_role.company_id # Проверяем только ID, is_deleted для owned_company не нужен здесь, т.к. мы проверяем доступ к сотруднику активной компании
+            for owned_company in current_user_role.companies_owned
+            if not owned_company.is_deleted # Убедимся, что компания владельца не удалена
+        )
+
+        if not is_owner_of_employee_company:
+            # Если компания сотрудника не найдена среди активных компаний владельца
+            # Проверим, существует ли вообще компания сотрудника и активна ли она
+            company_of_employee = await dao.company.get_active(session, id_=employee_role.company_id)
+            if not company_of_employee:
+                 # Компания сотрудника не активна или удалена, доступ запрещен даже если ранее владел
+                 raise UnauthorizedException(
+                    detail=f"The company associated with employee role ID {employee_role_id} is not accessible or has been deleted."
+                )
+            # Если компания активна, но не принадлежит текущему user_role
+            raise UnauthorizedException(
+                detail=f"You do not have permission to access employee role ID {employee_role_id} as you do not own their company."
+            )
+
+    return employee_role
+
+
 def get_otp_sending_service() -> MockOTPSendingService:
     return MockOTPSendingService()
 
@@ -266,6 +316,12 @@ def get_company_service(
     dao: HolderDAO = Depends(get_dao),
 ) -> CompanyService:
     return CompanyService(settings=settings, dao=dao)
+
+
+def get_employee_service(
+    dao: HolderDAO = Depends(get_dao),
+) -> EmployeeService:
+    return EmployeeService(dao=dao)
 
 
 def get_auth_service(

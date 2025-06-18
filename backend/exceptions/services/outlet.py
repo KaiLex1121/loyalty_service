@@ -1,7 +1,8 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 from backend.exceptions.common import (
     ConflictException,
+    ForbiddenException,
     InternalServerError,
     NotFoundException,
     ValidationException,
@@ -58,3 +59,16 @@ class OutletLimitExceededException(ConflictException):
         if internal_details:
             _internal_details.update(internal_details)
         super().__init__(detail=detail, internal_details=_internal_details)
+
+
+class InvalidOutletForAssignmentException(ForbiddenException):
+    def __init__(
+        self,
+        outlets_id: List[int],
+        company_id: int,
+        detail: Optional[str] = None,
+        internal_details: Optional[Dict[str, Any]] = None,
+    ):
+        if not detail:
+            detail = f"Outlet IDs {outlets_id} do not belong to company ID {company_id} or are invalid for assignment."
+        super().__init__(detail=detail, internal_details=internal_details)

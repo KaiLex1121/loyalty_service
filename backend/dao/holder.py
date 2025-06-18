@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from backend.dao.account import AccountDAO
 from backend.dao.cashback import CashbackConfigDAO
 from backend.dao.company import CompanyDAO
+from backend.dao.employee import EmployeeRoleDAO
 from backend.dao.otp_code import OtpCodeDAO
 from backend.dao.outlet import OutletDAO
 from backend.dao.subscription import SubscriptionDAO
@@ -20,6 +21,7 @@ class HolderDAO:
     tariff_plan: TariffPlanDAO = field(init=False)
     subscription: SubscriptionDAO = field(init=False)
     outlet: OutletDAO = field(init=False)
+    employee_role: EmployeeRoleDAO = field(init=False)
 
     def __post_init__(self):
         self.account = AccountDAO()
@@ -30,3 +32,4 @@ class HolderDAO:
         self.tariff_plan = TariffPlanDAO()
         self.subscription = SubscriptionDAO()
         self.outlet = OutletDAO()
+        self.employee_role = EmployeeRoleDAO()

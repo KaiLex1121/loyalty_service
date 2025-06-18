@@ -39,6 +39,7 @@ class AccountInDBBase(BaseModel):
     email: Optional[EmailStr] = None
     is_active: bool
     created_at: datetime
+    updated_at: datetime
     deleted_at: Optional[datetime] = None
 
     class Config:
@@ -49,3 +50,10 @@ class AccountResponse(AccountInDBBase):
     """
     Схема Account для ответа API. Ha данный момент совпадает c AccountInDBBase, но можно расширить
     """
+
+
+class AccountResponseForEmployee(AccountInDBBase):
+    id: int
+
+    class Config:
+        from_attributes = True

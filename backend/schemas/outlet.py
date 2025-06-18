@@ -45,3 +45,10 @@ class OutletResponse(OutletBase):
 
 class OutletInDB(OutletResponse):
     deleted_at: Optional[datetime.datetime]
+
+
+class OutletResponseForEmployee(OutletBase):
+    id: int
+
+    class Config:
+        from_attributes = True

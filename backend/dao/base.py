@@ -89,12 +89,12 @@ class BaseDAO(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def soft_delete(self, db: AsyncSession, *, id_: Any) -> Optional[ModelType]:
         db_obj = await self.get_active(
             db, id_=id_
-        )  # Ищем только активный объект для удаления
+        )
         if not db_obj:
             return None
-
         db_obj.deleted_at = datetime.now(timezone.utc)
         db.add(db_obj)
+        await db.flush()
         await db.refresh(db_obj)
         return db_obj
 

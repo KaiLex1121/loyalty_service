@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
-from backend.api.v1.enpoints import admin_tariff_plan, auth, company, dashboard, outlet
+from backend import api
+from backend.api.v1.enpoints import admin_tariff_plan, auth, company, dashboard, outlet, employee
 
 api_router_v1 = APIRouter()
 api_router_v1.include_router(auth.router, prefix="/auth", tags=["Authentication"])
@@ -12,3 +13,4 @@ api_router_v1.include_router(
     tags=["Admin - Tariff Plans"],
 )
 api_router_v1.include_router(outlet.router, prefix="/outlet", tags=["Outlet"])
+api_router_v1.include_router(employee.router, prefix="/employee", tags=["Employee"])
