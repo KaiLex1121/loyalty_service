@@ -23,6 +23,7 @@ from backend.models.subscription import Subscription
 from backend.models.user_role import UserRole
 from backend.services.account import AccountService
 from backend.services.auth import AuthService
+from backend.services.cashback import CashbackService
 from backend.services.company import CompanyService
 from backend.services.dashboard import DashboardService
 from backend.services.employee import EmployeeService
@@ -322,6 +323,12 @@ def get_employee_service(
     dao: HolderDAO = Depends(get_dao),
 ) -> EmployeeService:
     return EmployeeService(dao=dao)
+
+
+def get_cashback_service(
+    dao: HolderDAO = Depends(get_dao),
+) -> CashbackService:
+    return CashbackService(dao=dao)
 
 
 def get_auth_service(

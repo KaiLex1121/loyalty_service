@@ -186,27 +186,6 @@ class EmployeeService:
 
         return await self._build_employee_response(session, final_employee_role)
 
-    async def get_employees_for_company(
-        self, session: AsyncSession, company_id: int, skip: int, limit: int
-    ) -> List[EmployeeResponse]:
-        employee_role_models = (
-            await self.dao.employee_role.get_multi_by_company_id_with_details(
-                session, company_id=company_id, skip=skip, limit=limit
-            )
-        )
-        return [
-            await self._build_employee_response(session, er)
-            for er in employee_role_models
-        ]
-
-    async def get_employee_response_by_id(
-        self,
-        session: AsyncSession,
-        employee_role: EmployeeRoleModel,  # employee_role из зависимости
-    ) -> EmployeeResponse:
-        # employee_role уже должен быть загружен с деталями из зависимости get_owned_employee_role
-        return await self._build_employee_response(session, employee_role)
-
 
     async def update_employee_in_company(
         self,
@@ -239,27 +218,23 @@ class EmployeeService:
         # Обновляем привязку к торговым точкам, если передано (даже если это пустой список)
         outlets_updated = False
         if update_data.outlet_ids is not None: # Используем update_data напрямую, т.к. model_dump может убрать None
-            await self.dao.employee_role.assign_outlets_to_employee_role(
+            outlets_to_assign = await self._validate_and_get_outlets_for_assignment(
+                session, outlet_ids=update_data.outlet_ids, company_id=employee_role_to_update.company_id
+            )
+
+            await session.refresh(employee_role_to_update, ['account', 'assigned_outlets'])
+
+            await self.dao.employee_role.set_assigned_outlets(
                 session,
                 employee_role=employee_role_to_update,
-                outlet_ids=update_data.outlet_ids,
-                company_id=employee_role_to_update.company_id
+                outlets_to_assign=outlets_to_assign,
             )
             outlets_updated = True # Флаг, что была операция с торговыми точками
 
         if employee_role_was_modified:
             session.add(employee_role_to_update)
 
-        # Если были какие-либо изменения (в роли или в связях ТТ), делаем flush
-        if employee_role_was_modified or outlets_updated:
-            try:
-                await session.flush()
-            except IntegrityError as e:
-                # Это может произойти, если, например, work_phone_number имеет UNIQUE constraint в БД,
-                # а проверка на уровне Python его пропустила из-за гонки.
-                raise ServiceException(f"Database integrity error during employee update: {str(e.orig)}") from e
 
-        # Обновляем объект из БД, чтобы получить актуальное состояние и все связи для ответа.
         # assign_outlets_to_employee_role уже делает refresh для assigned_outlets.
         # Нам нужно убедиться, что employee_role_to_update содержит актуальные position и work_phone_number,
         # а также account (который не менялся) и обновленные assigned_outlets.
@@ -274,7 +249,7 @@ class EmployeeService:
                 session, employee_role_id=employee_role_to_update.id
             )
             if not updated_employee_role_for_response: # Крайне маловероятно
-                raise EmployeeNotFoundException(employee_role_id=employee_role_to_update.id)
+                raise EmployeeNotFoundException(identifier=employee_role_to_update.id)
             return await self._build_employee_response(session, updated_employee_role_for_response)
         else:
             # Если изменений не было, все равно строим ответ из переданного объекта,
@@ -290,6 +265,20 @@ class EmployeeService:
         )
         return [await self._build_employee_response(session, er) for er in employee_role_models]
 
+    async def get_employee_response_by_id(
+        self, session: AsyncSession, employee_role: EmployeeRoleModel
+    ) -> EmployeeResponse:
+        """
+        Формирует EmployeeResponse из предоставленного объекта EmployeeRoleModel.
+        Предполагается, что employee_role уже получен и проверен на доступ
+        зависимостью в эндпоинте (например, deps.get_owned_employee_role),
+        и что он не является None и не мягко удален (если это не предполагается).
+        """
+        if not employee_role: # Дополнительная проверка на None
+            # Эта ситуация не должна возникать, если зависимость отработала корректно
+            raise EmployeeNotFoundException(identifier=employee_role.id)
+
+        return await self._build_employee_response(session, employee_role)
 
     async def remove_employee_from_company(
         self, session: AsyncSession, employee_role_to_remove: EmployeeRoleModel
