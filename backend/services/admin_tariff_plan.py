@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.dao.holder import HolderDAO
-from backend.enums.back_office import TariffStatusEnum
+from backend.enums import TariffStatusEnum
 from backend.exceptions.services.tarrif_plan import (
     TariffPlanNameConflictException,
 )

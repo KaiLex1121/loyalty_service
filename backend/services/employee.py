@@ -8,7 +8,7 @@ from sqlalchemy.future import select  # Для явного select, если п�
 from sqlalchemy.orm import selectinload
 
 from backend.dao.holder import HolderDAO
-from backend.enums.back_office import SubscriptionStatusEnum
+from backend.enums import SubscriptionStatusEnum
 from backend.exceptions.services.employee import (
     ConflictException,
     EmployeeAlreadyExistsInCompanyException,
@@ -169,7 +169,7 @@ class EmployeeService:
                 session, outlet_ids=employee_data.outlet_ids, company_id=company.id
             )
 
-            await session.refresh(new_employee_role, ['assigned_outlets'])
+            await session.refresh(new_employee_role, ["assigned_outlets"])
 
             await self.dao.employee_role.set_assigned_outlets(
                 session,
@@ -186,12 +186,11 @@ class EmployeeService:
 
         return await self._build_employee_response(session, final_employee_role)
 
-
     async def update_employee_in_company(
         self,
         session: AsyncSession,
         employee_role_to_update: EmployeeRoleModel,
-        update_data: EmployeeUpdate
+        update_data: EmployeeUpdate,
     ) -> EmployeeResponse:
 
         employee_role_was_modified = False
@@ -206,34 +205,49 @@ class EmployeeService:
         if "work_phone_number" in update_fields_for_role:
             new_work_phone = update_fields_for_role["work_phone_number"]
             if new_work_phone != employee_role_to_update.work_phone_number:
-                if new_work_phone: # Проверка уникальности только если номер предоставлен и он не пустой
-                    existing_work_phone_employee = await self.dao.employee_role.get_active_by_work_phone(
-                        session, work_phone_number=new_work_phone
+                if (
+                    new_work_phone
+                ):  # Проверка уникальности только если номер предоставлен и он не пустой
+                    existing_work_phone_employee = (
+                        await self.dao.employee_role.get_active_by_work_phone(
+                            session, work_phone_number=new_work_phone
+                        )
                     )
-                    if existing_work_phone_employee and existing_work_phone_employee.id != employee_role_to_update.id:
-                        raise ConflictException(detail=f"The work phone number '{new_work_phone}' is already in use by another active employee.")
+                    if (
+                        existing_work_phone_employee
+                        and existing_work_phone_employee.id
+                        != employee_role_to_update.id
+                    ):
+                        raise ConflictException(
+                            detail=f"The work phone number '{new_work_phone}' is already in use by another active employee."
+                        )
                 employee_role_to_update.work_phone_number = new_work_phone
                 employee_role_was_modified = True
 
         # Обновляем привязку к торговым точкам, если передано (даже если это пустой список)
         outlets_updated = False
-        if update_data.outlet_ids is not None: # Используем update_data напрямую, т.к. model_dump может убрать None
+        if (
+            update_data.outlet_ids is not None
+        ):  # Используем update_data напрямую, т.к. model_dump может убрать None
             outlets_to_assign = await self._validate_and_get_outlets_for_assignment(
-                session, outlet_ids=update_data.outlet_ids, company_id=employee_role_to_update.company_id
+                session,
+                outlet_ids=update_data.outlet_ids,
+                company_id=employee_role_to_update.company_id,
             )
 
-            await session.refresh(employee_role_to_update, ['account', 'assigned_outlets'])
+            await session.refresh(
+                employee_role_to_update, ["account", "assigned_outlets"]
+            )
 
             await self.dao.employee_role.set_assigned_outlets(
                 session,
                 employee_role=employee_role_to_update,
                 outlets_to_assign=outlets_to_assign,
             )
-            outlets_updated = True # Флаг, что была операция с торговыми точками
+            outlets_updated = True  # Флаг, что была операция с торговыми точками
 
         if employee_role_was_modified:
             session.add(employee_role_to_update)
-
 
         # assign_outlets_to_employee_role уже делает refresh для assigned_outlets.
         # Нам нужно убедиться, что employee_role_to_update содержит актуальные position и work_phone_number,
@@ -245,25 +259,33 @@ class EmployeeService:
             # Можно просто await session.refresh(employee_role_to_update, attribute_names=['account', 'assigned_outlets'])
             # если уверены, что все поля employee_role_to_update уже актуальны.
             # Но для полной гарантии и загрузки связей лучше так:
-            updated_employee_role_for_response = await self.dao.employee_role.get_by_id_with_details(
-                session, employee_role_id=employee_role_to_update.id
+            updated_employee_role_for_response = (
+                await self.dao.employee_role.get_by_id_with_details(
+                    session, employee_role_id=employee_role_to_update.id
+                )
             )
-            if not updated_employee_role_for_response: # Крайне маловероятно
+            if not updated_employee_role_for_response:  # Крайне маловероятно
                 raise EmployeeNotFoundException(identifier=employee_role_to_update.id)
-            return await self._build_employee_response(session, updated_employee_role_for_response)
+            return await self._build_employee_response(
+                session, updated_employee_role_for_response
+            )
         else:
             # Если изменений не было, все равно строим ответ из переданного объекта,
             # убедившись, что его связи загружены для _build_employee_response
             return await self._build_employee_response(session, employee_role_to_update)
 
-
     async def get_employees_for_company(
         self, session: AsyncSession, company_id: int, skip: int, limit: int
     ) -> List[EmployeeResponse]:
-        employee_role_models = await self.dao.employee_role.get_multi_by_company_id_with_details(
-            session, company_id=company_id, skip=skip, limit=limit
+        employee_role_models = (
+            await self.dao.employee_role.get_multi_by_company_id_with_details(
+                session, company_id=company_id, skip=skip, limit=limit
+            )
         )
-        return [await self._build_employee_response(session, er) for er in employee_role_models]
+        return [
+            await self._build_employee_response(session, er)
+            for er in employee_role_models
+        ]
 
     async def get_employee_response_by_id(
         self, session: AsyncSession, employee_role: EmployeeRoleModel
@@ -274,7 +296,7 @@ class EmployeeService:
         зависимостью в эндпоинте (например, deps.get_owned_employee_role),
         и что он не является None и не мягко удален (если это не предполагается).
         """
-        if not employee_role: # Дополнительная проверка на None
+        if not employee_role:  # Дополнительная проверка на None
             # Эта ситуация не должна возникать, если зависимость отработала корректно
             raise EmployeeNotFoundException(identifier=employee_role.id)
 
@@ -283,13 +305,21 @@ class EmployeeService:
     async def remove_employee_from_company(
         self, session: AsyncSession, employee_role_to_remove: EmployeeRoleModel
     ) -> EmployeeResponse:
-        archived_employee_role = await self.dao.employee_role.soft_delete(session, id_=employee_role_to_remove.id)
+        archived_employee_role = await self.dao.employee_role.soft_delete(
+            session, id_=employee_role_to_remove.id
+        )
         if not archived_employee_role:
             raise EmployeeNotFoundException(identifier=employee_role_to_remove.id)
 
-        final_employee_role = await self.dao.employee_role.get_by_id_with_details_including_deleted(session, employee_role_id=archived_employee_role.id)
+        final_employee_role = (
+            await self.dao.employee_role.get_by_id_with_details_including_deleted(
+                session, employee_role_id=archived_employee_role.id
+            )
+        )
         if not final_employee_role:
-             await session.refresh(archived_employee_role, ['account', 'assigned_outlets'])
-             return await self._build_employee_response(session, archived_employee_role)
+            await session.refresh(
+                archived_employee_role, ["account", "assigned_outlets"]
+            )
+            return await self._build_employee_response(session, archived_employee_role)
 
         return await self._build_employee_response(session, final_employee_role)

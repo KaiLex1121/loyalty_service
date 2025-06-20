@@ -5,7 +5,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from backend.dao import company
-from backend.enums.back_office import (
+from backend.enums import (
     CurrencyEnum,
     OutletStatusEnum,
     PaymentCycleEnum,

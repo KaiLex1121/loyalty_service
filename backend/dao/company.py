@@ -5,10 +5,9 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
 from backend.dao.base import BaseDAO
-from backend.enums.back_office import CompanyStatusEnum
+from backend.enums import CompanyStatusEnum
 from backend.models.company import Company
 from backend.models.subscription import Subscription as SubscriptionModel
-from backend.models.user_role import UserRole
 from backend.schemas.company import CompanyCreate, CompanyUpdate
 
 
@@ -48,7 +47,7 @@ class CompanyDAO(BaseDAO[Company, CompanyCreate, CompanyUpdate]):
             select(self.model)
             .options(
                 selectinload(self.model.owner_user_role),
-                selectinload(self.model.cashback),
+                selectinload(self.model.cashback_config),
                 selectinload(self.model.subscriptions).options(
                     selectinload(SubscriptionModel.tariff_plan)
                 ),

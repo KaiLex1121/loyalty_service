@@ -87,9 +87,7 @@ class BaseDAO(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return await self.get_multi(db, skip=skip, limit=limit)
 
     async def soft_delete(self, db: AsyncSession, *, id_: Any) -> Optional[ModelType]:
-        db_obj = await self.get_active(
-            db, id_=id_
-        )
+        db_obj = await self.get_active(db, id_=id_)
         if not db_obj:
             return None
         db_obj.deleted_at = datetime.now(timezone.utc)

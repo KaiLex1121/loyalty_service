@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 
 from backend.db.base import Base
-from backend.enums.back_office import OtpPurposeEnum
+from backend.enums import OtpPurposeEnum
 
 if TYPE_CHECKING:
     from .account import Account

@@ -1,11 +1,10 @@
-from datetime import datetime, timezone
 from typing import List, Optional
 
-from sqlalchemy import func, select, update
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.dao.base import BaseDAO
-from backend.enums.back_office import OutletStatusEnum
+from backend.enums import OutletStatusEnum
 from backend.models.outlet import Outlet
 from backend.schemas.outlet import OutletCreate, OutletUpdate
 

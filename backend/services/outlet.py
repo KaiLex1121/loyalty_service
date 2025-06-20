@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload  # Для загрузки связей,
 
 from backend.core.logger import get_logger
 from backend.dao.holder import HolderDAO
-from backend.enums.back_office import OutletStatusEnum
+from backend.enums import OutletStatusEnum
 from backend.exceptions.common import InternalServerError
 from backend.exceptions.services.outlet import (
     OutletLimitExceededException,
@@ -65,7 +65,7 @@ class OutletService:
             session,
             obj_in=outlet_data,
             company_id=company.id,
-            initial_status=OutletStatusEnum.ACTIVE,
+            initial_status=OutletStatusEnum.OPEN,
         )
 
         return OutletResponse.model_validate(new_outlet_model)

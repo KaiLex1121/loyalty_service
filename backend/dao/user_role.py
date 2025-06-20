@@ -44,7 +44,7 @@ class UserRoleDAO(BaseDAO[UserRole, UserRoleCreate, UserRoleCreate]):
             select(UserRole)
             .options(
                 selectinload(UserRole.companies_owned).options(
-                    selectinload(Company.cashback),
+                    selectinload(Company.cashback_config),
                     selectinload(Company.subscriptions).options(
                         selectinload(Subscription.tariff_plan)
                     ),

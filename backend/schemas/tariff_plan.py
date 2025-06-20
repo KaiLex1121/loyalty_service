@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-from backend.enums.back_office import CurrencyEnum, PaymentCycleEnum, TariffStatusEnum
+from backend.enums import CurrencyEnum, PaymentCycleEnum, TariffStatusEnum
 
 
 class TariffPlanBase(BaseModel):

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from backend.enums.back_office import (  # Убедитесь, что путь правильный
+from backend.enums import (  # Убедитесь, что путь правильный
     UserAccessLevelEnum,
 )
 

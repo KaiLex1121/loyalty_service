@@ -156,7 +156,6 @@ class EmployeeRoleDAO(BaseDAO[EmployeeRole, EmployeeCreate, EmployeeUpdate]):
         result = await session.execute(stmt)
         return result.scalars().first()
 
-
     async def get_by_id_with_details_including_deleted(
         self, session: AsyncSession, *, employee_role_id: int
     ) -> Optional[EmployeeRole]:
@@ -164,9 +163,9 @@ class EmployeeRoleDAO(BaseDAO[EmployeeRole, EmployeeCreate, EmployeeUpdate]):
             select(self.model)
             .options(
                 selectinload(self.model.account),
-                selectinload(self.model.assigned_outlets)
+                selectinload(self.model.assigned_outlets),
             )
-            .filter(self.model.id == employee_role_id) # Без фильтра по deleted_at
+            .filter(self.model.id == employee_role_id)  # Без фильтра по deleted_at
         )
         result = await session.execute(stmt)
         return result.scalars().first()

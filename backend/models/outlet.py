@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 
 from backend.db.base import Base
-from backend.enums.back_office import OutletStatusEnum
+from backend.enums import OutletStatusEnum
 from backend.models.association_tables import employee_role_outlet_association
 
 if TYPE_CHECKING:
@@ -26,7 +26,7 @@ class Outlet(Base):
             create_constraint=True,
             inherit_schema=True,
         ),
-        default=OutletStatusEnum.ACTIVE,
+        default=OutletStatusEnum.OPEN,
         nullable=False,
         index=True,
     )

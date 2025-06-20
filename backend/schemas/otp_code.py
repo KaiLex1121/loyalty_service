@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from backend.enums.back_office import OtpPurposeEnum
+from backend.enums import OtpPurposeEnum
 
 
 class OtpCodeBase(BaseModel):

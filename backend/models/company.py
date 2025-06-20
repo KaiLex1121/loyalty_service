@@ -5,15 +5,15 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 
 from backend.db.base import Base
-from backend.enums.back_office import CompanyStatusEnum, LegalFormEnum
+from backend.enums.company_enums import CompanyStatusEnum, LegalFormEnum
 
 if TYPE_CHECKING:
-    from .cashback import Cashback
     from .customer_role import CustomerRole
     from .employee_role import EmployeeRole
     from .notification import NotificationMessage
     from .outlet import Outlet
-    from .promotion import Promotion
+    from .promotions.cashback_config import CashbackConfig
+    from .promotions.promotion import Promotion
     from .subscription import Subscription
     from .transaction import Transaction
     from .user_role import UserRole
@@ -83,13 +83,6 @@ class Company(Base):
     )
     customers: Mapped[List["CustomerRole"]] = relationship(
         "CustomerRole", back_populates="company"
-    )
-
-    cashback: Mapped["Cashback"] = relationship(
-        "Cashback",
-        back_populates="company",
-        uselist=False,
-        cascade="all, delete-orphan",
     )
     promotions: Mapped[List["Promotion"]] = relationship(
         "Promotion", back_populates="company", cascade="all, delete-orphan"

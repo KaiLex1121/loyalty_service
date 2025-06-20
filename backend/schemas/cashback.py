@@ -6,8 +6,9 @@ from pydantic import BaseModel, Field
 
 
 class CashbackConfigBase(BaseModel):
-    default_percentage: decimal.Decimal = Field(gt=0, le=100, description="Процент кэшбэка по умолчанию (больше 0)")
-
+    default_percentage: decimal.Decimal = Field(
+        gt=0, le=100, description="Процент кэшбэка по умолчанию (больше 0)"
+    )
 
 
 class CashbackConfigCreate(CashbackConfigBase):
@@ -15,7 +16,9 @@ class CashbackConfigCreate(CashbackConfigBase):
 
 
 class CashbackConfigUpdate(CashbackConfigBase):
-    default_percentage: Optional[decimal.Decimal] = Field(gt=0, le=100, description="Процент кэшбэка по умолчанию (больше 0 и менее 100)")
+    default_percentage: Optional[decimal.Decimal] = Field(
+        gt=0, le=100, description="Процент кэшбэка по умолчанию (больше 0 и менее 100)"
+    )
 
 
 class CashbackConfigResponse(CashbackConfigBase):

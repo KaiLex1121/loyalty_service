@@ -2,7 +2,7 @@ import os
 from functools import lru_cache  # Для кэширования экземпляра настроек
 from pathlib import Path
 
-from pydantic import AnyHttpUrl, PostgresDsn, computed_field
+from pydantic import PostgresDsn, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent  # -> . (корень проекта)
@@ -79,7 +79,7 @@ class SecuritySettings(BaseSettings):
 
 
 class WebAppSettings(BaseSettings):
-    BASE_URL: AnyHttpUrl = "http://localhost:8000"
+    BASE_URL: str = "http://localhost:8000"
     TEMPLATES_DIR: Path = BASE_DIR / "backend" / "web_app" / "templates"
     STATIC_DIR: Path = BASE_DIR / "backend" / "web_app" / "static"
 

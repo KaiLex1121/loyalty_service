@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-from backend.enums.back_office import CompanyStatusEnum
+from backend.enums import CompanyStatusEnum
 from backend.schemas.account import (  # Предполагаем, что Enum'ы импортируются так
     AccountResponse,
 )

@@ -10,7 +10,7 @@ from backend.core.security import (
 )
 from backend.core.settings import AppSettings
 from backend.dao.holder import HolderDAO
-from backend.enums.back_office import OtpPurposeEnum
+from backend.enums import OtpPurposeEnum
 from backend.exceptions import (
     AccountNotFoundException,
     InvalidOTPException,

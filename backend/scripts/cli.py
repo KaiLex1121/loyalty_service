@@ -13,7 +13,7 @@ from backend.dao.user_role import UserRoleDAO  # Используем экзем
 
 # Импорты из вашего проекта
 from backend.db.session import create_pool
-from backend.enums.back_office import (  # Прямой импорт или из backend.enums
+from backend.enums import (  # Прямой импорт или из backend.enums
     UserAccessLevelEnum,
 )
 from backend.models.user_role import UserRole  # Используем AdminProfile

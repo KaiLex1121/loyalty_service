@@ -1,10 +1,10 @@
-from typing import List, Optional, Sequence
+from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from backend.dao.base import BaseDAO
-from backend.enums.back_office import (  # Прямой импорт, если не через __init__
+from backend.enums import (  # Прямой импорт, если не через __init__
     TariffStatusEnum,
 )
 from backend.models.tariff_plan import TariffPlan
@@ -24,25 +24,6 @@ class TariffPlanDAO(BaseDAO[TariffPlan, TariffPlanCreate, TariffPlanUpdate]):
         )
         return result.scalars().first()
 
-    async def get_trial_plan(self, db: AsyncSession) -> Optional[TariffPlan]:
-        """
-        Получает текущий активный триальный тарифный план.
-        Предполагается, что активный триальный тариф может быть только один.
-        """
-        stmt = (
-            select(self.model)
-            .filter(
-                self.model.is_trial == True,
-                self.model.status == TariffStatusEnum.ACTIVE,  # Только активные триалы
-                self.model.deleted_at.is_(None),
-            )
-            .order_by(
-                self.model.created_at.desc()
-            )  # Берем самый новый, если их несколько (хотя не должно быть)
-        )
-        result = await db.execute(stmt)
-        return result.scalars().first()
-
     async def get_all_active_public_plans(
         self, db: AsyncSession, skip: int = 0, limit: int = 100
     ) -> List[TariffPlan]:
@@ -54,7 +35,7 @@ class TariffPlanDAO(BaseDAO[TariffPlan, TariffPlanCreate, TariffPlanUpdate]):
                 self.model.is_public == True,
                 self.model.deleted_at.is_(None),
             )
-            .order_by(self.model.sort_order, self.model.price)  # Сортировка
+            .order_by(self.model.sort_order)  # Сортировка
             .offset(skip)
             .limit(limit)
         )

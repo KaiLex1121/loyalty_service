@@ -12,7 +12,7 @@ from backend.core.settings import settings
 from backend.db.base import Base
 from backend.models import (
     Account,
-    Cashback,
+    CashbackConfig,
     Company,
     CustomerRole,
     EmployeeRole,

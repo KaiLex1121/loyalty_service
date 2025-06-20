@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 
 from backend.db.base import Base
-from backend.enums.back_office import PaymentCycleEnum, SubscriptionStatusEnum
+from backend.enums import PaymentCycleEnum, SubscriptionStatusEnum
 
 if TYPE_CHECKING:
     from .company import Company

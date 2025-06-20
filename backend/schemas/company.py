@@ -7,8 +7,7 @@ from typing import (
 
 from pydantic import BaseModel, Field, field_validator
 
-from backend.dao import cashback
-from backend.enums.back_office import CompanyStatusEnum, LegalFormEnum
+from backend.enums import CompanyStatusEnum, LegalFormEnum
 from backend.schemas.cashback import CashbackConfigResponse
 from backend.schemas.subscription import SubscriptionResponseForCompany
 

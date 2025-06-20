@@ -110,12 +110,12 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 
 
 def setup_exception_handlers(app: FastAPI) -> None:
-    app.add_exception_handler(BaseAppException, base_app_exception_handler)
+    app.add_exception_handler(BaseAppException, base_app_exception_handler)  # type: ignore
     app.add_exception_handler(
-        RequestValidationError, request_validation_exception_handler
-    )  # Для валидации Pydantic из запросов
+        RequestValidationError, request_validation_exception_handler  # type: ignore
+    )  #
     app.add_exception_handler(
-        ValidationError, pydantic_validation_error_handler
+        ValidationError, pydantic_validation_error_handler  # type: ignore
     )  # Для pydantic ошибок из сервисов
     app.add_exception_handler(
         Exception, unhandled_exception_handler

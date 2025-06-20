@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.core.logger import get_logger
 from backend.core.settings import AppSettings
 from backend.dao.holder import HolderDAO
-from backend.enums.back_office import (
+from backend.enums import (
     CompanyStatusEnum,
     SubscriptionStatusEnum,
     UserAccessLevelEnum,
@@ -29,8 +29,8 @@ from backend.exceptions.services.company import (
     OgrnConflictException,
     SubscriptionsNotFoundException,
 )
-from backend.models.cashback import Cashback
 from backend.models.company import Company as CompanyModel
+from backend.models.promotions.cashback_config import CashbackConfig
 from backend.models.subscription import Subscription
 from backend.models.tariff_plan import TariffPlan
 from backend.models.user_role import UserRole as UserRoleModel
@@ -79,7 +79,7 @@ class CompanyService:
         )
 
         cashback_response = CashbackConfigResponse.model_validate(
-            company_model.cashback
+            company_model.cashback_config
         )
 
         if not cashback_response:

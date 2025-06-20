@@ -11,7 +11,7 @@ from backend.core.security import oauth2_scheme, verify_token
 from backend.core.settings import AppSettings, get_settings
 from backend.dao.holder import HolderDAO
 from backend.db.session import create_pool
-from backend.enums.back_office import UserAccessLevelEnum
+from backend.enums import UserAccessLevelEnum
 from backend.exceptions.common import UnauthorizedException
 from backend.exceptions.services.employee import EmployeeNotFoundException
 from backend.exceptions.services.outlet import OutletNotFoundException
@@ -175,7 +175,7 @@ async def get_owned_company(
 
     stmt = stmt.options(
         selectinload(Company.owner_user_role),
-        selectinload(Company.cashback),
+        selectinload(Company.cashback_config),
         selectinload(Company.subscriptions).options(
             selectinload(Subscription.tariff_plan)
         ),
@@ -246,7 +246,7 @@ async def get_owned_employee_role(
     employee_role_id: int,
     session: AsyncSession = Depends(get_session),
     current_user_role: UserRole = Depends(get_current_user_profile_from_account),
-    dao: HolderDAO = Depends(get_dao)
+    dao: HolderDAO = Depends(get_dao),
 ) -> EmployeeRole:
     """
     Проверяет, принадлежит ли EmployeeRole компании, которой владеет current_user_role,
@@ -254,7 +254,9 @@ async def get_owned_employee_role(
     Возвращает EmployeeRoleModel с загруженными account и assigned_outlets.
     """
     # get_by_id_with_details загружает EmployeeRole с его Account и assigned_outlets
-    employee_role = await dao.employee_role.get_by_id_with_details(session, employee_role_id=employee_role_id)
+    employee_role = await dao.employee_role.get_by_id_with_details(
+        session, employee_role_id=employee_role_id
+    )
 
     if not employee_role:
         raise EmployeeNotFoundException(identifier=employee_role_id)
@@ -262,24 +264,29 @@ async def get_owned_employee_role(
     # Проверка прав: либо суперадмин, либо владелец компании, к которой принадлежит сотрудник
     if current_user_role.access_level != UserAccessLevelEnum.FULL_ADMIN:
         # current_user_role.companies_owned должны быть уже загружены благодаря get_current_user_role
-        if not current_user_role.companies_owned: # На случай, если список пуст или не загружен (хотя не должен)
+        if (
+            not current_user_role.companies_owned
+        ):  # На случай, если список пуст или не загружен (хотя не должен)
             raise UnauthorizedException(
                 detail=f"You do not own any companies to manage employees."
             )
 
         is_owner_of_employee_company = any(
-            owned_company.id == employee_role.company_id # Проверяем только ID, is_deleted для owned_company не нужен здесь, т.к. мы проверяем доступ к сотруднику активной компании
+            owned_company.id
+            == employee_role.company_id  # Проверяем только ID, is_deleted для owned_company не нужен здесь, т.к. мы проверяем доступ к сотруднику активной компании
             for owned_company in current_user_role.companies_owned
-            if not owned_company.is_deleted # Убедимся, что компания владельца не удалена
+            if not owned_company.is_deleted  # Убедимся, что компания владельца не удалена
         )
 
         if not is_owner_of_employee_company:
             # Если компания сотрудника не найдена среди активных компаний владельца
             # Проверим, существует ли вообще компания сотрудника и активна ли она
-            company_of_employee = await dao.company.get_active(session, id_=employee_role.company_id)
+            company_of_employee = await dao.company.get_active(
+                session, id_=employee_role.company_id
+            )
             if not company_of_employee:
-                 # Компания сотрудника не активна или удалена, доступ запрещен даже если ранее владел
-                 raise UnauthorizedException(
+                # Компания сотрудника не активна или удалена, доступ запрещен даже если ранее владел
+                raise UnauthorizedException(
                     detail=f"The company associated with employee role ID {employee_role_id} is not accessible or has been deleted."
                 )
             # Если компания активна, но не принадлежит текущему user_role

@@ -1,4 +1,4 @@
-from backend.enums.back_office import SubscriptionStatusEnum
+from backend.enums import SubscriptionStatusEnum
 from backend.exceptions.services.company import (
     ActiveSubscriptionsNotFoundException,
     SubscriptionsNotFoundException,

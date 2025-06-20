@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 
 from backend.db.base import Base
-from backend.enums.back_office import CurrencyEnum, PaymentCycleEnum, TariffStatusEnum
+from backend.enums import CurrencyEnum, PaymentCycleEnum, TariffStatusEnum
 
 if TYPE_CHECKING:
     from .subscription import Subscription
@@ -72,4 +72,4 @@ class TariffPlan(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<TariffPlan(id={self.id}, name='{self.name}', price={self.price} {self.currency.value})>"
+        return f"<TariffPlan(id={self.id}, name='{self.name}', currency={self.currency.value})>"

@@ -3,7 +3,7 @@ import re
 from pydantic import BaseModel, Field, model_validator
 
 from backend.core.settings import settings
-from backend.enums.back_office import OtpPurposeEnum
+from backend.enums import OtpPurposeEnum
 
 
 class PhoneNumber(BaseModel):

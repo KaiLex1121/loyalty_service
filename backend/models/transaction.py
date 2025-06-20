@@ -13,7 +13,8 @@ if TYPE_CHECKING:
     from .customer_role import CustomerRole
     from .employee_role import EmployeeRole
     from .outlet import Outlet
-    from .promotion import Promotion
+    from .promotions.promotion import Promotion
+    from .promotions.promotion_usage import PromotionUsage
 
 
 class Transaction(Base):
@@ -33,7 +34,7 @@ class Transaction(Base):
     )
     balance_after: Mapped[decimal.Decimal] = mapped_column(
         Numeric(12, 2), nullable=True
-    )  # Для аудита
+    )
     performed_by_employee_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("employee_roles.id", ondelete="SET NULL"), nullable=True, index=True
     )
@@ -49,8 +50,8 @@ class Transaction(Base):
     outlet_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("outlets.id", ondelete="SET NULL"), nullable=True
     )
-    applied_promotion_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("promotions.id", ondelete="SET NULL"), nullable=True
+    promotion_usage_entry: Mapped[Optional["PromotionUsage"]] = relationship(
+        "PromotionUsage", back_populates="transaction", uselist=False
     )
 
     customer_role_profile: Mapped["CustomerRole"] = relationship(

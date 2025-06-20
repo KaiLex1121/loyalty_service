@@ -4,7 +4,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from backend.dao.base import BaseDAO
-from backend.enums.back_office import TariffStatusEnum
 from backend.models.tariff_plan import TariffPlan
 from backend.schemas.tariff_plan import TariffPlanCreate, TariffPlanUpdate
 
