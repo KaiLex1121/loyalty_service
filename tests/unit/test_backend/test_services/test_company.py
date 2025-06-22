@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from backend.dao.account import AccountDAO
 from backend.dao.admin_tarrif_plan import TariffPlanDAO
-from backend.dao.cashback import CashbackConfigDAO
+from backend.dao.cashback_config import CashbackConfigDAO
 from backend.dao.company import CompanyDAO
 from backend.dao.holder import HolderDAO
 from backend.dao.subscription import SubscriptionDAO

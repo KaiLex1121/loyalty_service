@@ -12,15 +12,20 @@ from backend.core.dependencies import (
 )
 from backend.dao.holder import HolderDAO  # Для get_dao_holder
 from backend.models.company import Company as CompanyModel
-from backend.schemas.cashback import CashbackConfigResponse, CashbackConfigUpdate
-from backend.services.cashback import CashbackService  # Ваш сервис
+from backend.schemas.company_default_cashback_config import (
+    CompanyDefaultCashbackConfigResponse,
+    CompanyDefaultCashbackConfigUpdate,
+)
+from backend.services.company_default_cashback_config import (  # Ваш сервис
+    CompanyDefaultCashbackConfigService,
+)
 
 router = APIRouter()
 
 
 @router.get(
-    "/companies/{company_id}/cashback-config",
-    response_model=CashbackConfigResponse,
+    "/{company_id}/cashback-config",
+    response_model=CompanyDefaultCashbackConfigResponse,
     summary="Получить конфигурацию кэшбэка для компании",
 )
 async def get_company_cashback_config_endpoint(
@@ -31,7 +36,9 @@ async def get_company_cashback_config_endpoint(
     session: AsyncSession = Depends(
         get_session
     ),  # Нужна сервису (хотя в get_cashback_config он ее не использует для запросов)
-    cashback_service: CashbackService = Depends(get_cashback_service),
+    cashback_service: CompanyDefaultCashbackConfigService = Depends(
+        get_cashback_service
+    ),
 ):
     """
     Возвращает текущие настройки кэшбэка для указанной компании.
@@ -43,17 +50,19 @@ async def get_company_cashback_config_endpoint(
 
 
 @router.put(
-    "/companies/{company_id}/cashback-config",
-    response_model=CashbackConfigResponse,
+    "/{company_id}/cashback-config",
+    response_model=CompanyDefaultCashbackConfigResponse,
     summary="Обновить конфигурацию кэшбэка для компании",
 )
 async def update_company_cashback_config_endpoint(
-    update_data: CashbackConfigUpdate,
+    update_data: CompanyDefaultCashbackConfigUpdate,
     company: CompanyModel = Depends(
         get_owned_company
     ),  # Зависимость проверяет права и загружает компанию с cashback_config
     session: AsyncSession = Depends(get_session),
-    cashback_service: CashbackService = Depends(get_cashback_service),
+    cashback_service: CompanyDefaultCashbackConfigService = Depends(
+        get_cashback_service
+    ),
 ):
     """
     Обновляет настройки кэшбэка для указанной компании.

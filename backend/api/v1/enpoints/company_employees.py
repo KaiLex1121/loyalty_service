@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.dependencies import (
     get_employee_service,
-    get_outlet_service,
     get_owned_company,
     get_owned_employee_role,
     get_session,
@@ -21,8 +20,22 @@ from backend.services.outlet import OutletService
 router = APIRouter()
 
 
+@router.get(
+    "/{company_id}/employees/{employee_role_id}",
+    response_model=EmployeeResponse,
+    summary="Get specific company employee",
+)
+async def get_company_employee(
+    employee_role: EmployeeRole = Depends(get_owned_employee_role),
+    session: AsyncSession = Depends(get_session),
+    employee_service: EmployeeService = Depends(get_employee_service),
+):
+    """Returns detailed information about specific company employee."""
+    return await employee_service.get_employee_response_by_id(session, employee_role)
+
+
 @router.post(
-    "/companies/{company_id}/employees",  # Путь для создания в контексте компании
+    "/{company_id}/employees",  # Путь для создания в контексте компании
     response_model=EmployeeResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Добавить нового сотрудника в компанию",
@@ -44,7 +57,7 @@ async def add_employee_to_company_endpoint(
 
 
 @router.get(
-    "/companies/{company_id}/employees",
+    "/{company_id}/employees",
     response_model=List[EmployeeResponse],
     summary="Получить список сотрудников компании",
 )
@@ -64,12 +77,11 @@ async def get_company_employees_endpoint(
 
 
 @router.get(
-    "/employees/{employee_role_id}",  # Отдельный путь для конкретного EmployeeRole
+    "/{company_id}/employees/{employee_role_id}",  # Отдельный путь для конкретного EmployeeRole
     response_model=EmployeeResponse,
     summary="Получить информацию о конкретном сотруднике",
 )
 async def get_employee_by_id_endpoint(
-    # Зависимость get_owned_employee_role проверяет доступ к EmployeeRole через компанию и возвращает объект
     employee_role: EmployeeRole = Depends(get_owned_employee_role),
     session: AsyncSession = Depends(
         get_session
@@ -84,7 +96,7 @@ async def get_employee_by_id_endpoint(
 
 
 @router.put(
-    "/employees/{employee_role_id}",
+    "/{company_id}/employees/{employee_role_id}",
     response_model=EmployeeResponse,
     summary="Обновить информацию о сотруднике",
 )
@@ -107,7 +119,7 @@ async def update_employee_endpoint(
 
 
 @router.delete(
-    "/employees/{employee_role_id}",
+    "/{company_id}/employees/{employee_role_id}",
     response_model=EmployeeResponse,
     summary="Архивировать (мягко удалить) сотрудника из компании",
 )

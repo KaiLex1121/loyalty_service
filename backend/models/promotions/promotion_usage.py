@@ -21,7 +21,7 @@ class PromotionUsage(Base):
             "promotions.id",
             name="fk_promotion_usages_promotion_id_promotions",
             ondelete="RESTRICT",
-        ),  # RESTRICT, чтобы не удалить акцию, если есть использования. Или SET NULL/CASCADE по логике.
+        ),
         nullable=False,
         index=True,
     )
@@ -31,7 +31,7 @@ class PromotionUsage(Base):
         ForeignKey(
             "customer_roles.id",
             name="fk_promotion_usages_customer_role_id_customer_roles",
-        ),  # Замените customer_roles.id на актуальное
+        ),
         nullable=False,
         index=True,
     )
@@ -44,11 +44,9 @@ class PromotionUsage(Base):
             ForeignKey(
                 "transactions.id",
                 name="fk_promotion_usages_transaction_id_transactions",
-            ),  # Замените transactions.id на актуальное
-            nullable=True,  # Может быть Null, если акция применяется не в рамках транзакции (хотя для кэшбэка это маловероятно)
-            unique=True,  # Одна запись использования на одну транзакцию (если акция не может быть применена несколько раз к одной транзакции)
-            # Если акция может быть применена несколько раз к одной транзакции (например, на разные товары), то unique=False
-            # и UniqueConstraint ниже будет другим
+            ),
+            nullable=False,
+            unique=True,
         )
     )
     transaction: Mapped[Optional["Transaction"]] = relationship(

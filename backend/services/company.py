@@ -22,20 +22,25 @@ from backend.exceptions import (
     ForbiddenException,
     InternalServerError,
 )
-from backend.exceptions.services.cashback import CashbackNotConfiguredException
 from backend.exceptions.services.company import (
     ActiveSubscriptionsNotFoundException,
     InnConflictException,
     OgrnConflictException,
     SubscriptionsNotFoundException,
 )
+from backend.exceptions.services.company_default_cashback_config import (
+    CompanyDefaultCashbackNotConfiguredException,
+)
 from backend.models.company import Company as CompanyModel
 from backend.models.promotions.cashback_config import CashbackConfig
 from backend.models.subscription import Subscription
 from backend.models.tariff_plan import TariffPlan
 from backend.models.user_role import UserRole as UserRoleModel
-from backend.schemas.cashback import CashbackConfigCreate, CashbackConfigResponse
 from backend.schemas.company import CompanyCreate, CompanyResponse, CompanyUpdate
+from backend.schemas.company_default_cashback_config import (
+    CompanyDefaultCashbackConfigCreate,
+    CompanyDefaultCashbackConfigResponse,
+)
 from backend.schemas.subscription import (
     SubscriptionCreate,
     SubscriptionResponseForCompany,
@@ -78,13 +83,13 @@ class CompanyService:
             tariff_plan=tariff_plan_info,
         )
 
-        cashback_response = CashbackConfigResponse.model_validate(
-            company_model.cashback_config
+        cashback_response = CompanyDefaultCashbackConfigResponse.model_validate(
+            company_model.default_cashback_config
         )
 
         if not cashback_response:
-            raise CashbackNotConfiguredException(
-                detail="Cashback is not configured.",
+            raise CompanyDefaultCashbackNotConfiguredException(
+                detail="Company default cashback is not configured.",
                 internal_details={"context": "CompanyService._build_company_response"},
             )
 
@@ -175,11 +180,13 @@ class CompanyService:
             initial_status=CompanyStatusEnum.ACTIVE,
         )
 
-        cashback_config_schema = CashbackConfigCreate(
+        cashback_config_schema = CompanyDefaultCashbackConfigCreate(
             company_id=new_company_obj.id,
             default_percentage=company_data.initial_cashback_percentage,
         )
-        await self.dao.cashback_config.create(session, obj_in=cashback_config_schema)
+        await self.dao.default_cashback_config.create(
+            session, obj_in=cashback_config_schema
+        )
 
         tariff_plan_name = self.settings.TRIAL_PLAN.INTERNAL_NAME
         base_tariff_plan_model = await self.dao.tariff_plan.get_by_internal_name(

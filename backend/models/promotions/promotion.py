@@ -6,6 +6,9 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
+)
+from sqlalchemy import Enum as SQLAlchemyEnum  # Добавьте импорт
+from sqlalchemy import (
     ForeignKey,
     Integer,
     Numeric,
@@ -22,6 +25,9 @@ from backend.enums import PromotionStatusEnum, PromotionTypeEnum
 if TYPE_CHECKING:
     from backend.models.company import Company
     from backend.models.promotions.cashback_config import CashbackConfig
+    from backend.models.promotions.gift_config import GiftConfig
+    from backend.models.promotions.points_config import PointsMultiplierConfig
+    from backend.models.promotions.promotion_filters import PromotionProductFilter
     from backend.models.promotions.promotion_usage import PromotionUsage
 
 
@@ -39,18 +45,25 @@ class Promotion(Base):
     company: Mapped["Company"] = relationship(back_populates="promotions")
 
     promotion_type: Mapped[PromotionTypeEnum] = mapped_column(
-        PGEnum(
-            PromotionTypeEnum, name="promotion_type_enum", create_type=True
-        ),  # create_type=True для Alembic
+        SQLAlchemyEnum(
+            PromotionTypeEnum,
+            name="promotion_type_enum",
+            create_constraint=True,
+            inherit_schema=True,
+        ),
         nullable=False,
-        default=PromotionTypeEnum.CASHBACK,  # По умолчанию CASHBACK для MVP
-        server_default=PromotionTypeEnum.CASHBACK.value,
+        default=PromotionTypeEnum.CASHBACK,
     )
+
     status: Mapped[PromotionStatusEnum] = mapped_column(
-        PGEnum(PromotionStatusEnum, name="promotion_status_enum", create_type=True),
+        SQLAlchemyEnum(
+            PromotionStatusEnum,
+            name="promotion_status_enum",
+            create_constraint=True,
+            inherit_schema=True,
+        ),
         nullable=False,
         default=PromotionStatusEnum.DRAFT,
-        server_default=PromotionStatusEnum.DRAFT.value,
         index=True,
     )
 
@@ -64,10 +77,6 @@ class Promotion(Base):
     priority: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default="0", index=True
     )  # 0 - самый низкий
-
-    is_base_for_company: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=False, server_default="false", index=True
-    )  # Базовый кэшбэк для компании?
 
     min_purchase_amount: Mapped[Optional[decimal.Decimal]] = mapped_column(
         Numeric(12, 2), nullable=True
@@ -96,18 +105,18 @@ class Promotion(Base):
         back_populates="promotion",
         cascade="all, delete-orphan",  # При удалении акции удалять и записи об использовании
     )
-    # gift_config: Mapped[Optional["GiftConfig"]] = relationship(...) # MVP - отложено
-    # points_config: Mapped[Optional["PointsMultiplierConfig"]] = relationship(...) # MVP - отложено
-    # product_filters: Mapped[List["PromotionProductFilter"]] = relationship(...) # MVP - отложено
+    gift_config: Mapped[Optional["GiftConfig"]] = relationship(
+        "GiftConfig", back_populates="promotion", uselist=False
+    )
+    points_config: Mapped[Optional["PointsMultiplierConfig"]] = relationship(
+        "PointsMultiplierConfig", back_populates="promotion", uselist=False
+    )
+    product_filters: Mapped[List["PromotionProductFilter"]] = relationship(
+        "PromotionProductFilter", back_populates="promotion"
+    )
 
     __table_args__ = (
-        UniqueConstraint(
-            "company_id",
-            "is_base_for_company",
-            name="uq_company_base_promotion_if_true",
-            postgresql_where=Column("is_base_for_company"),
-        ),
-        # Можно добавить UniqueConstraint('company_id', 'name', name='uq_promotion_company_name') если имена акций должны быть уникальны в рамках компании
+        UniqueConstraint("company_id", "name", name="uq_promotion_company_name"),
     )
 
     def __repr__(self) -> str:

@@ -3,8 +3,8 @@ from typing import Any, Dict, Optional
 from backend.exceptions.common import InternalServerError
 
 
-class CashbackNotConfiguredException(InternalServerError):
-    detail = "Cashback is not configured."
+class CompanyDefaultCashbackNotConfiguredException(InternalServerError):
+    detail = "Company default cashback is not configured."
 
     def __init__(
         self,

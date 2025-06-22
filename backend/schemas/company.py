@@ -8,7 +8,9 @@ from typing import (
 from pydantic import BaseModel, Field, field_validator
 
 from backend.enums import CompanyStatusEnum, LegalFormEnum
-from backend.schemas.cashback import CashbackConfigResponse
+from backend.schemas.company_default_cashback_config import (
+    CompanyDefaultCashbackConfigResponse,
+)
 from backend.schemas.subscription import SubscriptionResponseForCompany
 
 
@@ -128,7 +130,7 @@ class CompanyResponse(CompanyBase):
     created_at: datetime.datetime
     updated_at: datetime.datetime
     current_subscription: Optional[SubscriptionResponseForCompany]
-    cashback: Optional[CashbackConfigResponse]
+    cashback: Optional[CompanyDefaultCashbackConfigResponse]
 
     class Config:
         from_attributes = True

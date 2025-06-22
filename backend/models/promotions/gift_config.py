@@ -8,15 +8,12 @@ from sqlalchemy import (
     Boolean,
     DateTime,
 )
-from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import Enum as SqlAlchemyEnum
 from sqlalchemy import (
     ForeignKey,
     Integer,
     Numeric,
     String,
-    Text,
-    Time,
-    UniqueConstraint,
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -37,7 +34,7 @@ class GiftConfig(Base):
     )
 
     gift_type: Mapped[GiftTypeEnum] = mapped_column(
-        SQLEnum(GiftTypeEnum), nullable=False
+        SqlAlchemyEnum(GiftTypeEnum), nullable=False
     )
 
     # Для "каждый N-й товар бесплатно"

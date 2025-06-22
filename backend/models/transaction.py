@@ -61,9 +61,6 @@ class Transaction(Base):
     outlet: Mapped[Optional["Outlet"]] = relationship(
         "Outlet", back_populates="transactions"
     )
-    applied_promotion: Mapped[Optional["Promotion"]] = relationship(
-        "Promotion", back_populates="transactions"
-    )  # Добавил back_populates
 
     def __repr__(self) -> str:
         return f"<Transaction(id={self.id}, customer_role_id={self.customer_role_id}, amount={self.purchase_amount})>"

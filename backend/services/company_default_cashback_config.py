@@ -11,38 +11,46 @@ from backend.exceptions.common import (  # Добавил ConflictException
     ValidationException,
 )
 from backend.models.company import Company as CompanyModel
-from backend.schemas.cashback import CashbackConfigResponse, CashbackConfigUpdate
+from backend.schemas.company_default_cashback_config import (
+    CompanyDefaultCashbackConfigResponse,
+    CompanyDefaultCashbackConfigUpdate,
+)
 
 
-class CashbackService:
+class CompanyDefaultCashbackConfigService:
     def __init__(self, dao: HolderDAO):
         self.dao = dao
 
     async def get_cashback_config(
         self, session: AsyncSession, company: CompanyModel
-    ) -> CashbackConfigResponse:
+    ) -> CompanyDefaultCashbackConfigResponse:
         """
         Получает конфигурацию кэшбэка для компании.
         Предполагается, что company.cashback_config уже загружен зависимостью.
         """
-        if not company.cashback_config or company.cashback_config.is_deleted:
+        if (
+            not company.default_cashback_config
+            or company.default_cashback_config.is_deleted
+        ):
             raise NotFoundException(
                 resource_name="Cashback Configuration", identifier=company.id
             )
 
-        return CashbackConfigResponse.model_validate(company.cashback_config)
+        return CompanyDefaultCashbackConfigResponse.model_validate(
+            company.default_cashback_config
+        )
 
     async def update_cashback_config(
         self,
         session: AsyncSession,
         company: CompanyModel,
-        update_data: CashbackConfigUpdate,
-    ) -> CashbackConfigResponse:
+        update_data: CompanyDefaultCashbackConfigUpdate,
+    ) -> CompanyDefaultCashbackConfigResponse:
         """
         Обновляет конфигурацию кэшбэка для компании.
         Предполагается, что company.cashback_config уже загружен зависимостью.
         """
-        cashback_config_to_update = company.cashback_config
+        cashback_config_to_update = company.default_cashback_config
         if not cashback_config_to_update or cashback_config_to_update.is_deleted:
             raise NotFoundException(
                 resource_name="Cashback Configuration", identifier=company.id
@@ -50,8 +58,8 @@ class CashbackService:
 
         update_dict = update_data.model_dump(exclude_unset=True)
 
-        updated_config_model = await self.dao.cashback_config.update(
+        updated_config_model = await self.dao.default_cashback_config.update(
             session, db_obj=cashback_config_to_update, obj_in=update_dict
         )
 
-        return CashbackConfigResponse.model_validate(updated_config_model)
+        return CompanyDefaultCashbackConfigResponse.model_validate(updated_config_model)

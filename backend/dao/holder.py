@@ -1,11 +1,14 @@
 from dataclasses import dataclass, field
 
 from backend.dao.account import AccountDAO
-from backend.dao.cashback import CashbackConfigDAO
+from backend.dao.cashback_config import CashbackConfigDAO
 from backend.dao.company import CompanyDAO
+from backend.dao.company_default_cashback_config import CompanyDefaultCashbackConfigDAO
 from backend.dao.employee import EmployeeRoleDAO
 from backend.dao.otp_code import OtpCodeDAO
 from backend.dao.outlet import OutletDAO
+from backend.dao.promotion import PromotionDAO
+from backend.dao.promotion_usage import PromotionUsageDAO
 from backend.dao.subscription import SubscriptionDAO
 from backend.dao.tariff_plan import TariffPlanDAO
 from backend.dao.user_role import UserRoleDAO
@@ -22,6 +25,9 @@ class HolderDAO:
     subscription: SubscriptionDAO = field(init=False)
     outlet: OutletDAO = field(init=False)
     employee_role: EmployeeRoleDAO = field(init=False)
+    promotion_usage: PromotionUsageDAO = field(init=False)
+    promotion: PromotionDAO = field(init=False)
+    default_cashback_config: CompanyDefaultCashbackConfigDAO = field(init=False)
 
     def __post_init__(self):
         self.account = AccountDAO()
@@ -33,3 +39,6 @@ class HolderDAO:
         self.subscription = SubscriptionDAO()
         self.outlet = OutletDAO()
         self.employee_role = EmployeeRoleDAO()
+        self.promotion_usage = PromotionUsageDAO()
+        self.promotion = PromotionDAO()
+        self.default_cashback_config = CompanyDefaultCashbackConfigDAO()

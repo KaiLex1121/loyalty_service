@@ -6,6 +6,7 @@ from sqlalchemy.types import Enum as SQLAlchemyEnum
 
 from backend.db.base import Base
 from backend.enums.company_enums import CompanyStatusEnum, LegalFormEnum
+from backend.models.company_default_cashback_config import CompanyDefaultCashbackConfig
 
 if TYPE_CHECKING:
     from .customer_role import CustomerRole
@@ -92,6 +93,12 @@ class Company(Base):
     )
     notification_messages: Mapped[List["NotificationMessage"]] = relationship(
         "NotificationMessage", back_populates="company", cascade="all, delete-orphan"
+    )
+    default_cashback_config: Mapped["CompanyDefaultCashbackConfig"] = relationship(
+        "CompanyDefaultCashbackConfig",
+        back_populates="company",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
 
     def __repr__(self) -> str:

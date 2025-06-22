@@ -12,19 +12,26 @@ from backend.core.settings import AppSettings, get_settings
 from backend.dao.holder import HolderDAO
 from backend.db.session import create_pool
 from backend.enums import UserAccessLevelEnum
-from backend.exceptions.common import UnauthorizedException
+from backend.exceptions.common import (
+    ForbiddenException,
+    NotFoundException,
+    UnauthorizedException,
+)
 from backend.exceptions.services.employee import EmployeeNotFoundException
 from backend.exceptions.services.outlet import OutletNotFoundException
 from backend.models.account import Account
 from backend.models.company import Company
 from backend.models.employee_role import EmployeeRole
 from backend.models.outlet import Outlet
+from backend.models.promotions.promotion import Promotion
 from backend.models.subscription import Subscription
 from backend.models.user_role import UserRole
 from backend.services.account import AccountService
 from backend.services.auth import AuthService
-from backend.services.cashback import CashbackService
 from backend.services.company import CompanyService
+from backend.services.company_default_cashback_config import (
+    CompanyDefaultCashbackConfigService,
+)
 from backend.services.dashboard import DashboardService
 from backend.services.employee import EmployeeService
 from backend.services.otp_code import OtpCodeService
@@ -175,7 +182,7 @@ async def get_owned_company(
 
     stmt = stmt.options(
         selectinload(Company.owner_user_role),
-        selectinload(Company.cashback_config),
+        selectinload(Company.default_cashback_config),
         selectinload(Company.subscriptions).options(
             selectinload(Subscription.tariff_plan)
         ),
@@ -185,75 +192,49 @@ async def get_owned_company(
     company = result.scalars().first()
 
     if not company:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Company not found or you do not have permission to access it.",
+        raise NotFoundException(
+            detail=f"Company with ID {company_id} not found or you do not have permission to access it.",
         )
 
     return company
 
 
-async def get_verified_outlet_for_user(
-    # outlet_id берется из параметра пути с тем же именем (тот, что в эндпоинте)
-    outlet_id: int,
+async def get_verified_outlet_for_company(
+    outlet_id: int,  # Из пути
+    company: Company = Depends(get_owned_company),
     session: AsyncSession = Depends(get_session),
-    current_user_role: UserRole = Depends(
-        get_current_user_profile_from_account
-    ),  # Получаем UserRole текущего пользователя
     dao: HolderDAO = Depends(get_dao),
 ) -> Outlet:
     """
-    1. Находит активную (не мягко удаленную) торговую точку по ID.
-    2. Проверяет, имеет ли текущий аутентифицированный пользователь (UserRole)
-       право доступа к этой торговой точке (через владение родительской компанией
-       или если он FULL_SYSTEM_ADMIN).
-    3. Возвращает объект OutletModel, если все проверки пройдены.
-    4. Выбрасывает OutletNotFoundException или AuthorizationException в случае неудачи.
+    Получает активную торговую точку (Outlet) по ID и проверяет,
+    принадлежит ли она компании, к которой у текущего пользователя есть доступ
+    (через зависимость get_owned_company).
+    Возвращает объект Outlet, если все проверки пройдены.
     """
-
-    # 1. Найти активную торговую точку
-    # Метод get_active из CRUDBase для OutletDAO уже проверяет deleted_at.is_(None)
     outlet = await dao.outlet.get_active(session, id_=outlet_id)
+
     if not outlet:
         raise OutletNotFoundException(identifier=outlet_id)
 
-    # 2. Проверить права доступа
-    user_has_access = False
-
-    # 2.1. Проверка на FULL_SYSTEM_ADMIN
-    if current_user_role.access_level == UserAccessLevelEnum.FULL_ADMIN:
-        user_has_access = True
-    else:
-        # 2.2. Проверка, является ли пользователь владельцем компании, к которой принадлежит ТТ
-        if current_user_role.companies_owned:
-            for owned_company in current_user_role.companies_owned:
-                if (
-                    owned_company.id == outlet.company_id
-                    and not owned_company.is_deleted
-                ):
-                    user_has_access = True
-                    break
-
-    if not user_has_access:
-        raise UnauthorizedException(
-            detail=f"You do not have permission to access outlet ID {outlet_id}."
+    if outlet.company_id != company.id:
+        raise NotFoundException(
+            detail=f"Outlet with ID {outlet_id} not found in company {company.id}."
         )
 
     return outlet
 
 
 async def get_owned_employee_role(
-    employee_role_id: int,
+    employee_role_id: int,  # Из пути
+    company: Company = Depends(get_owned_company),
     session: AsyncSession = Depends(get_session),
-    current_user_role: UserRole = Depends(get_current_user_profile_from_account),
     dao: HolderDAO = Depends(get_dao),
 ) -> EmployeeRole:
     """
-    Проверяет, принадлежит ли EmployeeRole компании, которой владеет current_user_role,
-    или если current_user_role является FULL_SYSTEM_ADMIN.
+    Получает EmployeeRole по ID и проверяет, принадлежит ли он компании,
+    к которой у текущего пользователя есть доступ (через зависимость get_owned_company).
     Возвращает EmployeeRoleModel с загруженными account и assigned_outlets.
     """
-    # get_by_id_with_details загружает EmployeeRole с его Account и assigned_outlets
     employee_role = await dao.employee_role.get_by_id_with_details(
         session, employee_role_id=employee_role_id
     )
@@ -261,38 +242,10 @@ async def get_owned_employee_role(
     if not employee_role:
         raise EmployeeNotFoundException(identifier=employee_role_id)
 
-    # Проверка прав: либо суперадмин, либо владелец компании, к которой принадлежит сотрудник
-    if current_user_role.access_level != UserAccessLevelEnum.FULL_ADMIN:
-        # current_user_role.companies_owned должны быть уже загружены благодаря get_current_user_role
-        if (
-            not current_user_role.companies_owned
-        ):  # На случай, если список пуст или не загружен (хотя не должен)
-            raise UnauthorizedException(
-                detail=f"You do not own any companies to manage employees."
-            )
-
-        is_owner_of_employee_company = any(
-            owned_company.id
-            == employee_role.company_id  # Проверяем только ID, is_deleted для owned_company не нужен здесь, т.к. мы проверяем доступ к сотруднику активной компании
-            for owned_company in current_user_role.companies_owned
-            if not owned_company.is_deleted  # Убедимся, что компания владельца не удалена
+    if employee_role.company_id != company.id:
+        raise NotFoundException(
+            detail=f"Employee with ID {employee_role_id} not found in company {company.id}."
         )
-
-        if not is_owner_of_employee_company:
-            # Если компания сотрудника не найдена среди активных компаний владельца
-            # Проверим, существует ли вообще компания сотрудника и активна ли она
-            company_of_employee = await dao.company.get_active(
-                session, id_=employee_role.company_id
-            )
-            if not company_of_employee:
-                # Компания сотрудника не активна или удалена, доступ запрещен даже если ранее владел
-                raise UnauthorizedException(
-                    detail=f"The company associated with employee role ID {employee_role_id} is not accessible or has been deleted."
-                )
-            # Если компания активна, но не принадлежит текущему user_role
-            raise UnauthorizedException(
-                detail=f"You do not have permission to access employee role ID {employee_role_id} as you do not own their company."
-            )
 
     return employee_role
 
@@ -334,8 +287,8 @@ def get_employee_service(
 
 def get_cashback_service(
     dao: HolderDAO = Depends(get_dao),
-) -> CashbackService:
-    return CashbackService(dao=dao)
+) -> CompanyDefaultCashbackConfigService:
+    return CompanyDefaultCashbackConfigService(dao=dao)
 
 
 def get_auth_service(
