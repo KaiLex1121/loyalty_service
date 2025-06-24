@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Security
 
 from backend.core.dependencies import (
     get_current_active_account_with_profiles,
     get_dashboard_service,
 )
 from backend.core.logger import get_logger
+from backend.core.security import oauth2_scheme_backoffice
 from backend.models.account import Account as AccountModel
 from backend.schemas.dashboard import DashboardResponse
 from backend.services.dashboard import DashboardService

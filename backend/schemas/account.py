@@ -3,6 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
+from backend.schemas.auth import PhoneNumber
+
 
 class AccountBase(BaseModel):
     phone_number: str
@@ -25,6 +27,13 @@ class AccountUpdate(BaseModel):
 
 class AccountCreateInternal(AccountBase):
     hashed_password: str
+
+
+class AccountCreateForClientOnboarding(PhoneNumber):
+    full_name: Optional[str] = None
+    telegram_user_id: int
+    is_active: bool = True
+    telegram_username: Optional[str] = None
 
 
 class AccountInDBBase(BaseModel):
@@ -50,6 +59,10 @@ class AccountResponse(AccountInDBBase):
     """
     Схема Account для ответа API. Ha данный момент совпадает c AccountInDBBase, но можно расширить
     """
+
+    # customer_roles: List[CustomerRoleInAccountResponse] = []
+    # employee_role: EmployeeRoleInAccountResponse = None
+    # user_role: UserRoleInAccountResponse = None
 
 
 class AccountResponseForEmployee(AccountInDBBase):

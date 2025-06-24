@@ -33,7 +33,7 @@ class CustomerRole(Base):
         "Company", back_populates="customers"
     )
     account: Mapped["Account"] = relationship(
-        "Account", back_populates="customer_profile"
+        "Account", back_populates="customer_profiles"
     )
     transactions: Mapped[List["Transaction"]] = relationship(
         "Transaction",
@@ -42,4 +42,4 @@ class CustomerRole(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<CustomerRole(id={self.id}, account_id={self.account_id})>"
+        return f"<CustomerRole(id=, account_id=)>"

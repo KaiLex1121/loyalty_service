@@ -5,14 +5,15 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.dependencies import (
-    get_account_id_from_token,
     get_company_service,
+    get_current_active_account_with_profiles,
     get_current_user_profile_from_account,
     get_dao,
     get_owned_company,
     get_session,
 )
 from backend.core.logger import get_logger
+from backend.models.account import Account
 from backend.models.company import Company
 from backend.models.user_role import UserRole
 from backend.schemas.company import CompanyCreate, CompanyResponse, CompanyUpdate
@@ -32,13 +33,13 @@ logger = get_logger(__name__)
 async def create_company_endpoint(
     company_data: CompanyCreate,
     session: AsyncSession = Depends(get_session),
-    account_id: int = Depends(get_account_id_from_token),
+    account: Account = Depends(get_current_active_account_with_profiles),
     company_service: CompanyService = Depends(get_company_service),
 ):
     new_company = await company_service.create_company_flow(
         session=session,
         company_data=company_data,
-        account_id=account_id,
+        account=account,
     )
     return new_company
 

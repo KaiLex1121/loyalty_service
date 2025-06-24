@@ -42,6 +42,14 @@ class PromotionStatusEnum(str, enum.Enum):  # Объединил и взял б�
     ARCHIVED = "archived"  # Перенесена в архив (заменил CANCELLED на ARCHIVED для согласованности)
 
 
+class PromotionPriorityLevelEnum(str, enum.Enum):
+    MINIMAL = "minimal"  # Минимальный
+    LOW = "low"  # Низкий
+    MEDIUM = "medium"  # Средний
+    HIGH = "high"  # Высокий
+    MAXIMUM = "maximum"  # Максимальный
+
+
 class CustomerSegmentEnum(str, enum.Enum):  # Переименовал из CustomerSegment
     """Сегмент клиентов, на который нацелена акция или коммуникация."""
 

@@ -31,6 +31,7 @@ from backend.exceptions.services.company import (
 from backend.exceptions.services.company_default_cashback_config import (
     CompanyDefaultCashbackNotConfiguredException,
 )
+from backend.models.account import Account
 from backend.models.company import Company as CompanyModel
 from backend.models.promotions.cashback_config import CashbackConfig
 from backend.models.subscription import Subscription
@@ -120,34 +121,15 @@ class CompanyService:
         )
 
     async def create_company_flow(
-        self,
-        session: AsyncSession,
-        company_data: CompanyCreate,
-        account_id: int,
+        self, session: AsyncSession, company_data: CompanyCreate, account: Account
     ) -> CompanyResponse:
-        current_account = await self.dao.account.get_by_id_with_profiles(
-            session, id_=account_id
-        )
-        if (
-            not current_account
-            or not current_account.is_active
-            or current_account.is_deleted
-        ):
-            if not current_account:
-                raise AccountNotFoundException(
-                    identifier=account_id, identifier_type="ID"
-                )
-            raise ForbiddenException(
-                detail="Account is inactive or deleted, cannot create company.",
-                internal_details={"account_id": account_id, "status_issue": True},
-            )
 
-        user_role: Optional[UserRoleModel] = current_account.user_profile
+        user_role: Optional[UserRoleModel] = account.user_profile
 
         if not user_role:
             user_role_schema = UserRoleCreate(
                 access_level=UserAccessLevelEnum.COMPANY_OWNER,
-                account_id=account_id,
+                account_id=account.id,
             )
             new_user_role_obj = await self.dao.user_role.create(
                 session, obj_in=user_role_schema
@@ -157,7 +139,7 @@ class CompanyService:
         if not user_role or not user_role.id:
             raise CompanyFlowException(
                 reason="UserRole could not be established for the account.",
-                internal_details={"account_id": account_id},
+                internal_details={"account_id": account.id},
             )
 
         existing_company_by_inn = await self.dao.company.get_by_inn(

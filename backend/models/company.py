@@ -83,7 +83,7 @@ class Company(Base):
         "EmployeeRole", back_populates="company", cascade="all, delete-orphan"
     )
     customers: Mapped[List["CustomerRole"]] = relationship(
-        "CustomerRole", back_populates="company"
+        "CustomerRole", back_populates="company", cascade="all, delete-orphan"
     )
     promotions: Mapped[List["Promotion"]] = relationship(
         "Promotion", back_populates="company", cascade="all, delete-orphan"

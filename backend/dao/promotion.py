@@ -10,13 +10,13 @@ from backend.dao.base import BaseDAO
 from backend.enums import PromotionStatusEnum, PromotionTypeEnum
 from backend.models.promotions.cashback_config import CashbackConfig  # Для joinedload
 from backend.models.promotions.promotion import Promotion
-from backend.schemas.promotion import PromotionCreate  # Вместо PromotionCreateInternal
-from backend.schemas.promotion import (  # Нейминг схем
+from backend.schemas.promotion import (  # Вместо PromotionCreateInternal; Нейминг схем
+    PromotionCreateInternal,
     PromotionUpdate,
 )
 
 
-class PromotionDAO(BaseDAO[Promotion, PromotionCreate, PromotionUpdate]):
+class PromotionDAO(BaseDAO[Promotion, PromotionCreateInternal, PromotionUpdate]):
     def __init__(self):
         super().__init__(Promotion)
 

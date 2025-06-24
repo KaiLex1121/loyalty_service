@@ -17,7 +17,7 @@ class AccountService:
     async def get_account_by_phone(
         self, db: AsyncSession, dao: HolderDAO, phone_number: str
     ) -> Optional[Account]:
-        result = await dao.account.get_by_phone_number_without_relations(
+        result = await dao.account.get_by_phone_number_with_all_profiles(
             db, phone_number=phone_number
         )
         return result

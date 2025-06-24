@@ -4,6 +4,7 @@ from backend.dao.account import AccountDAO
 from backend.dao.cashback_config import CashbackConfigDAO
 from backend.dao.company import CompanyDAO
 from backend.dao.company_default_cashback_config import CompanyDefaultCashbackConfigDAO
+from backend.dao.customer_role import CustomerRoleDAO
 from backend.dao.employee import EmployeeRoleDAO
 from backend.dao.otp_code import OtpCodeDAO
 from backend.dao.outlet import OutletDAO
@@ -28,6 +29,7 @@ class HolderDAO:
     promotion_usage: PromotionUsageDAO = field(init=False)
     promotion: PromotionDAO = field(init=False)
     default_cashback_config: CompanyDefaultCashbackConfigDAO = field(init=False)
+    customer_role: CustomerRoleDAO = field(init=False)
 
     def __post_init__(self):
         self.account = AccountDAO()
@@ -42,3 +44,4 @@ class HolderDAO:
         self.promotion_usage = PromotionUsageDAO()
         self.promotion = PromotionDAO()
         self.default_cashback_config = CompanyDefaultCashbackConfigDAO()
+        self.customer_role = CustomerRoleDAO()

@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import Boolean, String
+from sqlalchemy import BigInteger, Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.db.base import Base
@@ -17,6 +17,12 @@ class Account(Base):
 
     phone_number: Mapped[str] = mapped_column(
         String(20), unique=True, index=True, nullable=False
+    )
+    telegram_user_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger, unique=True, nullable=True, index=True
+    )
+    telegram_username: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, index=True
     )
     hashed_password: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     full_name: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
@@ -37,16 +43,10 @@ class Account(Base):
         cascade="all, delete-orphan",
         uselist=False,
     )
-    customer_profile: Mapped[Optional["CustomerRole"]] = relationship(
-        "CustomerRole",
-        back_populates="account",
-        cascade="all, delete-orphan",
-        uselist=False,
+    customer_profiles: Mapped[Optional[List["CustomerRole"]]] = relationship(
+        back_populates="account", cascade="all, delete-orphan"
     )
 
     otp_codes: Mapped[List["OtpCode"]] = relationship(
         "OtpCode", back_populates="account", cascade="all, delete-orphan"
     )
-
-    def __repr__(self) -> str:
-        return f"<Account(id={self.id}, phone_number='{self.phone_number}'), active={self.is_active}>"

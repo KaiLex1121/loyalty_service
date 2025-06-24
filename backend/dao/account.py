@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from backend.dao.base import BaseDAO
 from backend.models.account import Account
+from backend.models.customer_role import CustomerRole
 from backend.models.employee_role import EmployeeRole
 from backend.models.user_role import UserRole
 from backend.schemas.account import AccountCreate, AccountCreateInternal, AccountUpdate
@@ -24,23 +25,27 @@ class AccountDAO(BaseDAO[Account, AccountCreate, AccountUpdate]):
         result = await session.execute(statement)
         return result.scalar_one_or_none()
 
-    async def get_by_id_with_profiles(
-        self, db: AsyncSession, *, id_: int
+    async def get_by_id_with_all_profiles(  # Метод, который у вас уже был, но убедимся, что он грузит customer_roles
+        self, session: AsyncSession, id_: int
     ) -> Optional[Account]:
         stmt = (
             select(self.model)
             .options(
                 selectinload(self.model.user_profile).selectinload(
                     UserRole.companies_owned
-                ),
+                ),  # Для админа
                 selectinload(self.model.employee_profile).selectinload(
                     EmployeeRole.company
-                ),
-                selectinload(self.model.customer_profile),
+                ),  # Для сотрудника
+                selectinload(self.model.customer_profiles).selectinload(
+                    CustomerRole.company
+                ),  # Для клиента, все его роли в разных компаниях
             )
-            .filter(Account.id == id_)
+            .filter(
+                Account.id == id_, Account.deleted_at.is_(None)
+            )  # Добавил deleted_at
         )
-        result = await db.execute(stmt)
+        result = await session.execute(stmt)
         return result.scalars().first()
 
     async def get_by_phone_number_without_relations(
@@ -54,7 +59,7 @@ class AccountDAO(BaseDAO[Account, AccountCreate, AccountUpdate]):
         result = await session.execute(statement)
         return result.scalar_one_or_none()
 
-    async def get_by_phone_number_with_profiles(
+    async def get_by_phone_number_with_all_profiles(
         self, session: AsyncSession, *, phone_number: str
     ):
         stmt = (
@@ -62,7 +67,9 @@ class AccountDAO(BaseDAO[Account, AccountCreate, AccountUpdate]):
             .options(
                 selectinload(self.model.user_profile),
                 selectinload(self.model.employee_profile),
-                selectinload(self.model.customer_profile),
+                selectinload(self.model.customer_profiles).selectinload(
+                    CustomerRole.company
+                ),
             )
             .filter(Account.phone_number == phone_number)
         )
@@ -76,25 +83,28 @@ class AccountDAO(BaseDAO[Account, AccountCreate, AccountUpdate]):
         session.add(account)
         return account
 
-    async def create(
-        self, session: AsyncSession, *, obj_in: AccountCreate | AccountCreateInternal
-    ) -> Account:
-        obj_in_data = obj_in.model_dump()
-        db_obj = self.model(**obj_in_data)
-        session.add(db_obj)
-        await session.flush()
-        await session.refresh(db_obj)
-        return db_obj
+    async def get_by_telegram_id_with_all_profiles(
+        self, session: AsyncSession, telegram_user_id: int
+    ) -> Optional[Account]:
+        """Ищет аккаунт по telegram_user_id и загружает связанные профили."""
+        if (
+            telegram_user_id is None
+        ):  # Проверка на случай, если telegram_user_id не передан
+            return None
 
-    async def update(
-        self, session: AsyncSession, *, db_obj: Account, obj_in: AccountUpdate | dict
-    ) -> Account:
-        if isinstance(obj_in, dict):
-            update_data = obj_in
-        else:
-            update_data = obj_in.model_dump(exclude_unset=True)
-
-        for field, value in update_data.items():
-            setattr(db_obj, field, value)
-        session.add(db_obj)
-        return db_obj
+        stmt = (
+            select(self.model)
+            .options(
+                selectinload(self.model.user_profile),
+                selectinload(self.model.employee_profile),
+                selectinload(self.model.customer_profiles).selectinload(
+                    CustomerRole.company
+                ),
+            )
+            .filter(
+                self.model.telegram_user_id == telegram_user_id,
+                self.model.deleted_at.is_(None),
+            )
+        )
+        result = await session.execute(stmt)
+        return result.scalars().first()

@@ -11,6 +11,7 @@ from backend.core.security import (
 from backend.core.settings import AppSettings
 from backend.dao.holder import HolderDAO
 from backend.enums import OtpPurposeEnum
+from backend.enums.auth_enums import UserAccessLevelEnum
 from backend.exceptions import (
     AccountNotFoundException,
     InvalidOTPException,
@@ -145,8 +146,15 @@ class AuthService:
             account_in=AccountUpdate(is_active=True),
         )
 
+        jwt_scopes = ["backoffice_user"]
+        if (
+            account.user_profile
+            and account.user_profile.access_level == UserAccessLevelEnum.FULL_ADMIN
+        ):
+            jwt_scopes.append("backoffice_admin")
+        print("jwt_scopes", jwt_scopes)
         access_token = create_access_token(
-            data={"sub": str(account.id)}, settings=self.settings
+            data={"sub": str(account.id)}, settings=self.settings, scopes=jwt_scopes
         )
 
         return TokenResponse(access_token=access_token, token_type="bearer")

@@ -1,9 +1,9 @@
 import hashlib
 import hmac
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Any, List, Optional
 
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import APIKeyHeader, HTTPBearer, OAuth2PasswordBearer
 from jose import ExpiredSignatureError, JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import ValidationError
@@ -13,7 +13,25 @@ from backend.core.settings import AppSettings
 from backend.schemas.token import TokenPayload
 
 logger = get_logger(__name__)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token-for-swagger")
+
+API_KEY_BOT_NAME = "X-Bot-Api-Key"  # Имя заголовка для API ключа бота
+bot_api_key_header = APIKeyHeader(name=API_KEY_BOT_NAME, auto_error=True)
+
+http_bearer_backoffice = HTTPBearer(
+    scheme_name="BackofficeBearerAuth",
+    description="JWT токен для доступа к бэк-офису",
+    auto_error=False,
+)
+
+oauth2_scheme_backoffice = OAuth2PasswordBearer(
+    tokenUrl="/api/v1/auth/token-for-swagger",
+    description="Аутентификация для пользователей бэк-офиса. Введите 'Bearer <token>'.",
+    scopes={
+        "backoffice_user": "Доступ к ресурсам бэк-офиса компании.",
+        "backoffice_admin": "Полный доступ системного администратора.",
+    },
+    auto_error=False,
+)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -23,8 +41,12 @@ def get_password_hash(password: str) -> str:
 
 
 def create_access_token(
-    data: dict, settings: AppSettings, expires_delta: timedelta | None = None
+    data: dict[str, Any],
+    settings: AppSettings,
+    expires_delta: Optional[timedelta] = None,
+    scopes: Optional[List[str]] = None,
 ) -> str:
+    to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
@@ -32,8 +54,9 @@ def create_access_token(
             minutes=settings.SECURITY.ACCESS_TOKEN_EXPIRE_MINUTES
         )
 
-    to_encode = data.copy()
-    to_encode.update({"exp": expire})
+    to_encode["scopes"] = scopes if scopes else []
+    to_encode["exp"] = expire
+
     encoded_jwt = jwt.encode(
         to_encode,
         settings.SECURITY.JWT_SECRET_KEY,
@@ -49,6 +72,9 @@ def verify_token(token: str, settings: AppSettings) -> Optional[TokenPayload]:
     Проверяет подпись, срок годности и структуру полезной нагрузки.
     Возвращает объект TokenPayload в случае успеха или None в случае любой ошибки.
     """
+    if token is None:
+        logger.warning("Попытка верификации None токена")
+        return None
     try:
         payload_dict = jwt.decode(
             token,

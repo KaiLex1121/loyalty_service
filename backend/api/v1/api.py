@@ -7,8 +7,12 @@ from backend.api.v1.enpoints import (
     company_default_cashback_config,
     company_employees,
     company_outlets,
+    customer_auth,
+    customers,
     dashboards,
+    promotions,
 )
+from backend.exceptions.services import customer
 
 api_router_v1 = APIRouter()
 
@@ -30,4 +34,18 @@ api_router_v1.include_router(
     company_default_cashback_config.router,
     prefix="/companies",
     tags=["Company Default Cashback"],
+)
+api_router_v1.include_router(
+    promotions.router, prefix="/companies/{company_id}/promotions", tags=["Promotions"]
+)
+
+api_router_v1.include_router(
+    customer_auth.router,
+    prefix="/customer/auth",  # Префикс для эндпоинтов аутентификации клиента
+    tags=["Customer API - Authentication"],
+)
+api_router_v1.include_router(
+    customers.router,
+    prefix="/customers",  # Общий префикс для клиентских данных (пути внутри /me/...)
+    tags=["Customer API - Profile"],
 )
