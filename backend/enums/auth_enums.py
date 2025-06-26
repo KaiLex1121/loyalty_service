@@ -22,4 +22,6 @@ class OtpPurposeEnum(str, enum.Enum):
     TRANSACTION_CONFIRM = (
         "transaction_confirm"  # Для подтверждения важных транзакций/операций
     )
+    EMPLOYEE_VERIFICATION = "employee_verification"  # Для верификации сотрудника
+    CUSTOMER_VERIFICATION = "customer_verification"  # Для верификации клиента
     EMAIL_VERIFICATION = "email_verification"  # Для верификации email

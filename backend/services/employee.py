@@ -111,7 +111,7 @@ class EmployeeService:
         # Транзакция управляется извне
 
         # 1. Найти или создать Account по employee_data.account_phone_number
-        account = await self.dao.account.get_by_phone_number_with_profiles(
+        account = await self.dao.account.get_by_phone_number_with_all_profiles(
             session, phone_number=employee_data.account_phone_number
         )
 

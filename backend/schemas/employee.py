@@ -7,6 +7,7 @@ from backend.schemas.account import AccountResponseForEmployee
 from backend.schemas.outlet import (  # Предполагаем, что есть такая базовая схема
     OutletResponseForEmployee,
 )
+from backend.utils.validators import RussianPhoneNumber
 
 
 class EmployeeRoleBase(BaseModel):
@@ -14,22 +15,14 @@ class EmployeeRoleBase(BaseModel):
     work_full_name: Optional[str] = Field(
         None, max_length=555, description="Полное рабочее имя сотрудника в компании"
     )
-    work_phone_number: Optional[str] = Field(
-        None,
-        pattern=r"^\+?[1-9]\d{1,14}$",
-        description="Рабочий номер телефона сотрудника в компании (может отличаться от основного номера аккаунта)",
-    )
+    work_phone_number: RussianPhoneNumber
     work_email: Optional[EmailStr] = Field(
         None, description="Рабочий email сотрудника в компании"
     )
 
 
 class EmployeeCreate(BaseModel):  # Отдельная схема для создания
-    account_phone_number: str = Field(
-        ...,
-        pattern=r"^\+?[1-9]\d{1,14}$",
-        description="Основной номер телефона для Account сотрудника",
-    )
+    account_phone_number: RussianPhoneNumber
     account_full_name: Optional[str] = Field(
         None, max_length=100, description="Фамилия для Account (если создается новый)"
     )
@@ -68,3 +61,12 @@ class EmployeeResponse(EmployeeRoleBase):
 
     class Config:
         from_attributes = True
+
+
+class EmployeeSummaryForOtpResponse(BaseModel):
+    employee_role_id: int
+    work_phone_number: str
+    message: Optional[str] = None
+
+    class Config:
+        from_attributes = True  # Если будете создавать из модели EmployeeRole

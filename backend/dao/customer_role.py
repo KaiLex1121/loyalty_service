@@ -23,6 +23,36 @@ class CustomerRoleDAO(BaseDAO[CustomerRole, CustomerRoleCreate, CustomerRoleUpda
     def __init__(self):
         super().__init__(CustomerRole)
 
+    async def find_by_customer_phone_and_company_id_with_details(  # Новый метод
+        self, session: AsyncSession, customer_phone_number: str, company_id: int
+    ) -> Optional[CustomerRole]:
+        # Этот запрос может быть сложным, если делать его одним SQL.
+        # Проще в два шага:
+        # 1. Найти Account по номеру телефона
+        # (Предполагаем, что AccountDAO доступен, например, через HolderDAO,
+        # но здесь мы в CustomerRoleDAO, так что это может быть внешний вызов или прямой SQL)
+
+        # Вариант с прямым SQL-запросом с JOIN:
+        stmt = (
+            select(self.model)  # Select CustomerRole
+            .join(Account, self.model.account_id == Account.id)  # Join с Account
+            .options(
+                selectinload(self.model.account),  # Загрузить детали Account
+                selectinload(
+                    self.model.company
+                ),  # Загрузить детали Company для CustomerRole
+            )
+            .filter(
+                Account.phone_number
+                == customer_phone_number,  # Фильтр по номеру телефона клиента
+                self.model.company_id == company_id,  # Фильтр по ID компании
+                self.model.deleted_at.is_(None),
+                Account.deleted_at.is_(None),
+            )
+        )
+        result = await session.execute(stmt)
+        return result.scalars().first()
+
     async def get_by_account_id_and_company_id(
         self, session: AsyncSession, account_id: int, company_id: int
     ) -> Optional[CustomerRole]:
@@ -61,9 +91,6 @@ class CustomerRoleDAO(BaseDAO[CustomerRole, CustomerRoleCreate, CustomerRoleUpda
         result = await session.execute(stmt)
         return result.scalars().first()
 
-    # get_active_by_id используется в get_verified_customer_for_company_stub
-    # Он уже есть в BaseDAO как get_active(session, id_=...)
-    # Если нужна специфичная загрузка связей для get_active_by_id:
     async def get_active_by_id_with_account(  # Пример, если нужна загрузка Account
         self, session: AsyncSession, id_: int
     ) -> Optional[CustomerRole]:

@@ -101,7 +101,9 @@ class CustomerAuthService:
                     detail="Telegram ID не предоставлен для создания нового аккаунта."
                 )
 
-            # logger.info(f"Создание нового аккаунта для тел: {data.phone_number}, TG ID: {data.telegram_user_id}")
+            logger.info(
+                f"Создание нового аккаунта для тел: {data.phone_number}, TG ID: {data.telegram_user_id}"
+            )
             account_create_schema = AccountCreateForClientOnboarding(
                 phone_number=data.phone_number,
                 full_name=data.full_name_from_telegram,

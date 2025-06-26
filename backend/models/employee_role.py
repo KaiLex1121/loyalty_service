@@ -20,7 +20,7 @@ class EmployeeRole(Base):
         ForeignKey("accounts.id", ondelete="CASCADE"), unique=True, nullable=False
     )
     position: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    work_phone_number: Mapped[Optional[str]] = mapped_column(
+    work_phone_number: Mapped[str] = mapped_column(
         String(20), nullable=True, index=True
     )
     work_full_name: Mapped[Optional[str]] = mapped_column(String(555), nullable=True)

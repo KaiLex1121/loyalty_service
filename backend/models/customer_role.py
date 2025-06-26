@@ -2,7 +2,7 @@ import datetime
 import decimal
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import Date, ForeignKey, Numeric
+from sqlalchemy import Date, ForeignKey, Numeric, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.db.base import Base
@@ -17,7 +17,7 @@ class CustomerRole(Base):
     __tablename__ = "customer_roles"
 
     account_id: Mapped[int] = mapped_column(
-        ForeignKey("accounts.id", ondelete="CASCADE"), unique=True, nullable=False
+        ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False
     )
     company_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("companies.id", ondelete="SET NULL"), nullable=True
@@ -39,6 +39,12 @@ class CustomerRole(Base):
         "Transaction",
         back_populates="customer_role_profile",
         cascade="all, delete-orphan",
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "account_id", "company_id", name="uq_customer_role_account_company"
+        ),  # <--- ПРАВИЛЬНЫЙ КОНСТРЕЙНТ
     )
 
     def __repr__(self) -> str:

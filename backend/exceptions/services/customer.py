@@ -64,3 +64,21 @@ class CompanyNotFoundForOnboardingException(NotFoundException):
             detail=detail,
             internal_details=internal_details,
         )
+
+
+class CustomerNotFoundByPhoneInCompanyException(NotFoundException):
+    def __init__(
+        self,
+        phone_number: str,
+        company_id: int,
+        detail: Optional[str] = None,
+        internal_details: Optional[Dict[str, Any]] = None,
+    ):
+        if not detail:
+            detail = f"Клиент с номером телефона '{phone_number}' не найден в компании ID {company_id}."
+        super().__init__(
+            resource_name="Клиент (поиск по телефону для сотрудника)",
+            identifier=phone_number,
+            detail=detail,
+            internal_details=internal_details,
+        )

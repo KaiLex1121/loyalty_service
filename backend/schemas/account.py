@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
-from backend.schemas.auth import PhoneNumber
+from backend.utils.validators import RussianPhoneNumber
 
 
 class AccountBase(BaseModel):
@@ -29,7 +29,8 @@ class AccountCreateInternal(AccountBase):
     hashed_password: str
 
 
-class AccountCreateForClientOnboarding(PhoneNumber):
+class AccountCreateForClientOnboarding(BaseModel):
+    phone_number: RussianPhoneNumber
     full_name: Optional[str] = None
     telegram_user_id: int
     is_active: bool = True

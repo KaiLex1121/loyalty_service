@@ -47,6 +47,21 @@ class EmployeeRoleDAO(BaseDAO[EmployeeRole, EmployeeCreate, EmployeeUpdate]):
         await session.refresh(db_obj)
         return db_obj
 
+    async def get_by_work_phone_and_company_id_with_account(  # Новый метод
+        self, session: AsyncSession, work_phone_number: str, company_id: int
+    ) -> Optional[EmployeeRole]:
+        stmt = (
+            select(self.model)
+            .options(selectinload(self.model.account))  # Загружаем связанный Account
+            .filter(
+                self.model.work_phone_number == work_phone_number,
+                self.model.company_id == company_id,
+                self.model.deleted_at.is_(None),
+            )
+        )
+        result = await session.execute(stmt)
+        return result.scalars().first()
+
     async def get_by_account_id_and_company_id(
         self, session: AsyncSession, *, account_id: int, company_id: int
     ) -> Optional[EmployeeRole]:
@@ -66,6 +81,9 @@ class EmployeeRoleDAO(BaseDAO[EmployeeRole, EmployeeCreate, EmployeeUpdate]):
         employee_role_id: int,
         include_deleted: bool = False,
     ) -> Optional[EmployeeRole]:
+        """
+        Получает сотрудника по его ID и загружает связанные Account и assigned_outlets.
+        """
         stmt = (
             select(self.model)
             .options(
