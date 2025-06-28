@@ -14,7 +14,7 @@ from pydantic import (
 
 from backend.enums import PromotionStatusEnum, PromotionTypeEnum
 from backend.enums.loyalty_enums import PromotionPriorityLevelEnum
-from backend.schemas.cashback_config import (
+from backend.schemas.promotion_cashback_config import (
     CashbackConfigCreate,
     CashbackConfigResponse,
     CashbackConfigUpdate,

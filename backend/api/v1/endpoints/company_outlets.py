@@ -12,8 +12,8 @@ from backend.core.dependencies import (
 )
 from backend.models.company import Company as CompanyModel
 from backend.models.outlet import Outlet as OutletModel
-from backend.schemas.outlet import OutletCreate, OutletResponse, OutletUpdate
-from backend.services.outlet import OutletService
+from backend.schemas.company_outlet import OutletCreate, OutletResponse, OutletUpdate
+from backend.services.company_outlet import OutletService
 
 router = APIRouter()
 

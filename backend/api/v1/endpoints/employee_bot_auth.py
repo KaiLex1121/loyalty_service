@@ -13,15 +13,15 @@ from backend.core.dependencies import (
 )
 
 # EmployeeRoleResponse может понадобиться, если request_otp возвращает данные сотрудника
-from backend.schemas.employee import (  # Простая схема для ответа после запроса OTP
+from backend.schemas.company_employee import (  # Простая схема для ответа после запроса OTP
     EmployeeSummaryForOtpResponse,
 )
-from backend.schemas.employee_auth import EmployeeOtpRequest  # Запрос OTP сотрудником
-from backend.schemas.employee_auth import (
+from backend.schemas.employee_bot_auth import EmployeeOtpRequest  # Запрос OTP сотрудником
+from backend.schemas.employee_bot_auth import (
     EmployeeOtpVerify,  # Верификация OTP сотрудником
 )
 from backend.schemas.token import TokenResponse  # Ответ с JWT токеном
-from backend.services.employee_auth import EmployeeAuthService
+from backend.services.employee_bot_auth import EmployeeAuthService
 
 # from backend.core.logger import get_logger
 # logger = get_logger(__name__)

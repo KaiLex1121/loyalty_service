@@ -26,7 +26,7 @@ from backend.exceptions.services.employee_auth import (
 )
 from backend.models.account import Account  # Нужен для AccountService и для типа
 from backend.models.employee_role import EmployeeRole
-from backend.schemas.employee_auth import (  # Схема для верификации OTP сотрудника
+from backend.schemas.employee_bot_auth import (  # Схема для верификации OTP сотрудника
     EmployeeOtpVerify,
 )
 from backend.schemas.otp_code import OtpCodeCreate

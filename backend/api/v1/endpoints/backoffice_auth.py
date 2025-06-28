@@ -7,9 +7,9 @@ from backend.core.logger import get_logger
 from backend.dao.holder import HolderDAO
 from backend.enums.auth_enums import OtpPurposeEnum
 from backend.schemas.account import AccountResponse
-from backend.schemas.auth import OTPVerifyRequest, PhoneNumberRequest
+from backend.schemas.backoffice_auth import OTPVerifyRequest, PhoneNumberRequest
 from backend.schemas.token import TokenResponse
-from backend.services.auth import AuthService
+from backend.services.backoffice_auth import AuthService
 
 router = APIRouter()
 logger = get_logger(__name__)

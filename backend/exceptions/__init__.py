@@ -15,7 +15,7 @@ from backend.exceptions.services.account import (
     AccountNotFoundException,
     AccountUpdateException,
 )
-from backend.exceptions.services.auth import (
+from backend.exceptions.services.backoffice_auth import (
     InvalidOTPException,
     OTPExpiredException,
     OTPNotFoundException,

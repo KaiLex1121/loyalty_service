@@ -19,8 +19,8 @@ class CustomerRole(Base):
     account_id: Mapped[int] = mapped_column(
         ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False
     )
-    company_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("companies.id", ondelete="SET NULL"), nullable=True
+    company_id: Mapped[int] = mapped_column(
+        ForeignKey("companies.id", ondelete="SET NULL"), nullable=False
     )
     birth_date: Mapped[Optional[datetime.date]] = mapped_column(Date, nullable=True)
     cashback_balance: Mapped[decimal.Decimal] = mapped_column(

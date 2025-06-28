@@ -42,11 +42,11 @@ from backend.schemas.company_default_cashback_config import (
     CompanyDefaultCashbackConfigCreate,
     CompanyDefaultCashbackConfigResponse,
 )
-from backend.schemas.subscription import (
+from backend.schemas.company_subscription import (
     SubscriptionCreate,
     SubscriptionResponseForCompany,
 )
-from backend.schemas.tariff_plan import TariffPlanResponseForCompany
+from backend.schemas.company_tariff_plan import TariffPlanResponseForCompany
 from backend.schemas.user_role import UserRoleCreate
 from backend.utils.subscription_utils import get_current_subscription
 

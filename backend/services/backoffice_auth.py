@@ -20,7 +20,7 @@ from backend.exceptions import (
     OTPSendingException,
 )
 from backend.schemas.account import AccountInDBBase, AccountResponse, AccountUpdate
-from backend.schemas.auth import OTPVerifyRequest
+from backend.schemas.backoffice_auth import OTPVerifyRequest
 from backend.schemas.otp_code import OtpCodeCreate
 from backend.schemas.token import TokenResponse
 from backend.services.account import AccountService

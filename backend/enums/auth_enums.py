@@ -19,8 +19,8 @@ class OtpPurposeEnum(str, enum.Enum):
 
     BACKOFFICE_LOGIN = "backoffice_login"  # Для входа в систему
     PHONE_RESET = "phone_reset"  # Для сброса номера телефона
-    TRANSACTION_CONFIRM = (
-        "transaction_confirm"  # Для подтверждения важных транзакций/операций
+    TRANSACTION_CONFIRMATION = (
+        "transaction_confirmation"  # Для подтверждения важных транзакций/операций
     )
     EMPLOYEE_VERIFICATION = "employee_verification"  # Для верификации сотрудника
     CUSTOMER_VERIFICATION = "customer_verification"  # Для верификации клиента

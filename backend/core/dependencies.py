@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import Depends, HTTPException, Path, Request, status
+from fastapi import Depends, HTTPException, Path, Request, Security, status
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -11,9 +11,9 @@ from backend.core.logger import get_logger
 from backend.core.security import (
     customer_bot_api_key_header,
     employee_bot_api_key_header,
-    http_bearer_backoffice,
     oauth2_scheme_backoffice,
     verify_token,
+    http_bearer_backoffice,
 )
 from backend.core.settings import AppSettings, get_settings
 from backend.dao.holder import HolderDAO
@@ -36,23 +36,25 @@ from backend.models.subscription import Subscription
 from backend.models.user_role import UserRole
 from backend.schemas.token import TokenPayload
 from backend.services.account import AccountService
-from backend.services.auth import AuthService
+from backend.services.backoffice_auth import AuthService
+from backend.services.transaction_cashback_calculation import CashbackCalculationService
 from backend.services.company import CompanyService
 from backend.services.company_default_cashback_config import (
     CompanyDefaultCashbackConfigService,
 )
-from backend.services.customer import CustomerService  # Поздний импорт
-from backend.services.customer_auth import CustomerAuthService  # Поздний импорт
-from backend.services.dashboard import DashboardService
-from backend.services.employee import EmployeeService
-from backend.services.employee_auth import EmployeeAuthService
+from backend.services.company_customer import CustomerService  # Поздний импорт
+from backend.services.customer_bot_auth import CustomerAuthService  # Поздний импорт
+from backend.services.backoffice_dashboard import DashboardService
+from backend.services.company_employee import EmployeeService
+from backend.services.employee_bot_auth import EmployeeAuthService
 from backend.services.employee_customer_interaction import (
     EmployeeCustomerInteractionService,
 )
 from backend.services.otp_code import OtpCodeService
 from backend.services.otp_sending import MockOTPSendingService
-from backend.services.outlet import OutletService
-from backend.services.promotion import PromotionService
+from backend.services.company_outlet import OutletService
+from backend.services.company_promotion import PromotionService
+from backend.core.security import http_bearer_employee
 
 logger = get_logger(__name__)
 
@@ -84,7 +86,7 @@ async def get_dao() -> HolderDAO:
     return dao
 
 
-async def get_token_payload(
+async def get_backoffice_token_payload(
     oauth_token: str = Depends(oauth2_scheme_backoffice),
     http_credentials: HTTPAuthorizationCredentials = Depends(http_bearer_backoffice),
     settings: AppSettings = Depends(get_settings),
@@ -115,10 +117,40 @@ async def get_token_payload(
     return token_data
 
 
+async def get_employee_token_payload(
+    http_credentials: HTTPAuthorizationCredentials = Depends(http_bearer_employee),
+    settings: AppSettings = Depends(get_settings),
+) -> TokenPayload:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate admin credentials.",
+        headers={
+            "WWW-Authenticate": http_bearer_employee.scheme_name
+        },  # Используем имя схемы
+    )
+    if http_credentials:
+        token = http_credentials.credentials
+    else:
+        token = oauth_token
+
+    if http_credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Токен отсутствует",
+            headers={"WWW-Authenticate": http_bearer_employee.scheme_name},
+        )
+    token_data = verify_token(token=token, settings=settings)
+
+    if token_data is None:
+        raise credentials_exception
+
+    return token_data
+
+
 async def get_current_account_without_relations(
     session: AsyncSession = Depends(get_session),
     dao: HolderDAO = Depends(get_dao),
-    token_payload: TokenPayload = Depends(get_token_payload),
+    token_payload: TokenPayload = Depends(get_backoffice_token_payload),
 ) -> Optional[Account]:
     """
     Зависимость для получения текущего пользователя на основе JWT токена.
@@ -146,7 +178,7 @@ async def get_current_active_account_without_relations(
 async def get_current_account_with_profiles(
     session: AsyncSession = Depends(get_session),
     dao: HolderDAO = Depends(get_dao),
-    token_payload: TokenPayload = Depends(get_token_payload),
+    token_payload: TokenPayload = Depends(get_backoffice_token_payload),
 ) -> Optional[Account]:
     """
     Зависимость для получения текущего пользователя на основе JWT токена.
@@ -185,7 +217,7 @@ async def get_current_user_profile_from_account(
 
 async def get_current_full_system_admin(
     current_user_profile: UserRole = Depends(get_current_user_profile_from_account),
-    token_payload: TokenPayload = Depends(get_token_payload),
+    token_payload: TokenPayload = Depends(get_backoffice_token_payload),
 ) -> UserRole:
     if current_user_profile.access_level != UserAccessLevelEnum.FULL_ADMIN:
         raise HTTPException(
@@ -323,28 +355,23 @@ async def get_owned_promotion(
     return promotion
 
 
-async def authenticate_bot_and_get_company_id(  # Ключевая новая зависимость
-    bot_api_key: str = Depends(customer_bot_api_key_header),
-    settings: AppSettings = Depends(get_settings),
+async def authenticate_customer_bot_and_get_company_id(  # Ключевая новая зависимость
+    bot_api_key: str = Security(customer_bot_api_key_header),
     # dao: HolderDAO = Depends(get_dao) # Если ключи и их связь с компаниями хранятся в БД
 ) -> int:  # Возвращает ID компании, к которой привязан бот
     """
     Аутентифицирует запрос от Telegram-бота по API-ключу и возвращает ID его компании.
     TODO: Заменить заглушку на реальную логику проверки ключей.
     """
-
-    if bot_api_key == "5":
-        logger.info(f"Бот для компании 1 аутентифицирован по ключу: {bot_api_key}")
-        return 5
-    elif bot_api_key == "6":
-        logger.info(f"Бот для компании 2 аутентифицирован по ключу: {bot_api_key}")
-        return 6
-    return 3
+    if bot_api_key in map(str, range(10)):
+        return 1
+    raise UnauthorizedException(
+        detail="Неверный или отсутствует API-ключ бота.",
+    )
 
 
 async def authenticate_employee_bot_and_get_company_id(  # Новая зависимость
-    employee_bot_api_key: str = Depends(employee_bot_api_key_header),
-    settings: AppSettings = Depends(get_settings),
+    employee_bot_api_key: str = Security(employee_bot_api_key_header),
     # dao: HolderDAO = Depends(get_dao) # Если ключи в БД
 ) -> int:
     """
@@ -352,24 +379,15 @@ async def authenticate_employee_bot_and_get_company_id(  # Новая завис
     и возвращает ID его компании.
     TODO: Заменить заглушку на реальную логику проверки ключей.
     """
-    if employee_bot_api_key == "5":
-        logger.info(
-            f"Бот сотрудников для компании 1 аутентифицирован по ключу: {employee_bot_api_key}"
-        )
-        return 5
-    elif employee_bot_api_key == "TEST_EMP_BOT_KEY_COMPANY_2":
-        logger.info(
-            f"Бот сотрудников для компании 2 аутентифицирован по ключу: {employee_bot_api_key}"
-        )
-        return 2
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
+    if employee_bot_api_key in map(str, range(11)):
+        return 1
+    raise UnauthorizedException(
         detail="Неверный или отсутствует API-ключ бота сотрудников.",
     )
 
 
 async def get_employee_role_id_from_token_payload(
-    token_payload: TokenPayload = Depends(get_token_payload),
+    token_payload: TokenPayload = Depends(get_employee_token_payload),
 ) -> int:
     """Извлекает employee_role_id из payload и проверяет скоуп сотрудника."""
     required_scope = "employee.workspace:bot"
@@ -431,33 +449,7 @@ async def get_current_employee_role_for_bot_company(  # Новая основн�
     return employee_role
 
 
-def get_employee_auth_service(  # Новая зависимость
-    # account_service: "AccountService" = Depends(get_account_service), # Если нужен
-    # otp_code_service: "OtpCodeService" = Depends(get_otp_code_service),
-    # otp_sending_service: "MockOTPSendingService" = Depends(get_otp_sending_service),
-    # Для примера, если EmployeeAuthService похож на ваш AuthService для бэк-офиса:
-    settings: AppSettings = Depends(get_settings),
-    dao: HolderDAO = Depends(get_dao),
-    # Передаем DAO, а сервисы AccountService, OtpCodeService, OtpSendingService
-    # будут созданы внутри EmployeeAuthService или переданы ему при инициализации в get_employee_auth_service
-) -> EmployeeAuthService:
-
-    # Создаем экземпляры зависимых сервисов
-    # (Предполагаем, что AccountService, OtpCodeService не требуют сложных зависимостей при создании,
-    # или вы создаете их через свои get_..._service функции и передаете сюда)
-    acc_service = AccountService()  # Упрощенно, ваш AccountService может требовать dao
-    otp_code_serv = OtpCodeService()  # Упрощенно
-    otp_send_serv = MockOTPSendingService()  # Упрощенно
-
-    return EmployeeAuthService(
-        otp_code_service=otp_code_serv,
-        otp_sending_service=otp_send_serv,
-        settings=settings,
-        dao=dao,  # Передаем DAO
-    )
-
-
-async def get_target_customer_role_for_company_operation(
+async def get_target_customer_role_for_employee_operation(
     customer_role_id: int,
     requesting_company: Company = Depends(get_owned_company),
     session: AsyncSession = Depends(get_session),
@@ -486,7 +478,7 @@ async def get_target_customer_role_for_company_operation(
 
 async def get_customer_role_by_telegram_id_for_bot(
     telegram_user_id: int = Path(..., description="Telegram ID клиента из пути"),
-    bot_company_id: int = Depends(authenticate_bot_and_get_company_id),
+    bot_company_id: int = Depends(authenticate_customer_bot_and_get_company_id),
     session: AsyncSession = Depends(get_session),
     dao: HolderDAO = Depends(get_dao),
 ) -> CustomerRole:
@@ -514,6 +506,20 @@ async def get_customer_role_by_telegram_id_for_bot(
         customer_role.account = account
 
     return customer_role
+
+
+def get_employee_auth_service(
+    settings: AppSettings = Depends(get_settings),
+    dao: HolderDAO = Depends(get_dao),
+) -> EmployeeAuthService:
+    otp_code_serv = OtpCodeService()  # Упрощенно
+    otp_send_serv = MockOTPSendingService()  # Упрощенно
+    return EmployeeAuthService(
+        otp_code_service=otp_code_serv,
+        otp_sending_service=otp_send_serv,
+        settings=settings,
+        dao=dao,
+    )
 
 
 def get_client_onboarding_service(
@@ -578,10 +584,28 @@ def get_cashback_service(
     return CompanyDefaultCashbackConfigService(dao=dao)
 
 
+def get_cashback_calculation_service(
+    dao: HolderDAO = Depends(get_dao),
+) -> CashbackCalculationService:
+    return CashbackCalculationService(dao=dao)
+
+
 def get_employee_customer_interaction_service(
     dao: HolderDAO = Depends(get_dao),
+    cashback_calculation_service: CashbackCalculationService = Depends(
+        get_cashback_calculation_service
+    ),
+    otp_code_service: OtpCodeService = Depends(get_otp_code_service),
+    otp_sending_service: MockOTPSendingService = Depends(get_otp_sending_service),
+    settings: AppSettings = Depends(get_settings),
 ) -> EmployeeCustomerInteractionService:
-    return EmployeeCustomerInteractionService(dao=dao)
+    return EmployeeCustomerInteractionService(
+        dao=dao,
+        cashback_calculation_service=cashback_calculation_service,
+        otp_code_service=otp_code_service,
+        settings=settings,
+        otp_sending_service=otp_sending_service,
+    )
 
 
 def get_auth_service(

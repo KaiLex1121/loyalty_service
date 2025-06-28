@@ -1,6 +1,7 @@
 from typing import Any, Dict, Optional
 
 from backend.exceptions.common import (
+    BadRequestException,
     ConflictException,
     ForbiddenException,
     InternalServerError,
@@ -61,3 +62,9 @@ class EmployeeNotFoundException(NotFoundException):
             detail=detail,
             internal_details=internal_details,
         )
+
+
+class EmployeeCreationException(BadRequestException):
+    """Вызывается при общей ошибке создания сотрудника."""
+
+    detail = "Не удалось создать сотрудника."

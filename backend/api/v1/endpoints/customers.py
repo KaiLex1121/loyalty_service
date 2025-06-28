@@ -12,7 +12,7 @@ from backend.schemas.customer_role import (  # Импортируем из но�
     CustomerBalanceResponse,
     CustomerRoleResponse,
 )
-from backend.services.customer import CustomerService
+from backend.services.company_customer import CustomerService
 
 # from backend.core.logger import get_logger
 # logger = get_logger(__name__)

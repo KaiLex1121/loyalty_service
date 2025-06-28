@@ -17,13 +17,13 @@ from backend.core.dependencies import (
 )
 from backend.models.company import Company as CompanyModel
 from backend.models.promotions.promotion import Promotion as PromotionModel
-from backend.schemas.promotion import (
+from backend.schemas.company_promotion import (
     PromotionCreate,
     PromotionListItemResponse,
     PromotionResponse,
     PromotionUpdate,
 )
-from backend.services.promotion import PromotionService
+from backend.services.company_promotion import PromotionService
 
 # Кастомные исключения больше не нужно импортировать здесь для отлова
 

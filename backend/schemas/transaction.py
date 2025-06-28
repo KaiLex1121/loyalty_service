@@ -6,6 +6,9 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 from backend.enums import TransactionStatusEnum, TransactionTypeEnum
+from backend.schemas.promotion_usage import (  # Поместите импорт внутрь, если он циклический, или используйте ForwardRef
+    PromotionUsageResponse,
+)
 
 
 class TransactionBase(BaseModel):
@@ -16,13 +19,6 @@ class TransactionBase(BaseModel):
     description: Optional[str] = Field(
         None, examples=["Покупка товаров", "Списание кэшбэка"]
     )
-
-
-# TransactionCreateRequest - если будет API для ручного создания транзакций
-# class TransactionCreateRequest(TransactionBase):
-#     company_id: int
-#     customer_role_id: int
-#     # ... другие поля, необходимые от клиента ...
 
 
 class TransactionCreateInternal(
@@ -38,6 +34,7 @@ class TransactionCreateInternal(
     transaction_time: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.timezone.utc)
     )
+    performed_by_employee_id: int
     # performed_by_admin_profile_id: Optional[int] = None # Для ручных операций админа
 
 
@@ -59,12 +56,6 @@ class TransactionResponse(TransactionBase):
 
     created_at: datetime.datetime
     updated_at: datetime.datetime
-
-    # Связь с PromotionUsage для отображения, какая акция была применена (если была)
-    # Это поле будет заполняться, если вы делаете JOIN или selectinload в DAO при запросе транзакций
-    from backend.schemas.promotion_usage import (  # Поместите импорт внутрь, если он циклический, или используйте ForwardRef
-        PromotionUsageResponse,
-    )
 
     promotion_usage: Optional[PromotionUsageResponse] = None
 

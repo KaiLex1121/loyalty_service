@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.dao.base import BaseDAO
 from backend.enums import OutletStatusEnum
 from backend.models.outlet import Outlet
-from backend.schemas.outlet import OutletCreate, OutletUpdate
+from backend.schemas.company_outlet import OutletCreate, OutletUpdate
 
 
 class OutletDAO(BaseDAO[Outlet, OutletCreate, OutletUpdate]):

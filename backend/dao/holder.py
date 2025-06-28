@@ -13,6 +13,7 @@ from backend.dao.promotion_usage import PromotionUsageDAO
 from backend.dao.subscription import SubscriptionDAO
 from backend.dao.tariff_plan import TariffPlanDAO
 from backend.dao.user_role import UserRoleDAO
+from backend.dao.transaction import TransactionDAO
 
 
 @dataclass
@@ -28,8 +29,9 @@ class HolderDAO:
     employee_role: EmployeeRoleDAO = field(init=False)
     promotion_usage: PromotionUsageDAO = field(init=False)
     promotion: PromotionDAO = field(init=False)
-    default_cashback_config: CompanyDefaultCashbackConfigDAO = field(init=False)
+    default_company_cashback_config: CompanyDefaultCashbackConfigDAO = field(init=False)
     customer_role: CustomerRoleDAO = field(init=False)
+    transaction: TransactionDAO = field(init=False)
 
     def __post_init__(self):
         self.account = AccountDAO()
@@ -43,5 +45,6 @@ class HolderDAO:
         self.employee_role = EmployeeRoleDAO()
         self.promotion_usage = PromotionUsageDAO()
         self.promotion = PromotionDAO()
-        self.default_cashback_config = CompanyDefaultCashbackConfigDAO()
+        self.default_company_cashback_config = CompanyDefaultCashbackConfigDAO()
         self.customer_role = CustomerRoleDAO()
+        self.transaction = TransactionDAO()

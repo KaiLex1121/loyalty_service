@@ -10,7 +10,7 @@ from backend.core.logger import get_logger
 from backend.core.security import create_access_token
 from backend.core.settings import AppSettings
 from backend.dao.holder import HolderDAO
-from backend.exceptions.services.customer import (
+from backend.exceptions.services.company_customer import (
     CompanyNotFoundForOnboardingException,
     CustomerOnboardingException,
     PhoneNumberAlreadyLinkedToDifferentTelegramException,
@@ -24,7 +24,7 @@ from backend.schemas.account import (
     AccountCreateInternal,
     AccountUpdate,
 )
-from backend.schemas.customer_auth import ClientTelegramOnboardingRequest
+from backend.schemas.customer_bot_auth import ClientTelegramOnboardingRequest
 from backend.schemas.customer_role import CustomerRoleCreateInternal
 
 logger = get_logger(__name__)

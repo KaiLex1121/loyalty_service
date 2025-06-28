@@ -69,3 +69,15 @@ class AccountAlreadyExistsException(ConflictException):
         if not detail:
             detail = f"Account with {identifier_type} '{identifier}' already exists."
         super().__init__(detail=detail, internal_details=internal_details)
+
+
+class AccountInactiveException(ConflictException):
+    def __init__(
+        self,
+        account_id: int,
+        detail: Optional[str] = None,
+        internal_details: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        if not detail:
+            detail = f"Account with ID '{account_id}' is inactive."
+        super().__init__(detail=detail, internal_details=internal_details)

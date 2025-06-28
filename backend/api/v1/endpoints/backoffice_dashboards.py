@@ -7,8 +7,9 @@ from backend.core.dependencies import (
 from backend.core.logger import get_logger
 from backend.core.security import oauth2_scheme_backoffice
 from backend.models.account import Account as AccountModel
-from backend.schemas.dashboard import DashboardResponse
-from backend.services.dashboard import DashboardService
+from backend.schemas.backoffice_dashboard import DashboardResponse
+from backend.services.backoffice_dashboard import DashboardService
+
 
 router = APIRouter()
 logger = get_logger(__name__)

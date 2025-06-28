@@ -5,7 +5,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 from backend.enums import PaymentCycleEnum, SubscriptionStatusEnum
-from backend.schemas.tariff_plan import TariffPlanResponseForCompany
+from backend.schemas.company_tariff_plan import TariffPlanResponseForCompany
 
 
 class SubscriptionBase(BaseModel):

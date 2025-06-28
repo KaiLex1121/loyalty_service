@@ -5,7 +5,7 @@ from sqlalchemy.future import select
 
 from backend.dao.base import BaseDAO
 from backend.models.tariff_plan import TariffPlan
-from backend.schemas.tariff_plan import TariffPlanCreate, TariffPlanUpdate
+from backend.schemas.company_tariff_plan import TariffPlanCreate, TariffPlanUpdate
 
 
 class TariffPlanDAO(BaseDAO[TariffPlan, TariffPlanCreate, TariffPlanUpdate]):

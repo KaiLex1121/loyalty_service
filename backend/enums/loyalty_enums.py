@@ -81,10 +81,9 @@ class TransactionTypeEnum(str, enum.Enum):
     """Тип финансовой транзакции в системе лояльности."""
 
     ACCRUAL_PURCHASE = "accrual_purchase"
-    SPENDING_CASHBACK = "spending_cashback"
+    SPENDING_PURCHASE = "spending_purchase"
     ACCRUAL_MANUAL = "accrual_manual"  # Добавил для ручных операций
     SPENDING_MANUAL = "spending_manual"  # Добавил для ручных операций
-    ACCRUAL_PROMOTION = "accrual_promotion"  # Если акция дает кэшбэк сверх базового
     ACCRUAL_REFUND = "accrual_refund"
     SPENDING_REFUND = "spending_refund"
     EXPIRATION = "expiration"

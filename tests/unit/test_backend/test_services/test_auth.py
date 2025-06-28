@@ -5,7 +5,7 @@ import pytest
 from fastapi import HTTPException, status
 
 from backend.enums.back_office import OtpPurposeEnum
-from backend.schemas.auth import OTPVerifyRequest
+from backend.schemas.backoffice_auth import OTPVerifyRequest
 from backend.services.auth import AuthService
 
 

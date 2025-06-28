@@ -12,6 +12,7 @@ from backend.enums import SubscriptionStatusEnum
 from backend.exceptions.services.employee import (
     ConflictException,
     EmployeeAlreadyExistsInCompanyException,
+    EmployeeCreationException,
     EmployeeLimitExceededException,
     EmployeeNotFoundException,
 )
@@ -26,7 +27,7 @@ from backend.models.subscription import (
     Subscription as SubscriptionModel,  # Для _get_current_active_subscription
 )
 from backend.schemas.account import AccountCreate, AccountCreateInternal
-from backend.schemas.employee import (
+from backend.schemas.company_employee import (
     AccountResponseForEmployee,
     EmployeeCreate,
     EmployeeResponse,
@@ -114,7 +115,6 @@ class EmployeeService:
         account = await self.dao.account.get_by_phone_number_with_all_profiles(
             session, phone_number=employee_data.account_phone_number
         )
-
         if not account:
             account_schema = AccountCreate(
                 phone_number=employee_data.account_phone_number,
@@ -130,6 +130,7 @@ class EmployeeService:
                 session, account_id=account.id, company_id=company.id
             )
         )
+
         if existing_employee_role:
             raise EmployeeAlreadyExistsInCompanyException(
                 employee_phone_number=employee_data.account_phone_number,
@@ -153,17 +154,36 @@ class EmployeeService:
                     )
 
         # 4. Создать EmployeeRole. "Рабочие" поля по умолчанию берутся из Account.
-        new_employee_role = await self.dao.employee_role.create_employee_role(
-            session,
-            account_id=account.id,
-            company_id=company.id,
-            position=employee_data.position,
-            work_full_name=account.full_name,
-            work_email=account.email,
-            work_phone_number=account.phone_number,
-        )
+        try:
+            new_employee_role = await self.dao.employee_role.create_employee_role(
+                session,
+                account_id=account.id,
+                company_id=company.id,
+                position=employee_data.position,
+                work_full_name=account.full_name,
+                work_email=account.email,
+                work_phone_number=account.phone_number,
+            )
 
-        # 5. Привязать к торговым точкам
+        except IntegrityError as e:
+
+            error_message = str(e.orig).lower()
+
+            if "uq__employee_roles__account_id" in error_message:
+                raise ConflictException(
+                    detail=f"Этот пользователь уже является сотрудником в другой компании и не может быть добавлен снова."
+                )
+
+            elif "uq__employee_roles__work_phone_number" in error_message:
+                raise ConflictException(
+                    detail=f"Рабочий номер телефона уже используется другим сотрудником."
+                )
+
+            # Если причина другая, выбрасываем общее исключение
+            raise EmployeeCreationException(
+                detail="Не удалось добавить сотрудника из-за конфликта данных в базе."
+            )
+
         if employee_data.outlet_ids:
             outlets_to_assign = await self._validate_and_get_outlets_for_assignment(
                 session, outlet_ids=employee_data.outlet_ids, company_id=company.id

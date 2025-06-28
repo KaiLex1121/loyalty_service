@@ -12,10 +12,10 @@ from backend.core.dependencies import (
 from backend.models.company import Company as CompanyModel
 from backend.models.employee_role import EmployeeRole
 from backend.models.outlet import Outlet as OutletModel
-from backend.schemas.employee import EmployeeCreate, EmployeeResponse, EmployeeUpdate
-from backend.schemas.outlet import OutletCreate, OutletResponse, OutletUpdate
-from backend.services.employee import EmployeeService
-from backend.services.outlet import OutletService
+from backend.schemas.company_employee import EmployeeCreate, EmployeeResponse, EmployeeUpdate
+from backend.schemas.company_outlet import OutletCreate, OutletResponse, OutletUpdate
+from backend.services.company_employee import EmployeeService
+from backend.services.company_outlet import OutletService
 
 router = APIRouter()
 

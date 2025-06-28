@@ -15,36 +15,27 @@ from backend.schemas.token import TokenPayload
 logger = get_logger(__name__)
 
 
-API_KEY_CUSTOMER_BOT_NAME = "X-Bot-Api-Key"  # Имя заголовка для API ключа бота
+API_KEY_CUSTOMER_BOT_NAME = "X-Customer-Bot-Api-Key"  # Имя заголовка для API ключа бота
 customer_bot_api_key_header = APIKeyHeader(
-    name=API_KEY_CUSTOMER_BOT_NAME, auto_error=True
+    name=API_KEY_CUSTOMER_BOT_NAME, auto_error=True, scheme_name="CustomerBotApiKey"
 )
 
 API_KEY_EMPLOYEE_BOT_NAME = (
     "X-Employee-Bot-Api-Key"  # Имя заголовка для API ключа бота сотрудников
 )
 employee_bot_api_key_header = APIKeyHeader(
-    name=API_KEY_EMPLOYEE_BOT_NAME, auto_error=True
+    name=API_KEY_EMPLOYEE_BOT_NAME, auto_error=True, scheme_name="EmployeeBotApiKey"
 )
 
-http_bearer_employee_bot = HTTPBearer(
-    scheme_name="BackofficeBearerAuth",
+http_bearer_backoffice = HTTPBearer(
+    scheme_name="BackofficeUserHttpAuth",
     description="JWT токен для доступа к бэк-офису",
     auto_error=True,
 )
 
-oauth2_scheme_employee_bot = OAuth2PasswordBearer(
-    tokenUrl="/api/v1/auth/token-for-swagger",
-    description="Аутентификация для пользователей бэк-офиса. Введите 'Bearer <token>'.",
-    scopes={
-        "backoffice_user": "Доступ к ресурсам бэк-офиса компании.",
-        "backoffice_admin": "Полный доступ системного администратора.",
-    },
-    auto_error=True,
-)
 
-http_bearer_backoffice = HTTPBearer(
-    scheme_name="BackofficeBearerAuth",
+http_bearer_employee = HTTPBearer(
+    scheme_name="EmployeeHttpAuth",
     description="JWT токен для доступа к бэк-офису",
     auto_error=True,
 )
@@ -52,6 +43,7 @@ http_bearer_backoffice = HTTPBearer(
 oauth2_scheme_backoffice = OAuth2PasswordBearer(
     tokenUrl="/api/v1/auth/token-for-swagger",
     description="Аутентификация для пользователей бэк-офиса. Введите 'Bearer <token>'.",
+    scheme_name="BackofficeBearerAuth",
     scopes={
         "backoffice_user": "Доступ к ресурсам бэк-офиса компании.",
         "backoffice_admin": "Полный доступ системного администратора.",

@@ -4,7 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel, EmailStr, Field
 
 from backend.schemas.account import AccountResponseForEmployee
-from backend.schemas.outlet import (  # Предполагаем, что есть такая базовая схема
+from backend.schemas.company_outlet import (  # Предполагаем, что есть такая базовая схема
     OutletResponseForEmployee,
 )
 from backend.utils.validators import RussianPhoneNumber

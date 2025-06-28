@@ -8,7 +8,7 @@ from backend.enums import (  # Прямой импорт, если не чере
     TariffStatusEnum,
 )
 from backend.models.tariff_plan import TariffPlan
-from backend.schemas.tariff_plan import (  # Используем наши схемы
+from backend.schemas.company_tariff_plan import (  # Используем наши схемы
     TariffPlanCreate,
     TariffPlanUpdate,
 )

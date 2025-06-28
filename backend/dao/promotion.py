@@ -10,7 +10,7 @@ from backend.dao.base import BaseDAO
 from backend.enums import PromotionStatusEnum, PromotionTypeEnum
 from backend.models.promotions.cashback_config import CashbackConfig  # Для joinedload
 from backend.models.promotions.promotion import Promotion
-from backend.schemas.promotion import (  # Вместо PromotionCreateInternal; Нейминг схем
+from backend.schemas.company_promotion import (  # Вместо PromotionCreateInternal; Нейминг схем
     PromotionCreateInternal,
     PromotionUpdate,
 )

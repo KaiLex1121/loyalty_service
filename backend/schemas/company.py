@@ -11,7 +11,7 @@ from backend.enums import CompanyStatusEnum, LegalFormEnum
 from backend.schemas.company_default_cashback_config import (
     CompanyDefaultCashbackConfigResponse,
 )
-from backend.schemas.subscription import SubscriptionResponseForCompany
+from backend.schemas.company_subscription import SubscriptionResponseForCompany
 
 
 class CompanyBase(BaseModel):

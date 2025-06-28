@@ -11,7 +11,7 @@ from backend.models.account import (
 )
 from backend.models.employee_role import EmployeeRole, employee_role_outlet_association
 from backend.models.outlet import Outlet
-from backend.schemas.employee import (  # Для типа UpdateSchema в CRUDBase
+from backend.schemas.company_employee import (  # Для типа UpdateSchema в CRUDBase
     EmployeeCreate,
     EmployeeUpdate,
 )
@@ -72,6 +72,16 @@ class EmployeeRoleDAO(BaseDAO[EmployeeRole, EmployeeCreate, EmployeeUpdate]):
                 self.model.deleted_at.is_(None),
             )
         )
+        return result.scalars().first()
+
+    async def get_by_account_id(
+        self, session: AsyncSession, account_id: int
+    ) -> Optional[EmployeeRole]:
+        """Находит EmployeeRole по account_id."""
+        stmt = select(self.model).filter(
+            self.model.account_id == account_id, self.model.deleted_at.is_(None)
+        )
+        result = await session.execute(stmt)
         return result.scalars().first()
 
     async def get_by_id_with_details(

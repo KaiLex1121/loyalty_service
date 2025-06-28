@@ -1,9 +1,10 @@
 import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
+from sqlalchemy.dialects.postgresql import JSONB # Используем JSONB для лучшей производительности с JSON
 
 from backend.db.base import Base
 from backend.enums import OtpPurposeEnum
@@ -30,12 +31,14 @@ class OtpCode(Base):
         nullable=False,
         default=OtpPurposeEnum.BACKOFFICE_LOGIN,
     )
+
     attempts: Mapped[int] = mapped_column(Integer, default=0)
     channel: Mapped[str] = mapped_column(String(50))
     account_id: Mapped[int] = mapped_column(
         ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False
     )
     account: Mapped["Account"] = relationship("Account", back_populates="otp_codes")
+    meta: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True) # <--- НОВОЕ ПОЛЕ
 
     def __repr__(self) -> str:
         return f"<OtpCode(id={self.id}, account_id={self.account_id}, used={self.is_used})>"

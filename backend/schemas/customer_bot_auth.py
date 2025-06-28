@@ -5,9 +5,12 @@ from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field, constr
 
+from backend.utils.validators import RussianPhoneNumber
+
 
 # --- Схема для запроса от Telegram-бота ---
 class ClientTelegramOnboardingRequest(BaseModel):
+    phone_number: RussianPhoneNumber
     telegram_user_id: int = Field(
         examples=[123456789],
         description="Уникальный ID пользователя в Telegram (если передается).",

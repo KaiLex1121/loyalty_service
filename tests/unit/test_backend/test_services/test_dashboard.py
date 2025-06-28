@@ -4,8 +4,8 @@ import pytest
 
 from backend.models.account import Account as AccountModel
 from backend.models.company import Company
-from backend.schemas.dashboard import DashboardResponse
-from backend.services.dashboard import DashboardService
+from backend.schemas.backoffice_dashboard import DashboardResponse
+from backend.services.backoffice_dashboard import DashboardService
 
 
 class TestDashboardService:

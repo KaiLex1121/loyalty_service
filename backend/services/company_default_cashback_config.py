@@ -58,7 +58,7 @@ class CompanyDefaultCashbackConfigService:
 
         update_dict = update_data.model_dump(exclude_unset=True)
 
-        updated_config_model = await self.dao.default_cashback_config.update(
+        updated_config_model = await self.dao.default_company_cashback_config.update(
             session, db_obj=cashback_config_to_update, obj_in=update_dict
         )
 

@@ -30,8 +30,3 @@ class EmployeeOtpVerify(BaseModel):
         default=OtpPurposeEnum.EMPLOYEE_VERIFICATION,  # Используем новое значение
         description="Цель OTP кода.",
     )
-
-
-# --- Схемы для поиска клиента сотрудником ---
-class CustomerSearchByPhoneRequest(BaseModel):
-    customer_phone_number: RussianPhoneNumber

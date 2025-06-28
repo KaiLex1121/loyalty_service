@@ -17,7 +17,7 @@ from backend.exceptions.services.outlet import (
 )
 from backend.models.company import Company as CompanyModel  # Для проверки лимитов
 from backend.models.outlet import Outlet as OutletModel
-from backend.schemas.outlet import OutletCreate, OutletResponse, OutletUpdate
+from backend.schemas.company_outlet import OutletCreate, OutletResponse, OutletUpdate
 from backend.utils.subscription_utils import get_current_subscription
 
 logger = get_logger(__name__)

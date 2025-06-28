@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.dao.base import BaseDAO
 from backend.models.promotions.cashback_config import CashbackConfig
-from backend.schemas.cashback_config import (  # Предполагаем схему
+from backend.schemas.promotion_cashback_config import (  # Предполагаем схему
     CashbackConfigCreate,
     CashbackConfigUpdate,
 )

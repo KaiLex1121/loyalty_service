@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -11,6 +12,7 @@ class OtpCodeBase(BaseModel):
     purpose: OtpPurposeEnum
     account_id: int
     channel: str
+    meta: dict[str, Any] | None = None
 
 
 class OtpCodeCreate(OtpCodeBase):

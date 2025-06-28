@@ -2,13 +2,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.dao.holder import HolderDAO
 from backend.enums import TariffStatusEnum
-from backend.exceptions.services.tarrif_plan import (
+from backend.exceptions.services.tariff_plan import (
     TariffPlanNameConflictException,
 )
 from backend.models.tariff_plan import (
     TariffPlan as TariffPlanModel,  # Не используется напрямую, но для контекста
 )
-from backend.schemas.tariff_plan import TariffPlanCreate, TariffPlanResponse
+from backend.schemas.company_tariff_plan import TariffPlanCreate, TariffPlanResponse
 
 
 class AdminTariffPlanService:

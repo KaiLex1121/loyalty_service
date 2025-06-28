@@ -44,7 +44,7 @@ async def _create_superuser_logic(
     try:
         account_dao = AccountDAO()
         user_role_dao = UserRoleDAO()
-        account = await account_dao.get_by_phone_number_with_profiles(
+        account = await account_dao.get_by_phone_number_with_all_profiles(
             session, phone_number=phone_number
         )
 
