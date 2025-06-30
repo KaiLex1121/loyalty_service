@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from .promotions.cashback_config import CashbackConfig
     from .promotions.promotion import Promotion
     from .subscription import Subscription
+    from .telegram_bot import TelegramBot
     from .transaction import Transaction
     from .user_role import UserRole
 
@@ -99,6 +100,9 @@ class Company(Base):
         back_populates="company",
         uselist=False,
         cascade="all, delete-orphan",
+    )
+    telegram_bots: Mapped[List["TelegramBot"]] = relationship(
+        back_populates="company", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:

@@ -12,8 +12,9 @@ from backend.dao.promotion import PromotionDAO
 from backend.dao.promotion_usage import PromotionUsageDAO
 from backend.dao.subscription import SubscriptionDAO
 from backend.dao.tariff_plan import TariffPlanDAO
-from backend.dao.user_role import UserRoleDAO
+from backend.dao.telegram_bot import TelegramBotDAO
 from backend.dao.transaction import TransactionDAO
+from backend.dao.user_role import UserRoleDAO
 
 
 @dataclass
@@ -32,6 +33,7 @@ class HolderDAO:
     default_company_cashback_config: CompanyDefaultCashbackConfigDAO = field(init=False)
     customer_role: CustomerRoleDAO = field(init=False)
     transaction: TransactionDAO = field(init=False)
+    telegram_bot: TelegramBotDAO = field(init=False)
 
     def __post_init__(self):
         self.account = AccountDAO()
@@ -48,3 +50,4 @@ class HolderDAO:
         self.default_company_cashback_config = CompanyDefaultCashbackConfigDAO()
         self.customer_role = CustomerRoleDAO()
         self.transaction = TransactionDAO()
+        self.telegram_bot = TelegramBotDAO()

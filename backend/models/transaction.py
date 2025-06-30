@@ -2,7 +2,9 @@ import datetime
 import decimal
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Numeric, Enum as PGEnum, String
+from sqlalchemy import DateTime
+from sqlalchemy import Enum as PGEnum
+from sqlalchemy import ForeignKey, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -25,14 +27,14 @@ class Transaction(Base):
     transaction_type: Mapped[TransactionTypeEnum] = mapped_column(
         PGEnum(TransactionTypeEnum, name="transaction_type_enum", create_type=True),
         nullable=False,
-        index=True
+        index=True,
     )
     status: Mapped[TransactionStatusEnum] = mapped_column(
         PGEnum(TransactionStatusEnum, name="transaction_status_enum", create_type=True),
         nullable=False,
         default=TransactionStatusEnum.COMPLETED,
         server_default=TransactionStatusEnum.COMPLETED.value,
-        index=True
+        index=True,
     )
     description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     purchase_amount: Mapped[decimal.Decimal] = mapped_column(
@@ -76,14 +78,20 @@ class Transaction(Base):
     outlet: Mapped[Optional["Outlet"]] = relationship(
         "Outlet", back_populates="transactions"
     )
-    performed_by_admin_profile_id: Mapped[Optional[int]] = mapped_column( # Для ручных операций админа
-        ForeignKey("user_roles.id", name="fk_transactions_performed_by_admin_profile_id_user_roles"), # user_roles - это таблица для AdminProfile/UserRole
-        nullable=True,
-        index=True,
-        comment="Администратор, выполнивший операцию (для ручных начислений/списаний)"
+    performed_by_admin_profile_id: Mapped[Optional[int]] = (
+        mapped_column(  # Для ручных операций админа
+            ForeignKey(
+                "user_roles.id",
+                name="fk_transactions_performed_by_admin_profile_id_user_roles",
+            ),  # user_roles - это таблица для AdminProfile/UserRole
+            nullable=True,
+            index=True,
+            comment="Администратор, выполнивший операцию (для ручных начислений/списаний)",
+        )
     )
     performed_by_admin_profile: Mapped[Optional["UserRole"]] = relationship(
         foreign_keys=[performed_by_admin_profile_id]
     )
+
     def __repr__(self) -> str:
         return f"<Transaction(id={self.id}, customer_role_id={self.customer_role_id}, amount={self.purchase_amount})>"

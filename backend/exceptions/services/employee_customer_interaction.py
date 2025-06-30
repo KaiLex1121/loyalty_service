@@ -1,6 +1,7 @@
 # backend/exceptions/services/loyalty.py
 import decimal
 from typing import Optional  # Добавил Optional
+
 from backend.exceptions.common import BadRequestException
 
 
@@ -22,9 +23,11 @@ class InvalidSpendAmountException(BadRequestException):
     pass  # Сообщение будет передано из сервиса
 
 
-class CashbackAccrualFailedException(BadRequestException): # 400 Bad Request
+class CashbackAccrualFailedException(BadRequestException):  # 400 Bad Request
     detail = "Не удалось начислить кэшбэк."
+
 
 class CashbackSpendFailedException(BadRequestException):
     """Вызывается, когда операция списания не может быть завершена из-за внутренней ошибки."""
+
     detail = "Не удалось списать кэшбэк."

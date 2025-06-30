@@ -4,15 +4,26 @@ from typing import Optional, Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.security import generate_otp, get_otp_expiry_time, get_otp_hash, verify_otp_hash
+from backend.core.security import (
+    generate_otp,
+    get_otp_expiry_time,
+    get_otp_hash,
+    verify_otp_hash,
+)
 from backend.core.settings import AppSettings
 from backend.dao.holder import HolderDAO
 
 # Кастомные исключения
 from backend.enums.auth_enums import OtpPurposeEnum
 from backend.enums.loyalty_enums import TransactionStatusEnum, TransactionTypeEnum
+from backend.exceptions.common import BadRequestException, NotFoundException
 from backend.exceptions.services.account import AccountInactiveException
-from backend.exceptions.services.backoffice_auth import InvalidOTPException, OTPExpiredException, OTPNotFoundException, OTPSendingException
+from backend.exceptions.services.backoffice_auth import (
+    InvalidOTPException,
+    OTPExpiredException,
+    OTPNotFoundException,
+    OTPSendingException,
+)
 from backend.exceptions.services.company_customer import (  # Создайте эти исключения
     CustomerNotFoundByPhoneInCompanyException,
 )
@@ -26,9 +37,11 @@ from backend.models.employee_role import EmployeeRole
 from backend.models.transaction import Transaction
 from backend.schemas.otp_code import OtpCodeCreate
 from backend.schemas.transaction import TransactionCreateInternal
-from backend.services.transaction_cashback_calculation import CashbackCalculationService
 from backend.services.otp_code import OtpCodeService
-from backend.services.otp_sending import MockOTPSendingService  # Для контекста сотрудника
+from backend.services.otp_sending import (  # Для контекста сотрудника
+    MockOTPSendingService,
+)
+from backend.services.transaction_cashback_calculation import CashbackCalculationService
 
 # from backend.core.logger import get_logger
 # logger = get_logger(__name__)
@@ -128,12 +141,13 @@ class EmployeeCustomerInteractionService:
             )
         valid_outlet_id = outlet_id if outlet_id and outlet_id > 0 else None
 
-        # Проверка, что outlet_id (если передан) принадлежит той же компании
+        if not valid_outlet_id:
+            raise BadRequestException(detail="Торговая точка не указана.")
         if valid_outlet_id:
             outlet = await self.dao.outlet.get_active(session, id_=valid_outlet_id)
             if not outlet or outlet.company_id != acting_employee_role.company_id:
-                raise ValueError(
-                    f"Торговая точка с ID {valid_outlet_id} не найдена или не принадлежит компании."
+                raise NotFoundException(
+                    detail=f"Торговая точка с ID {valid_outlet_id} не найдена или не принадлежит компании."
                 )
 
         # Вызываем сервис расчета кэшбэка
@@ -152,8 +166,9 @@ class EmployeeCustomerInteractionService:
             # Это может произойти, если сумма кэшбэка равна 0.
             # Можно либо вернуть None, либо создать "нулевую" транзакцию, либо выбросить ошибку.
             # Давайте для простоты вернем ошибку, если транзакция не была создана.
-            raise CashbackAccrualFailedException(detail="Не удалось начислить кэшбэк (сумма покупки или условия акций не привели к начислению).")
-
+            raise CashbackAccrualFailedException(
+                detail="Не удалось начислить кэшбэк (сумма покупки или условия акций не привели к начислению)."
+            )
 
         return transaction
 
@@ -188,7 +203,7 @@ class EmployeeCustomerInteractionService:
         if current_balance <= 0:
             raise InsufficientCashbackBalanceException(
                 current_balance=current_balance,
-                detail="На балансе клиента нет средств для списания."
+                detail="На балансе клиента нет средств для списания.",
             )
 
         amount_to_spend = min(current_balance, purchase_amount)
@@ -277,7 +292,10 @@ class EmployeeCustomerInteractionService:
             settings=self.settings,
         ):
             raise InvalidOTPException(
-                internal_details={"account_id": customer_account.id, "otp_id": active_otp.id}
+                internal_details={
+                    "account_id": customer_account.id,
+                    "otp_id": active_otp.id,
+                }
             )
         await self.otp_code_service.set_mark_otp_as_used(session, self.dao, active_otp)
 
@@ -287,7 +305,7 @@ class EmployeeCustomerInteractionService:
         if amount_to_spend <= 0:
             raise InsufficientCashbackBalanceException(
                 current_balance=target_customer_role.cashback_balance,
-                detail="На балансе клиента больше нет средств для списания."
+                detail="На балансе клиента больше нет средств для списания.",
             )
 
         # Обновляем баланс и создаем транзакцию

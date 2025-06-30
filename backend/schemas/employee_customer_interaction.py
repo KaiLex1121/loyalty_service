@@ -1,8 +1,10 @@
 # --- Схемы для поиска клиента сотрудником ---
-from backend.utils.validators import OTPCode, RussianPhoneNumber
 import decimal
 from typing import Optional
+
 from pydantic import BaseModel, Field, field_validator
+
+from backend.utils.validators import OTPCode, RussianPhoneNumber
 
 
 class CustomerSearchByPhoneRequest(BaseModel):
@@ -17,12 +19,15 @@ class AccrueCashbackRequest(CustomerSearchByPhoneRequest):
         None, description="ID торговой точки, где совершена покупка."
     )
 
-    @field_validator('outlet_id')
+    @field_validator("outlet_id")
     @classmethod
     def validate_outlet_id(cls, v: Optional[int]) -> Optional[int]:
         if v is not None and v <= 0:
-            raise ValueError("ID торговой точки (outlet_id) должен быть положительным числом.")
+            raise ValueError(
+                "ID торговой точки (outlet_id) должен быть положительным числом."
+            )
         return v
+
 
 class SpendCashbackRequestOTP(CustomerSearchByPhoneRequest):
     """Запрос на начало списания и отправку OTP."""
@@ -34,12 +39,15 @@ class SpendCashbackRequestOTP(CustomerSearchByPhoneRequest):
     )
     outlet_id: Optional[int] = Field(None, description="ID торговой точки.")
 
-    @field_validator('outlet_id')
+    @field_validator("outlet_id")
     @classmethod
     def validate_outlet_id(cls, v: Optional[int]) -> Optional[int]:
         if v is not None and v <= 0:
-            raise ValueError("ID торговой точки (outlet_id) должен быть положительным числом.")
+            raise ValueError(
+                "ID торговой точки (outlet_id) должен быть положительным числом."
+            )
         return v
+
 
 class SpendCashbackVerifyOTP(CustomerSearchByPhoneRequest):
     """Подтверждение списания с помощью OTP."""
@@ -66,6 +74,8 @@ class SpendCashbackRequestOTPResponse(BaseModel):
         description="Маскированный номер телефона клиента, на который отправлен код."
     )
 
+
 class SpendCashbackVerifyRequest(BaseModel):
     """Запрос на подтверждение списания с OTP кодом."""
+
     otp_code: OTPCode

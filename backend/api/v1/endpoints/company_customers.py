@@ -34,7 +34,6 @@
 #     return await employee_service.get_customer_response_by_id(session, employee_role)
 
 
-
 # @router.get(
 #     "/{company_id}/customers",
 #     response_model=List[EmployeeResponse],

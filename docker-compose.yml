@@ -1,21 +1,50 @@
 services:
-
-  web:
-    image: "backend:latest"
-    stop_signal: SIGINT
-    ports:
-      - "8000:8000"
+  core-api: # Переименовали web в core-api
+    image: "backend-core-api:latest"
     build:
       context: .
+      dockerfile: Dockerfile.core_api # Указываем отдельный Dockerfile
     working_dir: "/app"
     volumes:
       - .:/app
-    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn backend.core_api.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
     restart: always
     env_file:
       - ".env"
     depends_on:
       - pg_database
+      - rabbitmq
+
+  bot-gateway: # Новый сервис для бота
+    image: "backend-bot-gateway:latest"
+    build:
+      context: .
+      dockerfile: Dockerfile.bot_gateway # Указываем отдельный Dockerfile
+    working_dir: "/app"
+    volumes:
+      - .:/app
+    # Запускаем и воркер Taskiq, и самого бота (через polling для простоты)
+    command: sh -c "taskiq worker -fsd backend.bot_gateway.tasks:broker & python -m backend.bot_gateway.main"
+    restart: always
+    env_file:
+      - ".env"
+    depends_on:
+      - pg_database
+      - rabbitmq
+      - core-api
+
+  rabbitmq: # Новый сервис RabbitMQ
+    image: rabbitmq:3.12-management # Используем образ с UI
+    ports:
+      - "5672:5672"   # Порт для подключения приложений
+      - "15672:15672" # Порт для веб-интерфейса управления
+    restart: always
+    env_file:
+      - ".env"
+    volumes:
+      - "rabbitmq_data:/var/lib/rabbitmq"
 
   pg_database:
     image: postgres:16
@@ -24,32 +53,12 @@ services:
     restart: always
     volumes:
       - pg_data:/var/lib/postgresql/data
-    command: "postgres -c max_connections=150
-            -c shared_buffers=512MB -c effective_cache_size=1536MB
-            -c maintenance_work_mem=128MB -c checkpoint_completion_target=0.9 -c wal_buffers=16MB
-            -c default_statistics_target=100 -c random_page_cost=1.1 -c effective_io_concurrency=200
-            -c work_mem=3495kB -c min_wal_size=1GB -c max_wal_size=4GB -c max_worker_processes=2
-            -c max_parallel_workers_per_gather=1 -c max_parallel_workers=2 -c max_parallel_maintenance_workers=1"
     env_file:
       - '.env'
+    # ... остальные настройки postgres без изменений ...
 
-  pg_database_test:
-    image: postgres:16
-    ports:
-      - "5433:5432"
-    restart: always
-    tmpfs:
-          - /var/lib/postgresql/data  # БД в памяти для скорости
-    command: "postgres -c max_connections=150
-            -c shared_buffers=512MB -c effective_cache_size=1536MB
-            -c maintenance_work_mem=128MB -c checkpoint_completion_target=0.9 -c wal_buffers=16MB
-            -c default_statistics_target=100 -c random_page_cost=1.1 -c effective_io_concurrency=200
-            -c work_mem=3495kB -c min_wal_size=1GB -c max_wal_size=4GB -c max_worker_processes=2
-            -c max_parallel_workers_per_gather=1 -c max_parallel_workers=2 -c max_parallel_maintenance_workers=1"
-    env_file:
-      - '.env.test'
-
+  # pg_database_test без изменений
 
 volumes:
-  redis_data:
   pg_data:
+  rabbitmq_data: # Новый volume для RabbitMQ

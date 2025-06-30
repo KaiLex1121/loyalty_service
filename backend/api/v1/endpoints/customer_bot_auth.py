@@ -6,7 +6,6 @@ from backend.core.dependencies import (
     get_client_onboarding_service,
     get_session,
 )
-from backend.core.security import customer_bot_api_key_header
 from backend.schemas.customer_bot_auth import (
     ClientTelegramOnboardingRequest,
     CustomerProfileResponse,

@@ -8,19 +8,25 @@ from backend.api.v1.endpoints import (
     company_employees,
     company_outlets,
     company_promotions,
+    company_telegram_bots,
     customer_bot_auth,
     customers,
     employee_bot_auth,
     employee_bot_operations,
 )
 from backend.api.v1.endpoints.admin import company_tariff_plans
+from backend.api.v1.endpoints.telegram import webhook
 
 api_router_v1 = APIRouter()
+
+api_router_v1.include_router(webhook.router, tags=["Webhooks"])  # <--- ДОБАВИТЬ
 
 api_router_v1.include_router(
     backoffice_auth.router, prefix="/auth", tags=["Backoffice Authentication"]
 )
-api_router_v1.include_router(backoffice_dashboards.router, prefix="/me", tags=["Backoffice Dashboard"])
+api_router_v1.include_router(
+    backoffice_dashboards.router, prefix="/me", tags=["Backoffice Dashboard"]
+)
 api_router_v1.include_router(companies.router, prefix="/companies", tags=["Companies"])
 api_router_v1.include_router(
     company_tariff_plans.router,
@@ -63,4 +69,10 @@ api_router_v1.include_router(
     employee_bot_operations.router,
     prefix="/employee-bot/operations",  # Префикс для операций сотрудника после входа
     tags=["Employees - Operations"],
+)
+
+api_router_v1.include_router(
+    company_telegram_bots.router,
+    prefix="/companies/{company_id}/bots",
+    tags=["Company Telegram Bots"],
 )

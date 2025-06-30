@@ -5,12 +5,6 @@ from fastapi import FastAPI
 from backend.api.v1.api import api_router_v1
 from backend.core.exception_handlers import setup_exception_handlers
 from backend.core.logger import get_logger
-from backend.core.security import (
-    API_KEY_CUSTOMER_BOT_NAME,
-    API_KEY_EMPLOYEE_BOT_NAME,
-    oauth2_scheme_backoffice,
-    http_bearer_backoffice,
-)
 from backend.core.settings import settings
 
 logger = get_logger(__name__)

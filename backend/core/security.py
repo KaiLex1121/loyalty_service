@@ -15,18 +15,6 @@ from backend.schemas.token import TokenPayload
 logger = get_logger(__name__)
 
 
-API_KEY_CUSTOMER_BOT_NAME = "X-Customer-Bot-Api-Key"  # Имя заголовка для API ключа бота
-customer_bot_api_key_header = APIKeyHeader(
-    name=API_KEY_CUSTOMER_BOT_NAME, auto_error=True, scheme_name="CustomerBotApiKey"
-)
-
-API_KEY_EMPLOYEE_BOT_NAME = (
-    "X-Employee-Bot-Api-Key"  # Имя заголовка для API ключа бота сотрудников
-)
-employee_bot_api_key_header = APIKeyHeader(
-    name=API_KEY_EMPLOYEE_BOT_NAME, auto_error=True, scheme_name="EmployeeBotApiKey"
-)
-
 http_bearer_backoffice = HTTPBearer(
     scheme_name="BackofficeUserHttpAuth",
     description="JWT токен для доступа к бэк-офису",

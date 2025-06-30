@@ -16,18 +16,18 @@ from backend.exceptions.services.promotion import (
 )
 from backend.models.company import Company
 from backend.models.promotions.promotion import Promotion
-from backend.schemas.promotion_cashback_config import (
-    CashbackConfigUpdate,  # Нужна для promo_update_data.cashback_config
-)
-from backend.schemas.promotion_cashback_config import (
-    CashbackConfigCreateInternal,
-)
 from backend.schemas.company_promotion import (
     INT_TO_PRIORITY_LEVEL_MAP,
     PRIORITY_LEVEL_TO_INT_MAP,
     PromotionCreate,
     PromotionCreateInternal,
     PromotionUpdate,
+)
+from backend.schemas.promotion_cashback_config import (
+    CashbackConfigUpdate,  # Нужна для promo_update_data.cashback_config
+)
+from backend.schemas.promotion_cashback_config import (
+    CashbackConfigCreateInternal,
 )
 
 # from backend.core.logger import get_logger # Раскомментируйте, если используете

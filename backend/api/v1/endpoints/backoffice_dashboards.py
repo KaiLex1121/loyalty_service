@@ -10,7 +10,6 @@ from backend.models.account import Account as AccountModel
 from backend.schemas.backoffice_dashboard import DashboardResponse
 from backend.services.backoffice_dashboard import DashboardService
 
-
 router = APIRouter()
 logger = get_logger(__name__)
 

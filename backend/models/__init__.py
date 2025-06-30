@@ -14,5 +14,6 @@ from backend.models.promotions.promotion_filters import PromotionProductFilter
 from backend.models.promotions.promotion_usage import PromotionUsage
 from backend.models.subscription import Subscription
 from backend.models.tariff_plan import TariffPlan
+from backend.models.telegram_bot import TelegramBot
 from backend.models.transaction import Transaction
 from backend.models.user_role import UserRole

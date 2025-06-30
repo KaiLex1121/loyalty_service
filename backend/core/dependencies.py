@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 from fastapi import Depends, HTTPException, Path, Request, Security, status
 from fastapi.security import HTTPAuthorizationCredentials
@@ -9,16 +9,16 @@ from sqlalchemy.orm import joinedload, selectinload
 
 from backend.core.logger import get_logger
 from backend.core.security import (
-    customer_bot_api_key_header,
-    employee_bot_api_key_header,
+    http_bearer_backoffice,
+    http_bearer_employee,
     oauth2_scheme_backoffice,
     verify_token,
-    http_bearer_backoffice,
 )
 from backend.core.settings import AppSettings, get_settings
 from backend.dao.holder import HolderDAO
 from backend.db.session import create_pool
 from backend.enums import UserAccessLevelEnum
+from backend.enums.telegram_bot_enums import BotTypeEnum
 from backend.exceptions.common import (
     ForbiddenException,
     NotFoundException,
@@ -33,28 +33,30 @@ from backend.models.employee_role import EmployeeRole
 from backend.models.outlet import Outlet
 from backend.models.promotions.promotion import Promotion
 from backend.models.subscription import Subscription
+from backend.models.telegram_bot import TelegramBot
 from backend.models.user_role import UserRole
 from backend.schemas.token import TokenPayload
 from backend.services.account import AccountService
 from backend.services.backoffice_auth import AuthService
-from backend.services.transaction_cashback_calculation import CashbackCalculationService
+from backend.services.backoffice_dashboard import DashboardService
 from backend.services.company import CompanyService
+from backend.services.company_customer import CustomerService  # Поздний импорт
 from backend.services.company_default_cashback_config import (
     CompanyDefaultCashbackConfigService,
 )
-from backend.services.company_customer import CustomerService  # Поздний импорт
-from backend.services.customer_bot_auth import CustomerAuthService  # Поздний импорт
-from backend.services.backoffice_dashboard import DashboardService
 from backend.services.company_employee import EmployeeService
+from backend.services.company_outlet import OutletService
+from backend.services.company_promotion import PromotionService
+from backend.services.customer_bot_auth import CustomerAuthService  # Поздний импорт
 from backend.services.employee_bot_auth import EmployeeAuthService
 from backend.services.employee_customer_interaction import (
     EmployeeCustomerInteractionService,
 )
 from backend.services.otp_code import OtpCodeService
 from backend.services.otp_sending import MockOTPSendingService
-from backend.services.company_outlet import OutletService
-from backend.services.company_promotion import PromotionService
-from backend.core.security import http_bearer_employee
+from backend.services.telegram_bot import TelegramBotService
+from backend.services.telegram_integration import TelegramIntegrationService
+from backend.services.transaction_cashback_calculation import CashbackCalculationService
 
 logger = get_logger(__name__)
 
@@ -355,35 +357,51 @@ async def get_owned_promotion(
     return promotion
 
 
-async def authenticate_customer_bot_and_get_company_id(  # Ключевая новая зависимость
-    bot_api_key: str = Security(customer_bot_api_key_header),
-    # dao: HolderDAO = Depends(get_dao) # Если ключи и их связь с компаниями хранятся в БД
-) -> int:  # Возвращает ID компании, к которой привязан бот
+async def authenticate_bot_and_get_company(
+    token: str = Path(..., description="Уникальный токен Telegram-бота из URL"),
+    session: AsyncSession = Depends(get_session),
+    dao: HolderDAO = Depends(get_dao),
+) -> Tuple[int, BotTypeEnum]:
     """
-    Аутентифицирует запрос от Telegram-бота по API-ключу и возвращает ID его компании.
-    TODO: Заменить заглушку на реальную логику проверки ключей.
+    Аутентифицирует запрос от Telegram-бота по токену из URL.
+    Возвращает ID компании и тип бота.
     """
-    if bot_api_key in map(str, range(10)):
-        return 1
-    raise UnauthorizedException(
-        detail="Неверный или отсутствует API-ключ бота.",
-    )
+    bot = await dao.telegram_bot.get_by_token(session, token=token)
+
+    if not bot:
+        # Не используем NotFoundException, чтобы не раскрывать существование токенов
+        raise UnauthorizedException(detail="Invalid or missing bot token.")
+
+    if not bot.is_active:
+        raise ForbiddenException(detail="This bot is currently inactive.")
+
+    return bot.company_id, bot.bot_type
 
 
-async def authenticate_employee_bot_and_get_company_id(  # Новая зависимость
-    employee_bot_api_key: str = Security(employee_bot_api_key_header),
-    # dao: HolderDAO = Depends(get_dao) # Если ключи в БД
+async def authenticate_customer_bot_and_get_company_id(
+    bot_data: Tuple[int, BotTypeEnum] = Depends(authenticate_bot_and_get_company),
 ) -> int:
     """
-    Аутентифицирует запрос от Telegram-бота СОТРУДНИКОВ по API-ключу
-    и возвращает ID его компании.
-    TODO: Заменить заглушку на реальную логику проверки ключей.
+    Проверяет, что бот является клиентским, и возвращает ID его компании.
     """
-    if employee_bot_api_key in map(str, range(11)):
-        return 1
-    raise UnauthorizedException(
-        detail="Неверный или отсутствует API-ключ бота сотрудников.",
-    )
+    company_id, bot_type = bot_data
+    if bot_type != BotTypeEnum.CUSTOMER:
+        raise ForbiddenException(detail="This operation requires a customer bot token.")
+    return company_id
+
+
+async def authenticate_employee_bot_and_get_company_id(
+    bot_data: Tuple[int, BotTypeEnum] = Depends(authenticate_bot_and_get_company),
+) -> int:
+    """
+    Проверяет, что бот является ботом для сотрудников, и возвращает ID его компании.
+    """
+    company_id, bot_type = bot_data
+    if bot_type != BotTypeEnum.EMPLOYEE:
+        raise ForbiddenException(
+            detail="This operation requires an employee bot token."
+        )
+    return company_id
 
 
 async def get_employee_role_id_from_token_payload(
@@ -506,6 +524,43 @@ async def get_customer_role_by_telegram_id_for_bot(
         customer_role.account = account
 
     return customer_role
+
+
+async def get_owned_bot(
+    bot_id: int = Path(..., description="ID of the bot"),
+    company: Company = Depends(get_owned_company),  # Зависит от company_id в пути
+    session: AsyncSession = Depends(get_session),
+    dao: HolderDAO = Depends(get_dao),
+) -> TelegramBot:
+    """
+    Проверяет, что запрашиваемый бот принадлежит компании,
+    к которой у текущего администратора есть доступ.
+    """
+    bot = await dao.telegram_bot.get_by_id_and_company_id(
+        session, bot_id=bot_id, company_id=company.id
+    )
+    if not bot:
+        raise NotFoundException(
+            detail=f"Bot with ID {bot_id} not found in company {company.id}."
+        )
+    return bot
+
+
+def get_telegram_service(
+    dao: HolderDAO = Depends(get_dao),
+    settings: AppSettings = Depends(get_settings),
+) -> TelegramIntegrationService:
+    return TelegramIntegrationService()
+
+
+def get_bot_service(
+    dao: HolderDAO = Depends(get_dao),
+    settings: AppSettings = Depends(get_settings),
+    telegram_service: TelegramIntegrationService = Depends(get_telegram_service),
+) -> TelegramBotService:
+    return TelegramBotService(
+        dao=dao, settings=settings, telegram_service=telegram_service
+    )
 
 
 def get_employee_auth_service(
