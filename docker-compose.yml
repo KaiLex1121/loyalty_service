@@ -1,50 +1,47 @@
+version: '3.8'
+
 services:
-  core-api: # Переименовали web в core-api
-    image: "backend-core-api:latest"
+  core_api:
     build:
-      context: .
-      dockerfile: Dockerfile.core_api # Указываем отдельный Dockerfile
-    working_dir: "/app"
-    volumes:
-      - .:/app
-    command: uvicorn backend.core_api.main:app --host 0.0.0.0 --port 8000 --reload
+      context: . # <-- ИЗМЕНЕНИЕ: Контекст теперь - корень проекта
+      dockerfile: core_api/Dockerfile # <-- НОВОЕ: Явно указываем путь к Dockerfile
+
+    image: "loyalty_core_api:latest"
     ports:
       - "8000:8000"
-    restart: always
-    env_file:
-      - ".env"
+    volumes:
+      - ./core_api/app:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    env_file: .env
+    restart: on-failure
     depends_on:
       - pg_database
       - rabbitmq
 
-  bot-gateway: # Новый сервис для бота
-    image: "backend-bot-gateway:latest"
+  bot_gateway:
     build:
-      context: .
-      dockerfile: Dockerfile.bot_gateway # Указываем отдельный Dockerfile
-    working_dir: "/app"
-    volumes:
-      - .:/app
-    # Запускаем и воркер Taskiq, и самого бота (через polling для простоты)
-    command: sh -c "taskiq worker -fsd backend.bot_gateway.tasks:broker & python -m backend.bot_gateway.main"
-    restart: always
-    env_file:
-      - ".env"
-    depends_on:
-      - pg_database
-      - rabbitmq
-      - core-api
+      context: . # <-- ИЗМЕНЕНИЕ: Контекст теперь - корень проекта
+      dockerfile: bot_gateway/Dockerfile # <-- НОВОЕ: Явно указываем путь к Dockerfile
 
-  rabbitmq: # Новый сервис RabbitMQ
-    image: rabbitmq:3.12-management # Используем образ с UI
-    ports:
-      - "5672:5672"   # Порт для подключения приложений
-      - "15672:15672" # Порт для веб-интерфейса управления
-    restart: always
-    env_file:
-      - ".env"
+    image: "loyalty_bot_gateway:latest"
     volumes:
-      - "rabbitmq_data:/var/lib/rabbitmq"
+      - ./bot_gateway/app:/app/app
+      - ./shared:/shared # Монтируем общие схемы
+    command: faststream run app.main:app --reload
+    env_file: .env
+    restart: on-failure
+    depends_on:
+      - core_api
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/
+    env_file: .env
 
   pg_database:
     image: postgres:16
@@ -53,12 +50,31 @@ services:
     restart: always
     volumes:
       - pg_data:/var/lib/postgresql/data
+    command: "postgres -c max_connections=150
+            -c shared_buffers=512MB -c effective_cache_size=1536MB
+            -c maintenance_work_mem=128MB -c checkpoint_completion_target=0.9 -c wal_buffers=16MB
+            -c default_statistics_target=100 -c random_page_cost=1.1 -c effective_io_concurrency=200
+            -c work_mem=3495kB -c min_wal_size=1GB -c max_wal_size=4GB -c max_worker_processes=2
+            -c max_parallel_workers_per_gather=1 -c max_parallel_workers=2 -c max_parallel_maintenance_workers=1"
     env_file:
       - '.env'
-    # ... остальные настройки postgres без изменений ...
 
-  # pg_database_test без изменений
+  # pg_database_test:
+  #   image: postgres:16
+  #   ports:
+  #     - "5433:5432"
+  #   restart: always
+  #   tmpfs:
+  #         - /var/lib/postgresql/data  # БД в памяти для скорости
+  #   command: "postgres -c max_connections=150
+  #           -c shared_buffers=512MB -c effective_cache_size=1536MB
+  #           -c maintenance_work_mem=128MB -c checkpoint_completion_target=0.9 -c wal_buffers=16MB
+  #           -c default_statistics_target=100 -c random_page_cost=1.1 -c effective_io_concurrency=200
+  #           -c work_mem=3495kB -c min_wal_size=1GB -c max_wal_size=4GB -c max_worker_processes=2
+  #           -c max_parallel_workers_per_gather=1 -c max_parallel_workers=2 -c max_parallel_maintenance_workers=1"
+  #   env_file:
+  #     - '.env.test'
 
 volumes:
+  rabbitmq_data:
   pg_data:
-  rabbitmq_data: # Новый volume для RabbitMQ
