@@ -33,7 +33,7 @@ class Transaction(Base):
         PGEnum(TransactionStatusEnum, name="transaction_status_enum", create_type=True),
         nullable=False,
         default=TransactionStatusEnum.COMPLETED,
-        server_default=TransactionStatusEnum.COMPLETED.value,
+        server_default=TransactionStatusEnum.COMPLETED,
         index=True,
     )
     description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)

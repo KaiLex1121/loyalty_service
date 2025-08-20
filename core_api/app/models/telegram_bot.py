@@ -30,7 +30,7 @@ class TelegramBot(Base):
     company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"), nullable=False)
 
     # Связь "многие-к-одному" с компанией
-    company: Mapped["Company"] = relationship(back_populates="bots")
+    company: Mapped["Company"] = relationship(back_populates="telegram_bots")
 
     def __repr__(self):
         return f"Bot(token={self.token}, bot_type={self.bot_type}, is_active={self.is_active}, company_id={self.company_id})"

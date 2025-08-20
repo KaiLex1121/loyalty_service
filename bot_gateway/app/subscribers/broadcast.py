@@ -1,8 +1,9 @@
 from aiogram import Bot
-from app.broker import broker
 from shared.schemas.schemas import BroadcastTask
+from app.broker import faststream_router
 
-@broker.subscriber("broadcast_tasks")
+
+@faststream_router.subscriber("broadcast_tasks")
 async def handle_broadcast_task(task: BroadcastTask):
     bot = Bot(token=task.bot_token)
     try:
@@ -10,7 +11,6 @@ async def handle_broadcast_task(task: BroadcastTask):
             try:
                 await bot.send_message(user_id, task.message_text, parse_mode="HTML")
             except Exception:
-                # Логируем ошибку, но не останавливаем рассылку
                 pass
     finally:
         await bot.session.close()

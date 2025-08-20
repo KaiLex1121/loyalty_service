@@ -23,6 +23,36 @@ class CustomerRoleDAO(BaseDAO[CustomerRole, CustomerRoleCreate, CustomerRoleUpda
     def __init__(self):
         super().__init__(CustomerRole)
 
+    async def find_by_telegram_id_and_company_id(
+        self, session: AsyncSession, *, telegram_id: int, company_id: int
+    ) -> Optional[CustomerRole]:
+        """
+        Находит CustomerRole по telegram_user_id (через Account) и company_id.
+
+        Этот метод выполняет JOIN между таблицами customer_roles и accounts,
+        чтобы найти профиль клиента, связанный с конкретным Telegram ID
+        в рамках конкретной компании.
+
+        Также жадно загружает связанный Account, чтобы избежать
+        дополнительных запросов к БД при формировании ответа.
+        """
+        stmt = (
+            select(self.model)
+            .join(Account, self.model.account_id == Account.id)
+            .where(
+                Account.telegram_user_id == telegram_id,
+                self.model.company_id == company_id,
+                self.model.deleted_at.is_(None),  # Ищем только активные профили
+                Account.deleted_at.is_(None)     # И только у активных аккаунтов
+            )
+            .options(
+                joinedload(self.model.account) # Жадная загрузка связанного аккаунта
+            )
+        )
+
+        result = await session.execute(stmt)
+        return result.scalars().first()
+
     async def find_by_customer_phone_and_company_id_with_details(  # Новый метод
         self, session: AsyncSession, customer_phone_number: str, company_id: int
     ) -> Optional[CustomerRole]:
@@ -120,23 +150,13 @@ class CustomerRoleDAO(BaseDAO[CustomerRole, CustomerRoleCreate, CustomerRoleUpda
         return result.scalars().all()
 
 
-    async def get_telegram_user_ids_by_company(
-        self, session: AsyncSession, *, company_id: int
-    ) -> List[int | None]:
-        """
-        Возвращает список уникальных и не-null Telegram User ID
-        для всех активных клиентов указанной компании.
-        Это основной метод для сбора аудитории для рассылок.
-        """
+    async def get_telegram_user_ids_by_company(self, session: AsyncSession, company_id: int) -> list[int]:
         stmt = (
             select(Account.telegram_user_id)
-            .join(self.model, self.model.account_id == Account.id)
-            .where(
-                self.model.company_id == company_id,
-                Account.telegram_user_id.is_not(None),  # Убеждаемся, что ID есть
-                Account.is_active.is_(True),            # Убеждаемся, что аккаунт активен
-            )
+            .join(CustomerRole, CustomerRole.account_id == Account.id)  # Account ← CustomerRole
+            .where(CustomerRole.company_id == company_id)
+            .where(Account.telegram_user_id.isnot(None))  # исключаем пустые
             .distinct()
         )
         result = await session.execute(stmt)
-        return list(result.scalars().all())
+        return result.scalars().all()

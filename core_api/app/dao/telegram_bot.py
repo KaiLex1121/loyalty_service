@@ -7,13 +7,13 @@ from sqlalchemy.orm import selectinload
 from app.dao.base import BaseDAO
 from app.enums.telegram_bot_enums import BotTypeEnum
 from app.models.telegram_bot import TelegramBot
-from app.schemas.telegram_bot import (  # Эти схемы Pydantic нужно будет создать
-    TelegramBotCreate,
+from app.schemas.company_telegram_bot import (  # Эти схемы Pydantic нужно будет создать
+    TelegramBotCreateInternal,
     TelegramBotUpdate,
 )
 
 
-class TelegramBotDAO(BaseDAO[TelegramBot, TelegramBotCreate, TelegramBotUpdate]):
+class TelegramBotDAO(BaseDAO[TelegramBot, TelegramBotCreateInternal, TelegramBotUpdate]):
     def __init__(self):
         super().__init__(TelegramBot)
 
@@ -40,16 +40,35 @@ class TelegramBotDAO(BaseDAO[TelegramBot, TelegramBotCreate, TelegramBotUpdate])
         result = await session.execute(stmt)
         return result.scalars().first()
 
-    async def check_bot_type_exists_for_company(
-        self, session: AsyncSession, *, company_id: int, bot_type: BotTypeEnum
-    ) -> bool:
-        stmt = select(self.model.id).where(
-            self.model.company_id == company_id, self.model.bot_type == bot_type
+    async def find_soft_deleted_by_token(self, session: AsyncSession, token: str) -> Optional[TelegramBot]:
+        """Находит мягко удаленного бота по токену."""
+        stmt = select(self.model).where(
+            self.model.token == token,
+            self.model.deleted_at.is_not(None)
         )
-        result = await session.execute(select(exists(stmt)))
+        result = await session.execute(stmt)
+        return result.scalars().first()
+
+    async def check_bot_type_exists_for_company(self, session: AsyncSession, company_id: int, bot_type: BotTypeEnum) -> bool:
+        """Проверяет существование АКТИВНОГО бота заданного типа для компании."""
+        stmt = select(self.model.id).where(
+            self.model.company_id == company_id,
+            self.model.bot_type == bot_type,
+            self.model.deleted_at.is_(None)
+        )
+        result = await session.execute(select(stmt.exists()))
         return result.scalar_one()
 
-    async def get_all_active_with_company(self, session: AsyncSession) -> List[Bot]:
+    async def restore_bot(self, session: AsyncSession, db_bot: TelegramBot) -> TelegramBot:
+        """Восстанавливает мягко удаленного бота."""
+        db_bot.deleted_at = None
+        db_bot.is_active = True # При восстановлении всегда делаем его активным
+        session.add(db_bot)
+        await session.flush()
+        await session.refresh(db_bot)
+        return db_bot
+
+    async def get_all_active_with_company(self, session: AsyncSession) -> List[TelegramBot]:
         """
         Получает список всех активных ботов (не удаленных и с флагом is_active=True)
         и жадно подгружает связанную информацию о компании для каждого бота.

@@ -166,7 +166,7 @@ class CompanyService:
             company_id=new_company_obj.id,
             default_percentage=company_data.initial_cashback_percentage,
         )
-        await self.dao.default_cashback_config.create(
+        await self.dao.default_company_cashback_config.create(
             session, obj_in=cashback_config_schema
         )
 
@@ -174,7 +174,6 @@ class CompanyService:
         base_tariff_plan_model = await self.dao.tariff_plan.get_by_internal_name(
             session, internal_name=tariff_plan_name
         )
-
         if not base_tariff_plan_model:
             raise BasePlanNotConfiguredException(
                 internal_details={"context": "CompanyService.create_company_flow"}

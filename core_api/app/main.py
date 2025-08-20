@@ -5,16 +5,16 @@ from app.api.v1.api import api_router_v1
 from app.core.exception_handlers import setup_exception_handlers
 from app.core.logger import get_logger
 from app.core.settings import settings
-from core_api.app.broker import broker
+from app.broker import faststream_router
+
 
 logger = get_logger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Application startup")
-    await broker.start()
     yield
-    await broker.close()
     logger.info("Application shutdown")
 
 
@@ -29,6 +29,8 @@ def create_app():
         lifespan=lifespan,
     )
     app.include_router(api_router_v1, prefix="/api/v1")
+    app.include_router(faststream_router)
+
     setup_exception_handlers(app)
 
     return app

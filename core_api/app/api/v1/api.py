@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import (
+from app.api.v1.endpoints.external import (
     backoffice_auth,
     backoffice_dashboards,
     companies,
@@ -13,10 +13,11 @@ from app.api.v1.endpoints import (
     customers,
     employee_bot_auth,
     employee_bot_operations,
-    internal,
+    company_broadcasts
 )
 from app.api.v1.endpoints.admin import company_tariff_plans
-from core_api.app.api.v1.endpoints import company_broadcasts
+
+from app.api.v1.endpoints.internal import internal_customers, internal_telegram_bots
 
 api_router_v1 = APIRouter()
 
@@ -48,14 +49,13 @@ api_router_v1.include_router(
     prefix="/companies/{company_id}/promotions",
     tags=["Company Promotions"],
 )
-
 api_router_v1.include_router(
     customer_bot_auth.router,
     prefix="/customer/auth",  # Префикс для эндпоинтов аутентификации клиента
     tags=["Customer - Authentication"],
 )
 api_router_v1.include_router(
-    customers.router,
+    internal_customers.router,
     prefix="/customers",  # Общий префикс для клиентских данных (пути внутри /me/...)
     tags=["Customers - Profile"],
 )
@@ -75,11 +75,12 @@ api_router_v1.include_router(
     prefix="/companies/{company_id}/bots",
     tags=["Company Telegram Bots"],
 )
-
 api_router_v1.include_router(
     company_broadcasts.router,
     prefix="/companies/{company_id}/broadcasts",
     tags=["Company Broadcasts"],
 )
 
-api_router_v1.include_router(internal.router, prefix="/internal", tags=["Internal API"])
+api_router_v1.include_router(internal_telegram_bots.router, prefix="/internal/telegram-bots", tags=["Internal Telegram Bots"])
+
+api_router_v1.include_router(internal_customers.router, prefix="/internal/customers", tags=["Internal Customers"])

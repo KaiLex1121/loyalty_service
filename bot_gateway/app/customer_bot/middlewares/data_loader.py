@@ -2,11 +2,7 @@ from typing import Any, Awaitable, Callable
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
-from src import dto
-from src.database.dao.holder import HolderDAO
-
-# from app.services.chat import upsert_chat
-from src.services.user import upsert_user
+from app.cache import CacheClient
 
 
 class LoadDataMiddleware(BaseMiddleware):
@@ -17,20 +13,22 @@ class LoadDataMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: dict[str, Any],
     ) -> Any:
-        holder_dao = data["dao"]
-        data["user"] = await save_user(data, holder_dao)
-        result = await handler(event, data)
-        return result
 
+        # Получаем токен бота из контекста, который Aiogram предоставляет
+        bot = data.get("bot")
+        if not bot:
+            return await handler(event, data)
 
-async def save_user(data: dict[str, Any], holder_dao: HolderDAO) -> dto.User:
-    return await upsert_user(
-        dto.User.from_aiogram(data["event_from_user"]), holder_dao.user
-    )
+        # Используем наш CacheClient для получения информации
+        cache = CacheClient()
+        try:
+            bot_info = await cache.get_bot_info(bot.token)
+            if bot_info:
+                # Добавляем данные в "контейнер"
+                data["company_id"] = bot_info.company_id
+                data["company_name"] = bot_info.company_name
+        finally:
+            await cache.close()
 
-
-# async def save_chat(data: dict[str, Any], holder_dao: HolderDao) -> dto.Chat:
-#     return await upsert_chat(
-#         dto.Chat.from_aiogram(data["event_chat"]),
-#         holder_dao.chat
-#     )
+        # Вызываем следующий middleware или сам хендлер
+        return await handler(event, data)

@@ -16,10 +16,10 @@ class CacheClient:
             return BotInfo.model_validate(json.loads(data))
         return None
 
-    async def set_bot_info(self, bot_info: BotInfo, ttl_seconds: int = 300):
+    async def set_bot_info(self, bot_info: BotInfo):
         """Сохраняет информацию о боте в кэш с TTL."""
         key = f"bot_info:{bot_info.token}"
-        await self.redis.set(key, bot_info.model_dump_json(), ex=ttl_seconds)
+        await self.redis.set(key, bot_info.model_dump_json())
 
     async def set_idempotency_key(self, key: str, ttl_seconds: int = 86400) -> bool:
         """

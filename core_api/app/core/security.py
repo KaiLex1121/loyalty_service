@@ -12,6 +12,7 @@ from app.core.logger import get_logger
 from app.core.settings import AppSettings
 from app.schemas.token import TokenPayload
 
+
 logger = get_logger(__name__)
 
 internal_api_key_header = APIKeyHeader(name="X-Internal-API-Key", auto_error=False, scheme_name="InternalAPIKeyAuth")
@@ -21,7 +22,6 @@ http_bearer_backoffice = HTTPBearer(
     description="JWT токен для доступа к бэк-офису",
     auto_error=True,
 )
-
 
 http_bearer_employee = HTTPBearer(
     scheme_name="EmployeeHttpAuth",

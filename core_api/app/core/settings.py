@@ -22,6 +22,7 @@ class ServerSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="SERVER_")
 
+
 class RabbitMQSettings(BaseSettings):
     USER: str
     PASSWORD: str
@@ -76,6 +77,9 @@ class ApiSettings(BaseSettings):
     DOCS_URL: str
     OPENAPI_URL: str
     REDOC_URL: str
+    INTERNAL_KEY: str
+    INTERNAL_CORE_BASE_URL: str
+    GATEWAY_BASE_URL: str
 
     model_config = SettingsConfigDict(env_prefix="API_")
 
@@ -106,6 +110,7 @@ class AppSettings(BaseSettings):
     REDIS: RedisSettings
     TRIAL_PLAN: TrialPlanSettings
     RABBITMQ: RabbitMQSettings
+
 
     model_config = SettingsConfigDict(
         env_file=".env.test" if os.getenv("TEST_MODE") == "true" else ".env",

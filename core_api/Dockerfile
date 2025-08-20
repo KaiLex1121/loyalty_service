@@ -1,14 +1,17 @@
-FROM python:3.12-slim-bullseye
+FROM python:3.12-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# Создаем корневую директорию для нашего приложения
+WORKDIR /app_root
 
-WORKDIR /app
+# Устанавливаем переменную окружения PYTHONPATH.
+# Это скажет Python: "Когда ищешь модули, загляни еще и в /app_root"
+ENV PYTHONPATH=/app_root
 
-# Устанавливаем зависимости
+# Копируем requirements.txt в корень, чтобы не инвалидировать кэш
 COPY core_api/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем код приложения И общие схемы
-COPY core_api/app /app
-COPY shared /shared
+# Копируем код приложения в корень /app_root
+COPY core_api /app_root
+# Копируем общие схемы
+COPY shared /app_root/shared

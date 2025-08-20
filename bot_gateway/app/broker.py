@@ -1,4 +1,4 @@
-from faststream.rabbit import RabbitBroker
 from app.core.settings import settings
+from faststream.rabbit.fastapi import RabbitRouter
 
-broker = RabbitBroker(settings.RABBITMQ.RABBITMQ_URI)
+faststream_router = RabbitRouter(settings.RABBITMQ.RABBITMQ_URI)

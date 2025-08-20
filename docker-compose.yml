@@ -5,18 +5,20 @@ services:
     build:
       context: . # <-- ИЗМЕНЕНИЕ: Контекст теперь - корень проекта
       dockerfile: core_api/Dockerfile # <-- НОВОЕ: Явно указываем путь к Dockerfile
-
     image: "loyalty_core_api:latest"
     ports:
       - "8000:8000"
     volumes:
-      - ./core_api/app:/app
+      - ./core_api:/app_root
+      - ./shared:/app_root/shared
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     env_file: .env
     restart: on-failure
     depends_on:
-      - pg_database
-      - rabbitmq
+      pg_database:
+        condition: service_started # Для БД достаточно этого
+      rabbitmq:
+        condition: service_healthy # <-- ИЗМЕНЕНИЕ: Ждем, пока RabbitMQ станет "здоров"
 
   bot_gateway:
     build:
@@ -24,15 +26,19 @@ services:
       dockerfile: bot_gateway/Dockerfile # <-- НОВОЕ: Явно указываем путь к Dockerfile
 
     image: "loyalty_bot_gateway:latest"
+    ports:
+      - "8001:8001"
     volumes:
       - ./bot_gateway/app:/app/app
       - ./shared:/shared # Монтируем общие схемы
-    command: faststream run app.main:app --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
     env_file: .env
     restart: on-failure
     depends_on:
-      - core_api
-      - rabbitmq
+      pg_database:
+        condition: service_started # Для БД достаточно этого
+      rabbitmq:
+        condition: service_healthy # <-- ИЗМЕНЕНИЕ: Ждем, пока RabbitMQ станет "здоров"
 
   rabbitmq:
     image: rabbitmq:3.12-management
@@ -42,6 +48,11 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq/
     env_file: .env
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   pg_database:
     image: postgres:16
@@ -58,6 +69,15 @@ services:
             -c max_parallel_workers_per_gather=1 -c max_parallel_workers=2 -c max_parallel_maintenance_workers=1"
     env_file:
       - '.env'
+
+  redis_database:
+    image: redis:7
+    restart: always
+    env_file:
+      - ".env"
+    volumes:
+      - redis_data:/data
+
 
   # pg_database_test:
   #   image: postgres:16
@@ -78,3 +98,4 @@ services:
 volumes:
   rabbitmq_data:
   pg_data:
+  redis_data:

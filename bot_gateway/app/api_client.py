@@ -16,7 +16,7 @@ class CoreApiClient:
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
-                    f"{self.base_url}/api/v1/internal/bots/active",
+                    f"{self.base_url}/api/v1/internal/telegram-bots/active",
                     headers=self.headers,
                     timeout=5.0 # Важно ставить таймауты
                 )
@@ -28,3 +28,40 @@ class CoreApiClient:
                 raise pybreaker.CircuitBreakerError(f"API call failed: {e.response.status_code}")
             except httpx.RequestError as e:
                 raise pybreaker.CircuitBreakerError(f"Network error: {e}")
+
+    @breaker
+    async def get_customer_by_telegram_id(self, telegram_id: int, company_id: int):
+        """Проверяет существование клиента."""
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(
+                    f"{self.base_url}/api/v1/internal/customers/by-telegram-id/{telegram_id}",
+                    params={"company_id": company_id},
+                    headers=self.headers,
+                    timeout=5.0
+                )
+                if response.status_code == 404:
+                    return None # Клиент не найден
+                response.raise_for_status()
+                return response.json()
+            except httpx.RequestError:
+                raise # Пробрасываем ошибку сети
+
+    @breaker
+    async def onboard_customer(self, telegram_id: int, phone_number: str, company_id: int, full_name: str | None):
+        """Регистрирует нового клиента."""
+        payload = {
+            "telegram_user_id": telegram_id,
+            "phone_number": phone_number,
+            "full_name": full_name
+        }
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{self.base_url}/api/v1/internal/customers/onboard",
+                params={"company_id": company_id},
+                json=payload,
+                headers=self.headers,
+                timeout=10.0
+            )
+            response.raise_for_status()
+            return response.json()

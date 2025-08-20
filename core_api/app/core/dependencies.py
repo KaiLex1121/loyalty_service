@@ -54,12 +54,20 @@ from app.services.employee_customer_interaction import (
 )
 from app.services.otp_code import OtpCodeService
 from app.services.otp_sending import MockOTPSendingService
-from app.services.telegram_bot import TelegramBotService
-from app.services.telegram_integration import TelegramIntegrationService
 from app.services.transaction_cashback_calculation import CashbackCalculationService
 from app.core.security import internal_api_key_header
-from core_api.app.services.telegram_broadcast import BroadcastService
+from app.services.company_telegram_broadcast import BroadcastService
+
+
 logger = get_logger(__name__)
+
+
+async def verify_internal_api_key(
+       api_key: str = Security(internal_api_key_header),
+       settings: AppSettings = Depends(get_settings)
+   ):
+    if api_key != settings.API.INTERNAL_KEY:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid internal API key")
 
 
 async def get_session(settings: AppSettings = Depends(get_settings)):
@@ -239,7 +247,7 @@ async def get_current_full_system_admin(
 
 async def get_owned_company(
     # company_id берется из параметра пути с тем же именем (тот, что в эндпоинте)
-    company_id: int,
+    company_id: int = Path(..., description="The ID of the company to access"),
     session: AsyncSession = Depends(get_session),
     current_user_role: UserRole = Depends(get_current_user_profile_from_account),
 ) -> Company:
@@ -359,7 +367,7 @@ async def get_owned_promotion(
 
 
 async def authenticate_bot_and_get_company(
-    token: str = Path(..., description="Уникальный токен Telegram-бота из URL"),
+    bot_token: str = Path(..., description="Уникальный токен Telegram-бота из URL"),
     session: AsyncSession = Depends(get_session),
     dao: HolderDAO = Depends(get_dao),
 ) -> Tuple[int, BotTypeEnum]:
@@ -367,7 +375,7 @@ async def authenticate_bot_and_get_company(
     Аутентифицирует запрос от Telegram-бота по токену из URL.
     Возвращает ID компании и тип бота.
     """
-    bot = await dao.telegram_bot.get_by_token(session, token=token)
+    bot = await dao.telegram_bot.get_by_token(session, token=bot_token)
 
     if not bot:
         # Не используем NotFoundException, чтобы не раскрывать существование токенов
@@ -551,27 +559,10 @@ async def get_internal_api_key(
     api_key: str = Security(internal_api_key_header),
     settings: AppSettings = Depends(get_settings),
 ) -> str:
-    if api_key == settings.SECURITY.INTERNAL_API_KEY:
+    if api_key == settings.API.INTERNAL_KEY:
         return api_key
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or missing Internal API Key"
-    )
-
-
-def get_telegram_service(
-    dao: HolderDAO = Depends(get_dao),
-    settings: AppSettings = Depends(get_settings),
-) -> TelegramIntegrationService:
-    return TelegramIntegrationService()
-
-
-def get_bot_service(
-    dao: HolderDAO = Depends(get_dao),
-    settings: AppSettings = Depends(get_settings),
-    telegram_service: TelegramIntegrationService = Depends(get_telegram_service),
-) -> TelegramBotService:
-    return TelegramBotService(
-        dao=dao, settings=settings, telegram_service=telegram_service
     )
 
 
@@ -592,8 +583,7 @@ def get_employee_auth_service(
 def get_client_onboarding_service(
     dao: HolderDAO = Depends(get_dao),
     settings: AppSettings = Depends(get_settings),
-    # Если OTP все же будет, то и OTP сервисы
-) -> CustomerAuthService:  # ClientOnboardingService будет определен ниже
+) -> CustomerAuthService:
     return CustomerAuthService(dao=dao, settings=settings)
 
 

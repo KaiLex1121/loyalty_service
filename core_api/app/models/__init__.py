@@ -17,3 +17,4 @@ from app.models.tariff_plan import TariffPlan
 from app.models.telegram_bot import TelegramBot
 from app.models.transaction import Transaction
 from app.models.user_role import UserRole
+from app.models.broadcast import Broadcast

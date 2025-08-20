@@ -13,12 +13,12 @@ if TYPE_CHECKING:
     from .employee_role import EmployeeRole
     from .notification import NotificationMessage
     from .outlet import Outlet
-    from .promotions.cashback_config import CashbackConfig
     from .promotions.promotion import Promotion
     from .subscription import Subscription
     from .telegram_bot import TelegramBot
     from .transaction import Transaction
     from .user_role import UserRole
+    from .telegram_bot import TelegramBot
 
 
 class Company(Base):
