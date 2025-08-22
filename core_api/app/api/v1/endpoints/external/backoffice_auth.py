@@ -1,7 +1,3 @@
-from fastapi import APIRouter, Depends, status
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.dependencies import get_auth_service, get_dao, get_session
 from app.core.logger import get_logger
 from app.dao.holder import HolderDAO
@@ -10,6 +6,9 @@ from app.schemas.account import AccountResponse
 from app.schemas.backoffice_auth import OTPVerifyRequest, PhoneNumberRequest
 from app.schemas.token import TokenResponse
 from app.services.backoffice_auth import AuthService
+from fastapi import APIRouter, Depends, status
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 logger = get_logger(__name__)

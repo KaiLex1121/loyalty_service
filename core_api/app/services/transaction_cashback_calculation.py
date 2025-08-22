@@ -3,8 +3,6 @@ import datetime
 import decimal
 from typing import Optional, Tuple
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.dao.holder import HolderDAO
 from app.enums import (
     CashbackTypeEnum,
@@ -19,6 +17,7 @@ from app.models.promotions.promotion_usage import PromotionUsage
 from app.models.transaction import Transaction
 from app.schemas.promotion_usage import PromotionUsageCreateInternal
 from app.schemas.transaction import TransactionCreateInternal
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class CashbackCalculationService:
@@ -79,8 +78,10 @@ class CashbackCalculationService:
         current_time: datetime.datetime,
     ) -> Optional[Promotion]:
         """Находит лучшую применимую акцию для покупки."""
-        active_promotions = await self.dao.promotion.get_active_promotions_for_company(
-            session, company_id=company_id, current_date=current_time
+        active_promotions = (
+            await self.dao.promotion.get_active_promotions_for_company_with_details(
+                session, company_id=company_id, current_date=current_time
+            )
         )
 
         applicable_promotions = []

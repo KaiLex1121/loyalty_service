@@ -1,7 +1,4 @@
 # backend/api/v1/endpoints/employee_bot_operations_router.py
-from fastapi import APIRouter, Depends, HTTPException, Path, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.dependencies import (
     authenticate_employee_bot_and_get_company_id,  # Аутентификация самого бота (может быть не нужна, если эндпоинт защищен JWT сотрудника)
 )
@@ -36,6 +33,8 @@ from app.schemas.transaction import TransactionResponse
 from app.services.employee_customer_interaction import (
     EmployeeCustomerInteractionService,
 )
+from fastapi import APIRouter, Depends, HTTPException, Path, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 

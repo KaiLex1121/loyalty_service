@@ -1,12 +1,11 @@
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.types import Enum as SQLAlchemyEnum
-
 from app.db.base import Base
 from app.enums.company_enums import CompanyStatusEnum, LegalFormEnum
 from app.models.company_default_cashback_config import CompanyDefaultCashbackConfig
+from sqlalchemy import ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.types import Enum as SQLAlchemyEnum
 
 if TYPE_CHECKING:
     from .customer_role import CustomerRole
@@ -18,7 +17,6 @@ if TYPE_CHECKING:
     from .telegram_bot import TelegramBot
     from .transaction import Transaction
     from .user_role import UserRole
-    from .telegram_bot import TelegramBot
 
 
 class Company(Base):

@@ -1,4 +1,5 @@
 from app.models.account import Account
+from app.models.broadcast import Broadcast
 from app.models.company import Company
 from app.models.company_default_cashback_config import CompanyDefaultCashbackConfig
 from app.models.customer_role import CustomerRole
@@ -17,4 +18,3 @@ from app.models.tariff_plan import TariffPlan
 from app.models.telegram_bot import TelegramBot
 from app.models.transaction import Transaction
 from app.models.user_role import UserRole
-from app.models.broadcast import Broadcast

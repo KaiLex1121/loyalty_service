@@ -1,7 +1,5 @@
 from typing import Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.dao.holder import HolderDAO
 from app.exceptions import InternalServerError  # Для непредвиденных ошибок DAO
 from app.exceptions import (  # Импортируем из __init__.py exceptions
@@ -11,6 +9,7 @@ from app.exceptions import (  # Импортируем из __init__.py exceptio
 )
 from app.models.account import Account
 from app.schemas.account import AccountCreate, AccountUpdate
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class AccountService:

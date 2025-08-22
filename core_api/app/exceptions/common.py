@@ -1,8 +1,7 @@
 from typing import Any, Dict, Optional
 
-from fastapi import status
-
 from app.exceptions.base import BaseAppException
+from fastapi import status
 
 
 class NotFoundException(BaseAppException):

@@ -1,6 +1,5 @@
-from sqlalchemy import BigInteger, Column, ForeignKey, Table
-
 from app.db.base import Base
+from sqlalchemy import BigInteger, Column, ForeignKey, Table
 
 employee_role_outlet_association = Table(
     "employee_role_outlet_association",

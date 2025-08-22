@@ -1,6 +1,3 @@
-from fastapi import APIRouter, Depends, HTTPException, Security, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.dependencies import (
     authenticate_customer_bot_and_get_company_id,
     get_client_onboarding_service,
@@ -12,6 +9,8 @@ from app.schemas.customer_bot_auth import (
 )
 from app.schemas.token import TokenResponse
 from app.services.customer_bot_auth import CustomerAuthService
+from fastapi import APIRouter, Depends, HTTPException, Security, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 

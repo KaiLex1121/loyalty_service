@@ -1,12 +1,11 @@
 import decimal
 from typing import TYPE_CHECKING, Optional
 
+from app.db.base import Base  # Убедитесь, что путь правильный
+from app.enums import CashbackTypeEnum
 from sqlalchemy import ForeignKey, Numeric
 from sqlalchemy.dialects.postgresql import ENUM as PGEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.db.base import Base  # Убедитесь, что путь правильный
-from app.enums import CashbackTypeEnum
 
 if TYPE_CHECKING:
     from app.models.promotions.promotion import Promotion  # Импорт для type hinting

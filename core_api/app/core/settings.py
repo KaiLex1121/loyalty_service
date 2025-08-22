@@ -111,7 +111,6 @@ class AppSettings(BaseSettings):
     TRIAL_PLAN: TrialPlanSettings
     RABBITMQ: RabbitMQSettings
 
-
     model_config = SettingsConfigDict(
         env_file=".env.test" if os.getenv("TEST_MODE") == "true" else ".env",
         env_file_encoding="utf-8",

@@ -2,11 +2,6 @@
 
 from typing import List, Optional
 
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select  # Для явного select, если понадобится
-from sqlalchemy.orm import selectinload
-
 from app.dao.holder import HolderDAO
 from app.enums import SubscriptionStatusEnum
 from app.exceptions.services.employee import (
@@ -35,6 +30,10 @@ from app.schemas.company_employee import (
     OutletResponseForEmployee,
 )
 from app.utils.subscription_utils import get_current_subscription
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select  # Для явного select, если понадобится
+from sqlalchemy.orm import selectinload
 
 
 class EmployeeService:

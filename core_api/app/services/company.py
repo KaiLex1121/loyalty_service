@@ -2,10 +2,6 @@ import datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from dateutil.relativedelta import relativedelta
-from pydantic import ValidationError
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.logger import get_logger
 from app.core.settings import AppSettings
 from app.dao.holder import HolderDAO
@@ -49,6 +45,9 @@ from app.schemas.company_subscription import (
 from app.schemas.company_tariff_plan import TariffPlanResponseForCompany
 from app.schemas.user_role import UserRoleCreate
 from app.utils.subscription_utils import get_current_subscription
+from dateutil.relativedelta import relativedelta
+from pydantic import ValidationError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = get_logger(__name__)
 

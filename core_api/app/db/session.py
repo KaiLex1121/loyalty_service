@@ -1,7 +1,6 @@
+from app.core.settings import AppSettings
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-
-from app.core.settings import AppSettings
 
 
 def create_pool(config: AppSettings) -> async_sessionmaker[AsyncSession]:

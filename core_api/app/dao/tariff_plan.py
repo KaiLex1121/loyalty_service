@@ -1,11 +1,10 @@
 from typing import Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-
 from app.dao.base import BaseDAO
 from app.models.tariff_plan import TariffPlan
 from app.schemas.company_tariff_plan import TariffPlanCreate, TariffPlanUpdate
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 
 class TariffPlanDAO(BaseDAO[TariffPlan, TariffPlanCreate, TariffPlanUpdate]):

@@ -3,10 +3,6 @@ from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from dateutil.relativedelta import relativedelta
-from fastapi import HTTPException, status
-from pydantic import ValidationError
-
 from app.dao.account import AccountDAO
 from app.dao.admin_tariff_plan import TariffPlanDAO
 from app.dao.cashback_config import CashbackConfigDAO
@@ -25,6 +21,9 @@ from app.models.tariff_plan import TariffPlan as TariffPlanModel
 from app.models.user_role import UserRole as UserRoleModel
 from app.schemas.company import CompanyCreateRequest
 from app.services.company import CompanyService
+from dateutil.relativedelta import relativedelta
+from fastapi import HTTPException, status
+from pydantic import ValidationError
 
 
 class TestCompanyService:

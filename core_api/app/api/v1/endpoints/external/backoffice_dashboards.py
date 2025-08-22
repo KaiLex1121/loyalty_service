@@ -1,5 +1,3 @@
-from fastapi import APIRouter, Depends, HTTPException, Security
-
 from app.core.dependencies import (
     get_current_active_account_with_profiles,
     get_dashboard_service,
@@ -9,6 +7,7 @@ from app.core.security import oauth2_scheme_backoffice
 from app.models.account import Account as AccountModel
 from app.schemas.backoffice_dashboard import DashboardResponse
 from app.services.backoffice_dashboard import DashboardService
+from fastapi import APIRouter, Depends, HTTPException, Security
 
 router = APIRouter()
 logger = get_logger(__name__)

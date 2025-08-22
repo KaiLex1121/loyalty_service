@@ -2,6 +2,8 @@ import datetime
 import decimal
 from typing import TYPE_CHECKING, List, Optional
 
+from app.db.base import Base
+from app.enums import PromotionStatusEnum, PromotionTypeEnum
 from sqlalchemy import (
     Boolean,
     Column,
@@ -18,9 +20,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ENUM as PGEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.db.base import Base
-from app.enums import PromotionStatusEnum, PromotionTypeEnum
 
 if TYPE_CHECKING:
     from app.models.company import Company

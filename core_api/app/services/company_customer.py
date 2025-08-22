@@ -1,13 +1,12 @@
 # backend/services/customer_profile.py
 from decimal import Decimal
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.dao.holder import HolderDAO
 from app.db import session
 from app.models.account import Account
 from app.models.customer_role import CustomerRole
 from app.schemas.customer_role import CustomerRoleUpdate
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # from backend.schemas.customer_role import CustomerRoleUpdate # Если будет обновление профиля
 # from backend.schemas.account import AccountUpdate # Если будет обновление данных Account через этот профиль

@@ -1,17 +1,13 @@
 import asyncio
 from logging.config import fileConfig
-
-from alembic import context
-from dotenv import load_dotenv
-from sqlalchemy import pool
-from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
 from pathlib import Path
 
+from alembic import context
 from app.core.settings import settings
 from app.db.base import Base
 from app.models import (
     Account,
+    Broadcast,
     CashbackConfig,
     Company,
     CustomerRole,
@@ -26,15 +22,17 @@ from app.models import (
     PromotionUsage,
     Subscription,
     TariffPlan,
+    TelegramBot,
     Transaction,
     UserRole,
-    TelegramBot,
-    Broadcast
 )
+from dotenv import load_dotenv
+from sqlalchemy import pool
+from sqlalchemy.engine import Connection
+from sqlalchemy.ext.asyncio import async_engine_from_config
 
 config = context.config
 config.set_main_option("sqlalchemy.url", str(settings.DB.DATABASE_URI))
-
 
 
 # add your model's MetaData object here

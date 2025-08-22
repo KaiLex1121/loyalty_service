@@ -1,8 +1,6 @@
 # backend/exceptions/services/promotion.py
 from typing import Any, Dict, List, Optional
 
-from fastapi import status
-
 from app.exceptions.base import BaseAppException
 from app.exceptions.common import (
     ValidationException,  # Для ошибок валидации бизнес-логики
@@ -13,6 +11,7 @@ from app.exceptions.common import (  # Импортируем общие тип�
     ForbiddenException,
     NotFoundException,
 )
+from fastapi import status
 
 # --- Promotion Service Specific Exceptions ---
 

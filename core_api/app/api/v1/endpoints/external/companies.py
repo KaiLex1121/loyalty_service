@@ -1,9 +1,6 @@
 from calendar import c
 from typing import List
 
-from fastapi import APIRouter, Depends, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.dependencies import (
     get_company_service,
     get_current_active_account_with_profiles,
@@ -18,6 +15,8 @@ from app.models.company import Company
 from app.models.user_role import UserRole
 from app.schemas.company import CompanyCreate, CompanyResponse, CompanyUpdate
 from app.services.company import CompanyService
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 

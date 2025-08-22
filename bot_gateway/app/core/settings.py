@@ -1,5 +1,6 @@
-from functools import lru_cache
 import os
+from functools import lru_cache
+
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -16,6 +17,7 @@ class RabbitMQSettings(BaseSettings):
         return f"amqp://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/"
 
     model_config = SettingsConfigDict(env_prefix="RABBITMQ_")
+
 
 class RedisSettings(BaseSettings):
     HOST: str
@@ -39,10 +41,22 @@ class ApiSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="API_")
 
 
+class SecuritySettings(BaseSettings):
+    JWT_SECRET_KEY: str
+    ALGORITHM: str
+    HMAC_SECRET_KEY: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    OTP_EXPIRE_MINUTES: int
+    OTP_LENGTH: int
+
+    model_config = SettingsConfigDict(env_prefix="SECURITY_")
+
 class AppSettings(BaseSettings):
     API: ApiSettings
     REDIS: RedisSettings
     RABBITMQ: RabbitMQSettings
+    SECURITY: SecuritySettings
+
 
     model_config = SettingsConfigDict(
         env_file=".env.test" if os.getenv("TEST_MODE") == "true" else ".env",
@@ -50,12 +64,14 @@ class AppSettings(BaseSettings):
         extra="ignore",
     )
 
+
 @lru_cache()
 def get_settings() -> AppSettings:
     return AppSettings(
         API=ApiSettings(),
         REDIS=RedisSettings(),
         RABBITMQ=RabbitMQSettings(),
+        SECURITY=SecuritySettings(),
     )
 
 

@@ -2,13 +2,12 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from fastapi import HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.dao.holder import HolderDAO
 from app.models.account import Account
 from app.schemas.account import AccountUpdate
 from app.services.account import AccountService
+from fastapi import HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class TestAccountService:

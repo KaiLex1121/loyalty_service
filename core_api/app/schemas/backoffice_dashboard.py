@@ -1,11 +1,10 @@
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
-
 from app.enums import CompanyStatusEnum
 from app.schemas.account import (  # Предполагаем, что Enum'ы импортируются так
     AccountResponse,
 )
+from pydantic import BaseModel, Field
 
 
 class DashboardCompanyAdminResponse(BaseModel):

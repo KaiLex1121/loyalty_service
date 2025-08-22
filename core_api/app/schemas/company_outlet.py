@@ -2,8 +2,6 @@ import datetime
 import decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
-
 from app.dao import company
 from app.enums import (
     CurrencyEnum,
@@ -11,6 +9,7 @@ from app.enums import (
     PaymentCycleEnum,
     TariffStatusEnum,
 )
+from pydantic import BaseModel, Field
 
 
 class OutletBase(BaseModel):

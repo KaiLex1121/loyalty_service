@@ -2,9 +2,6 @@ import asyncio
 from typing import Optional, Tuple
 
 import typer
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.logger import get_logger
 from app.core.security import get_password_hash
 from app.core.settings import settings
@@ -19,6 +16,8 @@ from app.enums import (  # Прямой импорт или из backend.enums
 from app.models.user_role import UserRole  # Используем AdminProfile
 from app.schemas.account import AccountCreateInternal, AccountUpdate
 from app.schemas.user_role import UserRoleCreate
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 cli_app = typer.Typer()
 logger = get_logger(__name__)

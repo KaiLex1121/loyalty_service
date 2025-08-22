@@ -2,10 +2,6 @@
 import datetime
 from typing import Optional, Sequence
 
-from sqlalchemy import func, or_, select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
-
 from app.dao.base import BaseDAO
 from app.enums import PromotionStatusEnum, PromotionTypeEnum
 from app.models.promotions.cashback_config import CashbackConfig  # Для joinedload
@@ -14,6 +10,9 @@ from app.schemas.company_promotion import (  # Вместо PromotionCreateInter
     PromotionCreateInternal,
     PromotionUpdate,
 )
+from sqlalchemy import func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 
 class PromotionDAO(BaseDAO[Promotion, PromotionCreateInternal, PromotionUpdate]):
@@ -34,7 +33,7 @@ class PromotionDAO(BaseDAO[Promotion, PromotionCreateInternal, PromotionUpdate])
         result = await session.execute(stmt)
         return result.scalars().first()
 
-    async def get_active_promotions_for_company(
+    async def get_active_promotions_for_company_with_details(
         self,
         session: AsyncSession,
         company_id: int,

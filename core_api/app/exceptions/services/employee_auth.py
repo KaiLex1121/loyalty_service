@@ -1,8 +1,6 @@
 # backend/exceptions/services/employee_auth.py
 from typing import Any, Dict, Optional
 
-from fastapi import status
-
 from app.exceptions.base import BaseAppException
 from app.exceptions.common import (  # Импортируем нужные
     BadRequestException,
@@ -11,6 +9,7 @@ from app.exceptions.common import (  # Импортируем нужные
     ServiceUnavailableException,
     UnauthorizedException,
 )
+from fastapi import status
 
 
 class EmployeeAuthException(BaseAppException):

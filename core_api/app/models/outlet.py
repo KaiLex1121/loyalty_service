@@ -1,12 +1,11 @@
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import Boolean, ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.types import Enum as SQLAlchemyEnum
-
 from app.db.base import Base
 from app.enums import OutletStatusEnum
 from app.models.association_tables import employee_role_outlet_association
+from sqlalchemy import Boolean, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.types import Enum as SQLAlchemyEnum
 
 if TYPE_CHECKING:
     from .company import Company

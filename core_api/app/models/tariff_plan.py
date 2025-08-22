@@ -3,12 +3,11 @@ from email.policy import default
 from sys import intern
 from typing import TYPE_CHECKING, List, Optional
 
+from app.db.base import Base
+from app.enums import CurrencyEnum, PaymentCycleEnum, TariffStatusEnum
 from sqlalchemy import JSON, Boolean, Integer, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
-
-from app.db.base import Base
-from app.enums import CurrencyEnum, PaymentCycleEnum, TariffStatusEnum
 
 if TYPE_CHECKING:
     from .subscription import Subscription

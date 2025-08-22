@@ -3,9 +3,8 @@ import datetime
 import decimal
 from typing import Optional
 
-from pydantic import BaseModel, Field, model_validator
-
 from app.enums import CashbackTypeEnum
+from pydantic import BaseModel, Field, model_validator
 
 
 # --- CashbackConfig Schemas ---

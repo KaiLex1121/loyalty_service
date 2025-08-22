@@ -1,14 +1,6 @@
 # backend/api/v1/endpoints/company_promotions.py
 from typing import List
 
-from fastapi import (  # Убрал HTTPException, т.к. есть хендлеры
-    APIRouter,
-    Depends,
-    Path,
-    status,
-)
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.dependencies import (
     get_owned_company,
     get_owned_promotion,
@@ -24,6 +16,13 @@ from app.schemas.company_promotion import (
     PromotionUpdate,
 )
 from app.services.company_promotion import PromotionService
+from fastapi import (  # Убрал HTTPException, т.к. есть хендлеры
+    APIRouter,
+    Depends,
+    Path,
+    status,
+)
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # Кастомные исключения больше не нужно импортировать здесь для отлова
 

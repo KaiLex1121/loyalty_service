@@ -1,11 +1,6 @@
 # backend/services/outlet_service.py
 from typing import List, Optional
 
-from pydantic import ValidationError
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload  # Для загрузки связей, если нужно для ответа
-
 from app.core.logger import get_logger
 from app.dao.holder import HolderDAO
 from app.enums import OutletStatusEnum
@@ -19,6 +14,10 @@ from app.models.company import Company as CompanyModel  # Для проверк�
 from app.models.outlet import Outlet as OutletModel
 from app.schemas.company_outlet import OutletCreate, OutletResponse, OutletUpdate
 from app.utils.subscription_utils import get_current_subscription
+from pydantic import ValidationError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload  # Для загрузки связей, если нужно для ответа
 
 logger = get_logger(__name__)
 

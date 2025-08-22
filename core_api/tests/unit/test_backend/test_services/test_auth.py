@@ -2,11 +2,10 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from fastapi import HTTPException, status
-
 from app.enums.back_office import OtpPurposeEnum
 from app.schemas.backoffice_auth import OTPVerifyRequest
 from app.services.auth import AuthService
+from fastapi import HTTPException, status
 
 
 class TestAuthService:

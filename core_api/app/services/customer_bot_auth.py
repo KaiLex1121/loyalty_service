@@ -3,9 +3,6 @@ import datetime
 from decimal import Decimal
 from typing import Optional, Tuple
 
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.logger import get_logger
 from app.core.security import create_access_token
 from app.core.settings import AppSettings
@@ -26,6 +23,8 @@ from app.schemas.account import (
 )
 from app.schemas.customer_bot_auth import ClientTelegramOnboardingRequest
 from app.schemas.customer_role import CustomerRoleCreateInternal
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = get_logger(__name__)
 

@@ -1,24 +1,18 @@
 from typing import Optional, Tuple
 
-from fastapi import Depends, HTTPException, Path, Request, Security, status
-from fastapi.security import HTTPAuthorizationCredentials
-from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload
-
 from app.core.logger import get_logger
 from app.core.security import (
     http_bearer_backoffice,
     http_bearer_employee,
+    internal_api_key_header,
     oauth2_scheme_backoffice,
-    verify_token,
 )
+from shared.utils.security import verify_token
 from app.core.settings import AppSettings, get_settings
 from app.dao.holder import HolderDAO
 from app.db.session import create_pool
 from app.enums import UserAccessLevelEnum
-from app.enums.telegram_bot_enums import BotTypeEnum
+from shared.enums.telegram_bot_enums import BotTypeEnum
 from app.exceptions.common import (
     ForbiddenException,
     NotFoundException,
@@ -35,7 +29,7 @@ from app.models.promotions.promotion import Promotion
 from app.models.subscription import Subscription
 from app.models.telegram_bot import TelegramBot
 from app.models.user_role import UserRole
-from app.schemas.token import TokenPayload
+from shared.schemas.schemas import TokenPayload
 from app.services.account import AccountService
 from app.services.backoffice_auth import AuthService
 from app.services.backoffice_dashboard import DashboardService
@@ -47,6 +41,7 @@ from app.services.company_default_cashback_config import (
 from app.services.company_employee import EmployeeService
 from app.services.company_outlet import OutletService
 from app.services.company_promotion import PromotionService
+from app.services.company_telegram_broadcast import BroadcastService
 from app.services.customer_bot_auth import CustomerAuthService  # Поздний импорт
 from app.services.employee_bot_auth import EmployeeAuthService
 from app.services.employee_customer_interaction import (
@@ -55,19 +50,24 @@ from app.services.employee_customer_interaction import (
 from app.services.otp_code import OtpCodeService
 from app.services.otp_sending import MockOTPSendingService
 from app.services.transaction_cashback_calculation import CashbackCalculationService
-from app.core.security import internal_api_key_header
-from app.services.company_telegram_broadcast import BroadcastService
-
+from fastapi import Depends, HTTPException, Path, Request, Security, status
+from fastapi.security import HTTPAuthorizationCredentials
+from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload, selectinload
 
 logger = get_logger(__name__)
 
 
 async def verify_internal_api_key(
-       api_key: str = Security(internal_api_key_header),
-       settings: AppSettings = Depends(get_settings)
-   ):
+    api_key: str = Security(internal_api_key_header),
+    settings: AppSettings = Depends(get_settings),
+):
     if api_key != settings.API.INTERNAL_KEY:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid internal API key")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid internal API key"
+        )
 
 
 async def get_session(settings: AppSettings = Depends(get_settings)):
@@ -120,7 +120,8 @@ async def get_backoffice_token_payload(
             detail="Токен отсутствует",
             headers={"WWW-Authenticate": oauth2_scheme_backoffice.scheme_name},
         )
-    token_data = verify_token(token=token, settings=settings)
+
+    token_data = verify_token(token=token, secret_key=settings.SECURITY.JWT_SECRET_KEY, algorithm=settings.SECURITY.ALGORITHM)
 
     if token_data is None:
         raise credentials_exception
@@ -150,7 +151,7 @@ async def get_employee_token_payload(
             detail="Токен отсутствует",
             headers={"WWW-Authenticate": http_bearer_employee.scheme_name},
         )
-    token_data = verify_token(token=token, settings=settings)
+    token_data = verify_token(token=token, secret_key=settings.SECURITY.JWT_SECRET_KEY, algorithm=settings.SECURITY.ALGORITHM)
 
     if token_data is None:
         raise credentials_exception
@@ -562,21 +563,8 @@ async def get_internal_api_key(
     if api_key == settings.API.INTERNAL_KEY:
         return api_key
     raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or missing Internal API Key"
-    )
-
-
-def get_employee_auth_service(
-    settings: AppSettings = Depends(get_settings),
-    dao: HolderDAO = Depends(get_dao),
-) -> EmployeeAuthService:
-    otp_code_serv = OtpCodeService()  # Упрощенно
-    otp_send_serv = MockOTPSendingService()  # Упрощенно
-    return EmployeeAuthService(
-        otp_code_service=otp_code_serv,
-        otp_sending_service=otp_send_serv,
-        settings=settings,
-        dao=dao,
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Invalid or missing Internal API Key",
     )
 
 
@@ -664,6 +652,7 @@ def get_employee_customer_interaction_service(
         otp_sending_service=otp_sending_service,
     )
 
+
 def get_broadcast_service(
     dao: HolderDAO = Depends(get_dao),
 ) -> BroadcastService:
@@ -685,4 +674,18 @@ def get_auth_service(
         otp_sending_service=otp_sending_service,
         otp_code_service=otp_code_service,
         settings=settings,
+    )
+
+
+def get_employee_auth_service(
+    settings: AppSettings = Depends(get_settings),
+    dao: HolderDAO = Depends(get_dao),
+    otp_code_service: OtpCodeService = Depends(get_otp_code_service),
+    otp_sending_service: MockOTPSendingService = Depends(get_otp_sending_service),
+) -> EmployeeAuthService:
+    return EmployeeAuthService(
+        otp_code_service=otp_code_service,
+        otp_sending_service=otp_sending_service,
+        settings=settings,
+        dao=dao,
     )

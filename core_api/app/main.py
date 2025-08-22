@@ -1,12 +1,11 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
 from app.api.v1.api import api_router_v1
+from app.broker import faststream_router
 from app.core.exception_handlers import setup_exception_handlers
 from app.core.logger import get_logger
 from app.core.settings import settings
-from app.broker import faststream_router
-
+from fastapi import FastAPI
 
 logger = get_logger(__name__)
 

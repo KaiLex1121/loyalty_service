@@ -5,13 +5,12 @@ from typing import (
     Optional,
 )
 
-from pydantic import BaseModel, Field, field_validator
-
 from app.enums import CompanyStatusEnum, LegalFormEnum
 from app.schemas.company_default_cashback_config import (
     CompanyDefaultCashbackConfigResponse,
 )
 from app.schemas.company_subscription import SubscriptionResponseForCompany
+from pydantic import BaseModel, Field, field_validator
 
 
 class CompanyBase(BaseModel):

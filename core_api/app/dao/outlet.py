@@ -1,12 +1,11 @@
 from typing import List, Optional
 
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.dao.base import BaseDAO
 from app.enums import OutletStatusEnum
 from app.models.outlet import Outlet
 from app.schemas.company_outlet import OutletCreate, OutletUpdate
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class OutletDAO(BaseDAO[Outlet, OutletCreate, OutletUpdate]):

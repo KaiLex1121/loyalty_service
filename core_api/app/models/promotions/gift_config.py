@@ -3,6 +3,8 @@ import decimal
 from enum import Enum
 from typing import TYPE_CHECKING, List, Optional
 
+from app.db.base import Base
+from app.enums.loyalty_enums import GiftTypeEnum
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -17,9 +19,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.db.base import Base
-from app.enums.loyalty_enums import GiftTypeEnum
 
 if TYPE_CHECKING:
     from app.models.promotions.promotion import Promotion

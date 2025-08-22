@@ -1,9 +1,8 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel
-
 from app.enums import OtpPurposeEnum
+from pydantic import BaseModel
 
 
 class OtpCodeBase(BaseModel):

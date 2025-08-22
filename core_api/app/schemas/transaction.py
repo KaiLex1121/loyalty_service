@@ -3,12 +3,11 @@ import datetime
 import decimal
 from typing import Optional
 
-from pydantic import BaseModel, Field
-
 from app.enums import TransactionStatusEnum, TransactionTypeEnum
 from app.schemas.promotion_usage import (  # Поместите импорт внутрь, если он циклический, или используйте ForwardRef
     PromotionUsageResponse,
 )
+from pydantic import BaseModel, Field
 
 
 class TransactionBase(BaseModel):

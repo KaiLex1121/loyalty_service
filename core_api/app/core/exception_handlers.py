@@ -1,11 +1,10 @@
+from app.core.logger import get_logger
+from app.exceptions.base import BaseAppException
 from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
-
-from app.core.logger import get_logger
-from app.exceptions.base import BaseAppException
 
 logger = get_logger(__name__)
 

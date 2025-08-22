@@ -7,6 +7,11 @@ import pytest
 import pytest_asyncio
 from alembic import command as alembic_command
 from alembic.config import Config as AlembicConfig
+from app.core.dependencies import get_session as app_get_db
+from app.core.settings import AppSettings, get_settings
+from app.dao.holder import HolderDAO
+from app.db.base import Base
+from app.main import app
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -14,12 +19,6 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-
-from app.core.dependencies import get_session as app_get_db
-from app.core.settings import AppSettings, get_settings
-from app.dao.holder import HolderDAO
-from app.db.base import Base
-from app.main import app
 
 
 @pytest.fixture

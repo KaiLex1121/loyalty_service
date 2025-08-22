@@ -1,8 +1,7 @@
-from pydantic import BaseModel
-
 from app.enums import (  # Убедитесь, что путь правильный
     UserAccessLevelEnum,
 )
+from pydantic import BaseModel
 
 
 class UserRoleBase(BaseModel):

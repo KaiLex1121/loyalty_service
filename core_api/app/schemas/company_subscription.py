@@ -2,10 +2,9 @@ import datetime
 import decimal
 from typing import Optional
 
-from pydantic import BaseModel
-
 from app.enums import PaymentCycleEnum, SubscriptionStatusEnum
 from app.schemas.company_tariff_plan import TariffPlanResponseForCompany
+from pydantic import BaseModel
 
 
 class SubscriptionBase(BaseModel):

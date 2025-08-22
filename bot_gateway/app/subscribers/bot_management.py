@@ -1,10 +1,14 @@
 from aiogram import Bot
 from app.broker import faststream_router
+
 from shared.schemas.schemas import BotManagementEvent
+
 
 @faststream_router.subscriber("bot_management_events")
 async def handle_bot_management(event: BotManagementEvent):
-    print(f"Received bot management event: {event.event_type} for token ...{event.token[-4:]}")
+    print(
+        f"Received bot management event: {event.event_type} for token ...{event.token[-4:]}"
+    )
     bot = Bot(token=event.token)
     try:
         if event.event_type in ["bot_created", "bot_activated"]:

@@ -1,10 +1,5 @@
 from typing import List, Optional
 
-from sqlalchemy import delete, func
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
-
 from app.dao.base import BaseDAO
 from app.models.account import (
     Account as AccountModel,  # Для join в get_active_by_work_phone
@@ -15,6 +10,10 @@ from app.schemas.company_employee import (  # Для типа UpdateSchema в CR
     EmployeeCreate,
     EmployeeUpdate,
 )
+from sqlalchemy import delete, func
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 
 # EmployeeCreateRequest не используется как CreateSchema для CRUDBase, т.к. создание EmployeeRole сложнее
@@ -183,6 +182,25 @@ class EmployeeRoleDAO(BaseDAO[EmployeeRole, EmployeeCreate, EmployeeUpdate]):
             stmt = stmt.filter(self.model.company_id == company_id)
         result = await session.execute(stmt)
         return result.scalars().first()
+
+    async def find_by_work_phone_and_company_id(
+        self, session: AsyncSession, phone_number: str, company_id: int
+    ) -> Optional[EmployeeRole]:
+        """
+        Находит активного сотрудника по рабочему номеру телефона в конкретной компании.
+        """
+        stmt = (
+            select(self.model)
+            .where(
+                self.model.work_phone_number == phone_number,
+                self.model.company_id == company_id,
+                self.model.deleted_at.is_(None)
+            )
+            .options(selectinload(self.model.account)) # Загружаем связанный Account
+        )
+        result = await session.execute(stmt)
+        return result.scalars().first()
+
 
     async def get_by_id_with_details_including_deleted(
         self, session: AsyncSession, *, employee_role_id: int

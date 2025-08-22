@@ -3,6 +3,13 @@ import datetime
 import decimal
 from typing import Dict, Optional
 
+from app.enums import PromotionStatusEnum, PromotionTypeEnum
+from app.enums.loyalty_enums import PromotionPriorityLevelEnum
+from app.schemas.promotion_cashback_config import (
+    CashbackConfigCreate,
+    CashbackConfigResponse,
+    CashbackConfigUpdate,
+)
 from pydantic import (
     BaseModel,
     Field,
@@ -10,14 +17,6 @@ from pydantic import (
     field_validator,
     model_validator,
     validator,
-)
-
-from app.enums import PromotionStatusEnum, PromotionTypeEnum
-from app.enums.loyalty_enums import PromotionPriorityLevelEnum
-from app.schemas.promotion_cashback_config import (
-    CashbackConfigCreate,
-    CashbackConfigResponse,
-    CashbackConfigUpdate,
 )
 
 PRIORITY_LEVEL_TO_INT_MAP: Dict[PromotionPriorityLevelEnum, int] = {

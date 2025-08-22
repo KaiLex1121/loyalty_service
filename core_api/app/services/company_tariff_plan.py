@@ -1,5 +1,3 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.dao.holder import HolderDAO
 from app.enums import TariffStatusEnum
 from app.exceptions.services.tariff_plan import (
@@ -9,6 +7,7 @@ from app.models.tariff_plan import (
     TariffPlan as TariffPlanModel,  # Не используется напрямую, но для контекста
 )
 from app.schemas.company_tariff_plan import TariffPlanCreate, TariffPlanResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class AdminTariffPlanService:

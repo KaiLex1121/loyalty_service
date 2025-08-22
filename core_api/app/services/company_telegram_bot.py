@@ -1,14 +1,24 @@
 from typing import List
 from urllib.parse import urljoin
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings import settings
 from app.dao.holder import HolderDAO
 from app.exceptions.common import ConflictException
 from app.models.telegram_bot import TelegramBot
-from app.schemas.company_telegram_bot import TelegramBotCreate, TelegramBotCreateInternal, TelegramBotUpdate
-from app.publishers import bot_management_events_publisher # Импортируем наш экземпляр брокера
-from shared.schemas.schemas import BotManagementEvent # Импортируем общую схему для события
+from app.publishers import (
+    bot_management_events_publisher,  # Импортируем наш экземпляр брокера
+)
+from app.schemas.company_telegram_bot import (
+    TelegramBotCreate,
+    TelegramBotCreateInternal,
+    TelegramBotUpdate,
+)
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from shared.schemas.schemas import (
+    BotManagementEvent,  # Импортируем общую схему для события
+)
+
 
 class TelegramBotService:
     def __init__(self, dao: HolderDAO):
@@ -22,7 +32,9 @@ class TelegramBotService:
         path = f"/telegram/bot{token}"
         return urljoin(settings.API.GATEWAY_BASE_URL, path)
 
-    async def create_bot(self, session: AsyncSession, bot_data: TelegramBotCreate, company_id: int) -> TelegramBot:
+    async def create_bot(
+        self, session: AsyncSession, bot_data: TelegramBotCreate, company_id: int
+    ) -> TelegramBot:
         """
         Создает нового бота или восстанавливает существующего.
         Обрабатывает конфликты с мягко удаленными записями.
@@ -40,17 +52,23 @@ class TelegramBotService:
                 )
 
             # Если бот принадлежит этой же компании, восстанавливаем его.
-            print(f"Restoring soft-deleted bot ID {soft_deleted_bot.id} with token ...{bot_data.token[-4:]}")
-            restored_bot = await self.dao.telegram_bot.restore_bot(session, db_bot=soft_deleted_bot)
+            print(
+                f"Restoring soft-deleted bot ID {soft_deleted_bot.id} with token ...{bot_data.token[-4:]}"
+            )
+            restored_bot = await self.dao.telegram_bot.restore_bot(
+                session, db_bot=soft_deleted_bot
+            )
 
             # Публикуем событие 'bot_activated' (или 'bot_created', в зависимости от семантики)
             event = BotManagementEvent(
-                event_type="bot_activated", # Восстановление - это как активация
+                event_type="bot_activated",  # Восстановление - это как активация
                 token=restored_bot.token,
-                webhook_url=self._get_webhook_url_for_bot(restored_bot.token)
+                webhook_url=self._get_webhook_url_for_bot(restored_bot.token),
             )
             await bot_management_events_publisher.publish(event)
-            print(f"Published 'bot_activated' event for restored bot ID {restored_bot.id}")
+            print(
+                f"Published 'bot_activated' event for restored bot ID {restored_bot.id}"
+            )
 
             return restored_bot
 
@@ -65,19 +83,22 @@ class TelegramBotService:
             )
 
         # --- Сценарий 3: Создание полностью нового бота ---
-        print(f"Creating a new bot for company {company_id} with token ...{bot_data.token[-4:]}")
+        print(
+            f"Creating a new bot for company {company_id} with token ...{bot_data.token[-4:]}"
+        )
         bot_internal_schema = TelegramBotCreateInternal(
-            **bot_data.model_dump(),
-            company_id=company_id
+            **bot_data.model_dump(), company_id=company_id
         )
 
-        new_bot = await self.dao.telegram_bot.create(session, obj_in=bot_internal_schema)
+        new_bot = await self.dao.telegram_bot.create(
+            session, obj_in=bot_internal_schema
+        )
         await session.flush()
 
         event = BotManagementEvent(
             event_type="bot_created",
             token=new_bot.token,
-            webhook_url=self._get_webhook_url_for_bot(new_bot.token)
+            webhook_url=self._get_webhook_url_for_bot(new_bot.token),
         )
 
         await bot_management_events_publisher.publish(event)
@@ -85,18 +106,25 @@ class TelegramBotService:
 
         return new_bot
 
-
-    async def get_bots_for_company(self, session: AsyncSession, company_id: int) -> List[TelegramBot]:
+    async def get_bots_for_company(
+        self, session: AsyncSession, company_id: int
+    ) -> List[TelegramBot]:
         """Возвращает список ботов для указанной компании."""
-        return await self.dao.telegram_bot.get_by_company_id(session, company_id=company_id)
+        return await self.dao.telegram_bot.get_by_company_id(
+            session, company_id=company_id
+        )
 
-    async def update_bot(self, session: AsyncSession, db_bot: TelegramBot, update_data: TelegramBotUpdate) -> TelegramBot:
+    async def update_bot(
+        self, session: AsyncSession, db_bot: TelegramBot, update_data: TelegramBotUpdate
+    ) -> TelegramBot:
         """
         Обновляет бота в БД и публикует событие, если его статус активности изменился.
         """
         original_status = db_bot.is_active
 
-        updated_bot = await self.dao.telegram_bot.update(session, db_obj=db_bot, obj_in=update_data)
+        updated_bot = await self.dao.telegram_bot.update(
+            session, db_obj=db_bot, obj_in=update_data
+        )
         await session.flush()
 
         event_type = None
@@ -110,14 +138,16 @@ class TelegramBotService:
             event = BotManagementEvent(
                 event_type=event_type,
                 token=updated_bot.token,
-                webhook_url=self._get_webhook_url_for_bot(updated_bot.token)
+                webhook_url=self._get_webhook_url_for_bot(updated_bot.token),
             )
             await bot_management_events_publisher.publish(event)
             print(f"Published '{event_type}' event for bot ID {updated_bot.id}")
 
         return updated_bot
 
-    async def delete_bot(self, session: AsyncSession, db_bot: TelegramBot) -> TelegramBot:
+    async def delete_bot(
+        self, session: AsyncSession, db_bot: TelegramBot
+    ) -> TelegramBot:
         """
         Мягко удаляет бота из БД и публикует событие 'bot_deleted'.
         """
@@ -133,7 +163,7 @@ class TelegramBotService:
             event = BotManagementEvent(
                 event_type="bot_deleted",
                 token=bot_token,
-                webhook_url=None # URL не нужен для удаления
+                webhook_url=None,  # URL не нужен для удаления
             )
             await bot_management_events_publisher.publish(event)
             print(f"Published 'bot_deleted' event for bot ID {bot_id}")

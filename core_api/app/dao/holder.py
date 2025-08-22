@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 
 from app.dao.account import AccountDAO
+from app.dao.broadcast import BroadcastDAO
 from app.dao.cashback_config import CashbackConfigDAO
 from app.dao.company import CompanyDAO
 from app.dao.company_default_cashback_config import CompanyDefaultCashbackConfigDAO
@@ -15,7 +16,6 @@ from app.dao.tariff_plan import TariffPlanDAO
 from app.dao.telegram_bot import TelegramBotDAO
 from app.dao.transaction import TransactionDAO
 from app.dao.user_role import UserRoleDAO
-from app.dao.broadcast import BroadcastDAO
 
 
 @dataclass

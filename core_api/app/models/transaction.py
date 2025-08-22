@@ -2,14 +2,13 @@ import datetime
 import decimal
 from typing import TYPE_CHECKING, Optional
 
+from app.db.base import Base
+from app.enums.loyalty_enums import TransactionStatusEnum, TransactionTypeEnum
 from sqlalchemy import DateTime
 from sqlalchemy import Enum as PGEnum
 from sqlalchemy import ForeignKey, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
-
-from app.db.base import Base
-from app.enums.loyalty_enums import TransactionStatusEnum, TransactionTypeEnum
 
 if TYPE_CHECKING:
     from .company import Company

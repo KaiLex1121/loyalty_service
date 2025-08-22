@@ -1,15 +1,14 @@
 from typing import Optional
 
-from sqlalchemy import and_, select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-
 from app.dao.base import BaseDAO
 from app.models.account import Account
 from app.models.customer_role import CustomerRole
 from app.models.employee_role import EmployeeRole
 from app.models.user_role import UserRole
 from app.schemas.account import AccountCreate, AccountCreateInternal, AccountUpdate
+from sqlalchemy import and_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 
 class AccountDAO(BaseDAO[Account, AccountCreate, AccountUpdate]):

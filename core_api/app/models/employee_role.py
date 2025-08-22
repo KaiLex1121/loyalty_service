@@ -1,10 +1,9 @@
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from app.db.base import Base
 from app.models.association_tables import employee_role_outlet_association
+from sqlalchemy import ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from .account import Account

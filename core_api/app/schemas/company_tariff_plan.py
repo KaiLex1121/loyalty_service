@@ -4,9 +4,8 @@ from math import e
 from operator import eq, gt
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
-
 from app.enums import CurrencyEnum, PaymentCycleEnum, TariffStatusEnum
+from pydantic import BaseModel, Field
 
 
 class TariffPlanBase(BaseModel):

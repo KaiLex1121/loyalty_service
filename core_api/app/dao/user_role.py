@@ -1,14 +1,13 @@
 from typing import Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
-
 from app.dao.base import BaseDAO
 from app.models.company import Company
 from app.models.subscription import Subscription
 from app.models.user_role import UserRole
 from app.schemas.user_role import UserRoleCreate
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 
 class UserRoleDAO(BaseDAO[UserRole, UserRoleCreate, UserRoleCreate]):

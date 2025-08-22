@@ -3,9 +3,8 @@ import datetime
 import decimal  # Для CustomerProfileResponse
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field, constr
-
 from app.utils.validators import RussianPhoneNumber
+from pydantic import BaseModel, EmailStr, Field, constr
 
 
 # --- Схема для запроса от Telegram-бота ---

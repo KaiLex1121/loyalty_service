@@ -1,11 +1,10 @@
 import decimal
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import ForeignKey, Integer, Numeric
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from app.db.base import Base
 from app.models.promotions.promotion import Promotion
+from sqlalchemy import ForeignKey, Integer, Numeric
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 class PointsMultiplierConfig(Base):

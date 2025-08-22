@@ -1,5 +1,3 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.logger import get_logger
 from app.core.security import (
     create_access_token,
@@ -28,6 +26,7 @@ from app.services.otp_code import (
     OtpCodeService,
 )
 from app.services.otp_sending import MockOTPSendingService
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = get_logger(__name__)
 

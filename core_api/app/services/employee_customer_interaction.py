@@ -2,8 +2,6 @@ import datetime
 import decimal
 from typing import Optional, Tuple
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.security import (
     generate_otp,
     get_otp_expiry_time,
@@ -42,6 +40,7 @@ from app.services.otp_sending import (  # Для контекста сотруд
     MockOTPSendingService,
 )
 from app.services.transaction_cashback_calculation import CashbackCalculationService
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # from backend.core.logger import get_logger
 # logger = get_logger(__name__)

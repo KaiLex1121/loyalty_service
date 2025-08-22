@@ -1,10 +1,9 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.dao.holder import HolderDAO
 from app.enums import OtpPurposeEnum
 from app.models.account import Account
 from app.models.otp_code import OtpCode
 from app.schemas.otp_code import OtpCodeCreate
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class OtpCodeService:

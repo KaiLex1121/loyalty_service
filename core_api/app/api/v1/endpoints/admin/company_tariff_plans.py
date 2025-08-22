@@ -1,8 +1,5 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.dependencies import get_session  # Ваша зависимость для сессии
 from app.core.dependencies import get_current_full_system_admin, get_dao
 from app.dao.holder import HolderDAO
@@ -12,6 +9,8 @@ from app.schemas.company_tariff_plan import (
     TariffPlanUpdate,
 )
 from app.services.company_tariff_plan import AdminTariffPlanService
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 

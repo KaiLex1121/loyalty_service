@@ -1,10 +1,5 @@
 from typing import List, Optional, Sequence
 
-from sqlalchemy import and_, select  # Добавил and_
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload, selectinload  # Добавил selectinload
-
 from app.dao.base import BaseDAO
 from app.models.account import Account  # Для joinedload
 from app.models.company import Company  # Для joinedload
@@ -16,6 +11,10 @@ from app.schemas.customer_role import (
     CustomerRoleUpdate,
 )
 from app.schemas.user_role import UserRoleCreate
+from sqlalchemy import and_, select  # Добавил and_
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload, selectinload  # Добавил selectinload
 
 
 class CustomerRoleDAO(BaseDAO[CustomerRole, CustomerRoleCreate, CustomerRoleUpdate]):
@@ -43,10 +42,10 @@ class CustomerRoleDAO(BaseDAO[CustomerRole, CustomerRoleCreate, CustomerRoleUpda
                 Account.telegram_user_id == telegram_id,
                 self.model.company_id == company_id,
                 self.model.deleted_at.is_(None),  # Ищем только активные профили
-                Account.deleted_at.is_(None)     # И только у активных аккаунтов
+                Account.deleted_at.is_(None),  # И только у активных аккаунтов
             )
             .options(
-                joinedload(self.model.account) # Жадная загрузка связанного аккаунта
+                joinedload(self.model.account)  # Жадная загрузка связанного аккаунта
             )
         )
 
@@ -149,11 +148,14 @@ class CustomerRoleDAO(BaseDAO[CustomerRole, CustomerRoleCreate, CustomerRoleUpda
         result = await session.execute(stmt)
         return result.scalars().all()
 
-
-    async def get_telegram_user_ids_by_company(self, session: AsyncSession, company_id: int) -> list[int]:
+    async def get_telegram_user_ids_by_company(
+        self, session: AsyncSession, company_id: int
+    ) -> list[int]:
         stmt = (
             select(Account.telegram_user_id)
-            .join(CustomerRole, CustomerRole.account_id == Account.id)  # Account ← CustomerRole
+            .join(
+                CustomerRole, CustomerRole.account_id == Account.id
+            )  # Account ← CustomerRole
             .where(CustomerRole.company_id == company_id)
             .where(Account.telegram_user_id.isnot(None))  # исключаем пустые
             .distinct()

@@ -2,12 +2,11 @@ import datetime
 import decimal
 from typing import TYPE_CHECKING, Optional
 
+from app.db.base import Base
+from app.enums import PaymentCycleEnum, SubscriptionStatusEnum
 from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
-
-from app.db.base import Base
-from app.enums import PaymentCycleEnum, SubscriptionStatusEnum
 
 if TYPE_CHECKING:
     from .company import Company

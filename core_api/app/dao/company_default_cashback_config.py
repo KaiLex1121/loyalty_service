@@ -1,15 +1,14 @@
 # backend/dao/company_default_cashback_config.py
 from typing import Optional
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.dao.base import BaseDAO
 from app.models.company_default_cashback_config import CompanyDefaultCashbackConfig
 from app.schemas.company_default_cashback_config import (
     CompanyDefaultCashbackConfigCreate,
     CompanyDefaultCashbackConfigUpdate,
 )
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class CompanyDefaultCashbackConfigDAO(

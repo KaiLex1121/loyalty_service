@@ -2,9 +2,6 @@
 import datetime
 from typing import Optional, Sequence  # Добавил Optional
 
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.dao.holder import HolderDAO
 from app.enums import CashbackTypeEnum, PromotionStatusEnum, PromotionTypeEnum
 from app.enums.loyalty_enums import PromotionPriorityLevelEnum
@@ -29,6 +26,8 @@ from app.schemas.promotion_cashback_config import (
 from app.schemas.promotion_cashback_config import (
     CashbackConfigCreateInternal,
 )
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # from backend.core.logger import get_logger # Раскомментируйте, если используете
 # logger = get_logger(__name__)

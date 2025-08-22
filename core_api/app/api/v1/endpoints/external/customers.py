@@ -1,7 +1,4 @@
 # backend/api/v1/endpoints/client_profile_router.py
-from fastapi import APIRouter, Depends, Path, status  # Убрал HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.dependencies import (
     get_customer_profile_service,
     get_customer_role_by_telegram_id_for_bot,
@@ -13,6 +10,8 @@ from app.schemas.customer_role import (  # Импортируем из ново�
     CustomerRoleResponse,
 )
 from app.services.company_customer import CustomerService
+from fastapi import APIRouter, Depends, Path, status  # Убрал HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # from backend.core.logger import get_logger
 # logger = get_logger(__name__)

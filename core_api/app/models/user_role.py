@@ -1,11 +1,10 @@
 from typing import TYPE_CHECKING, List
 
+from app.db.base import Base
+from app.enums import UserAccessLevelEnum
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
-
-from app.db.base import Base
-from app.enums import UserAccessLevelEnum
 
 if TYPE_CHECKING:
     from .account import Account

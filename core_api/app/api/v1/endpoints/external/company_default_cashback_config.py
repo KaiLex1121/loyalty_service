@@ -1,9 +1,6 @@
 # backend/api/v1/endpoints/cashback_config.py
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.dependencies import (
     get_cashback_service,
     get_dao,
@@ -19,6 +16,8 @@ from app.schemas.company_default_cashback_config import (
 from app.services.company_default_cashback_config import (  # Ваш сервис
     CompanyDefaultCashbackConfigService,
 )
+from fastapi import APIRouter, Depends, HTTPException, Path, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 

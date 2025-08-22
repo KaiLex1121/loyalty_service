@@ -1,14 +1,13 @@
 from typing import Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
-
 from app.dao.base import BaseDAO
 from app.enums import CompanyStatusEnum
 from app.models.company import Company
 from app.models.subscription import Subscription as SubscriptionModel
 from app.schemas.company import CompanyCreate, CompanyUpdate
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 
 class CompanyDAO(BaseDAO[Company, CompanyCreate, CompanyUpdate]):

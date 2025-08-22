@@ -2,8 +2,6 @@ import hashlib
 import hmac
 from datetime import datetime, timedelta, timezone
 
-from jose import jwt
-
 from app.core.security import (
     TokenPayload,
     create_access_token,
@@ -15,6 +13,7 @@ from app.core.security import (
     verify_token,
 )
 from app.core.settings import AppSettings
+from jose import jwt
 
 
 class TestAccessToken:

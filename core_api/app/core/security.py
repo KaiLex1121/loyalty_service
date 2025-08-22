@@ -3,19 +3,19 @@ import hmac
 from datetime import datetime, timedelta, timezone
 from typing import Any, List, Optional
 
+from app.core.logger import get_logger
+from app.core.settings import AppSettings
+from app.schemas.token import TokenPayload
 from fastapi.security import APIKeyHeader, HTTPBearer, OAuth2PasswordBearer
 from jose import ExpiredSignatureError, JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import ValidationError
 
-from app.core.logger import get_logger
-from app.core.settings import AppSettings
-from app.schemas.token import TokenPayload
-
-
 logger = get_logger(__name__)
 
-internal_api_key_header = APIKeyHeader(name="X-Internal-API-Key", auto_error=False, scheme_name="InternalAPIKeyAuth")
+internal_api_key_header = APIKeyHeader(
+    name="X-Internal-API-Key", auto_error=False, scheme_name="InternalAPIKeyAuth"
+)
 
 http_bearer_backoffice = HTTPBearer(
     scheme_name="BackofficeUserHttpAuth",
@@ -70,37 +70,6 @@ def create_access_token(
         algorithm=settings.SECURITY.ALGORITHM,
     )
     return encoded_jwt
-
-
-def verify_token(token: str, settings: AppSettings) -> Optional[TokenPayload]:
-    """
-    Верифицирует JWT токен.
-
-    Проверяет подпись, срок годности и структуру полезной нагрузки.
-    Возвращает объект TokenPayload в случае успеха или None в случае любой ошибки.
-    """
-    if token is None:
-        logger.warning("Попытка верификации None токена")
-        return None
-    try:
-        payload_dict = jwt.decode(
-            token,
-            settings.SECURITY.JWT_SECRET_KEY,
-            algorithms=[settings.SECURITY.ALGORITHM],
-        )
-        token_data = TokenPayload(**payload_dict)
-        return token_data
-
-    except ExpiredSignatureError:
-        logger.info("Token has expired.")
-        return None
-    except JWTError as e:
-        logger.error(f"JWT decoding error: {e}")
-        return None
-    except ValidationError as e:
-        logger.error(f"Invalid token payload structure: {e}")
-        return None
-
 
 def generate_otp(settings: AppSettings) -> str:
     settings.SECURITY.OTP_LENGTH

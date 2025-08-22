@@ -1,8 +1,6 @@
 # backend/schemas/employee_auth.py
 from typing import Optional
 
-from pydantic import BaseModel, Field, constr
-
 from app.enums import OtpPurposeEnum  # Используем существующий или дополняем
 from app.models.otp_code import OtpCode
 from app.schemas.token import TokenResponse
@@ -10,6 +8,7 @@ from app.utils.validators import (  # Используем вашу схему �
     OTPCode,
     RussianPhoneNumber,
 )
+from pydantic import BaseModel, Field, constr
 
 # Если OtpPurposeEnum нужно дополнить:
 # class OtpPurposeEnum(str, enum.Enum):
@@ -26,7 +25,8 @@ class EmployeeOtpRequest(BaseModel):
 class EmployeeOtpVerify(BaseModel):
     work_phone_number: RussianPhoneNumber
     otp_code: OTPCode
-    purpose: OtpPurposeEnum = Field(
-        default=OtpPurposeEnum.EMPLOYEE_VERIFICATION,  # Используем новое значение
-        description="Цель OTP кода.",
-    )
+
+
+class EmployeeAuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"

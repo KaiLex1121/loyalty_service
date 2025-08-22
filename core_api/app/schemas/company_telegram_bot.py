@@ -1,10 +1,9 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
-
 from app.enums import OtpPurposeEnum
-from app.enums.telegram_bot_enums import BotTypeEnum
+from shared.enums.telegram_bot_enums import BotTypeEnum
+from pydantic import BaseModel, Field
 
 
 class TelegramBotBase(BaseModel):
@@ -19,7 +18,9 @@ class TelegramBotCreate(TelegramBotBase):
 
 class TelegramBotCreateInternal(TelegramBotBase):
     """Схема для создания бота в БД, используется внутри сервиса и DAO."""
+
     company_id: int
+
 
 # Схема для обновления (например, деактивации)
 class TelegramBotUpdate(BaseModel):

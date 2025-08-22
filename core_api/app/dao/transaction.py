@@ -1,10 +1,6 @@
 # backend/dao/transaction.py
 from typing import Optional, Sequence
 
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
-
 from app.dao.base import BaseDAO
 from app.models.promotions.promotion import Promotion  # Для joinedload
 from app.models.promotions.promotion_usage import PromotionUsage  # Для joinedload
@@ -15,6 +11,9 @@ from app.schemas.transaction import (
 from app.schemas.transaction import (  # Нейминг схем
     TransactionUpdate,
 )
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 
 class TransactionDAO(
@@ -27,7 +26,7 @@ class TransactionDAO(
     def __init__(self):
         super().__init__(Transaction)
 
-    async def get_transactions_by_customer_id(
+    async def get_transactions_by_customer_id_with_details(
         self,
         session: AsyncSession,
         customer_role_id: int,
@@ -80,3 +79,15 @@ class TransactionDAO(
         )
         result = await session.execute(stmt)
         return result.scalars().first()
+
+    async def get_latest_for_customer_by_id(
+        self, session: AsyncSession, customer_role_id: int, limit: int = 10
+    ) -> list[Transaction]:
+        stmt = (
+            select(self.model)
+            .where(self.model.customer_role_id == customer_role_id)
+            .order_by(self.model.transaction_time.desc())
+            .limit(limit)
+        )
+        result = await session.execute(stmt)
+        return list(result.scalars().all())

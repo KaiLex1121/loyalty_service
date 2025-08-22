@@ -1,25 +1,29 @@
-from fastapi import APIRouter, Depends, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.core.dependencies import (
+    get_broadcast_service,
+    get_dao,
+    get_owned_company,
+    get_session,
+)
 from app.dao.holder import HolderDAO
-from app.core.dependencies import get_broadcast_service, get_dao, get_owned_company, get_session
 from app.models.company import Company
 from app.schemas.broadcast import BroadcastCreate
 from app.services.company_telegram_broadcast import BroadcastService
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # Создаем новый роутер для эндпоинтов рассылок
 router = APIRouter()
 
 
 @router.post(
-    "", # Путь относительно префикса, заданного в api.py (/companies/{company_id}/broadcasts)
+    "",  # Путь относительно префикса, заданного в api.py (/companies/{company_id}/broadcasts)
     status_code=status.HTTP_202_ACCEPTED,
     summary="Create and queue a new broadcast",
     description=(
         "Принимает запрос на создание рассылки, "
         "сохраняет ее в БД и публикует задачу в очередь для асинхронной отправки. "
         "Возвращает ответ немедленно."
-    )
+    ),
 )
 async def create_broadcast(
     broadcast_in: BroadcastCreate,

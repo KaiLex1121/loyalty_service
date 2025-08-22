@@ -2,8 +2,6 @@
 import decimal
 from typing import Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.dao.holder import HolderDAO
 from app.exceptions.common import (  # Добавил ConflictException
     ConflictException,
@@ -15,6 +13,7 @@ from app.schemas.company_default_cashback_config import (
     CompanyDefaultCashbackConfigResponse,
     CompanyDefaultCashbackConfigUpdate,
 )
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class CompanyDefaultCashbackConfigService:

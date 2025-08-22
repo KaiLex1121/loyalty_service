@@ -1,9 +1,6 @@
 # backend/api/v1/endpoints/outlets.py
 from typing import List
 
-from fastapi import APIRouter, Depends, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.dependencies import (
     get_outlet_service,
     get_owned_company,
@@ -14,6 +11,8 @@ from app.models.company import Company as CompanyModel
 from app.models.outlet import Outlet as OutletModel
 from app.schemas.company_outlet import OutletCreate, OutletResponse, OutletUpdate
 from app.services.company_outlet import OutletService
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 

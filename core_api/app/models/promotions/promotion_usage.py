@@ -2,10 +2,9 @@ import datetime
 import decimal
 from typing import TYPE_CHECKING, Optional
 
+from app.db.base import Base
 from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.db.base import Base
 
 if TYPE_CHECKING:
     from app.models.customer_role import CustomerRole

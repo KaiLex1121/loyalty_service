@@ -1,8 +1,5 @@
 from typing import List, Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-
 from app.dao.base import BaseDAO
 from app.enums import (  # Прямой импорт, если не через __init__
     TariffStatusEnum,
@@ -12,6 +9,8 @@ from app.schemas.company_tariff_plan import (  # Используем наши �
     TariffPlanCreate,
     TariffPlanUpdate,
 )
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 
 class TariffPlanDAO(BaseDAO[TariffPlan, TariffPlanCreate, TariffPlanUpdate]):

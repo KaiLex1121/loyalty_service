@@ -1,16 +1,15 @@
 # backend/dao/promotion_usage.py
 from typing import Optional, Sequence
 
-from pydantic import BaseModel  # Для заглушки Update схемы
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.dao.base import BaseDAO
 from app.models.promotions.promotion_usage import PromotionUsage
 from app.schemas.promotion_usage import (  # Нейминг схем
     PromotionUsageCreate,
     PromotionUsageUpdate,
 )
+from pydantic import BaseModel  # Для заглушки Update схемы
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class PromotionUsageDAO(

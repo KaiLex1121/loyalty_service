@@ -2,9 +2,8 @@
 import decimal
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
-
 from app.utils.validators import OTPCode, RussianPhoneNumber
+from pydantic import BaseModel, Field, field_validator
 
 
 class CustomerSearchByPhoneRequest(BaseModel):

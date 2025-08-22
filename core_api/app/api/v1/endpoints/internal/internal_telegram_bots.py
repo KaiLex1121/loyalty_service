@@ -1,15 +1,14 @@
 import os
 from typing import List
-from fastapi import APIRouter, Depends, Security, HTTPException, status
+
+from app.core.dependencies import get_dao, get_session, verify_internal_api_key
+from app.core.settings import settings
+from app.dao.holder import HolderDAO
+from fastapi import APIRouter, Depends, HTTPException, Security, status
 from fastapi.security import APIKeyHeader
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dao.holder import HolderDAO
-from app.core.dependencies import get_dao, get_session
-from app.core.settings import settings
 from shared.schemas.schemas import BotInfo
-from app.core.dependencies import verify_internal_api_key
-
 
 router = APIRouter()
 
@@ -31,6 +30,7 @@ async def get_active_bots(
             token=bot.token,
             company_id=bot.company_id,
             company_name=bot.company.name,
+            bot_type=bot.bot_type,
         )
         for bot in bots
     ]

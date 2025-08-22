@@ -1,13 +1,13 @@
 from datetime import datetime
 
+from shared.enums.telegram_bot_enums import BroadcastStatusEnum
 from pydantic import BaseModel, Field
-
-from app.enums.telegram_bot_enums import BroadcastStatusEnum
 
 
 class BroadcastCreateInternal(BaseModel):
     message_text: str = Field(..., min_length=1, max_length=4096)
     company_id: int
+
 
 class BroadcastCreate(BaseModel):
     message_text: str = Field(..., min_length=1, max_length=4096)

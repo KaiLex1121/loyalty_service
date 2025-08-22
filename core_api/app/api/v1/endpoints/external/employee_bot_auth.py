@@ -1,7 +1,4 @@
 # backend/api/v1/endpoints/employee_bot_auth_router.py
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.dependencies import (
     authenticate_employee_bot_and_get_company_id,  # Аутентификация самого бота
 )
@@ -24,6 +21,8 @@ from app.schemas.employee_bot_auth import (  # Запрос OTP сотрудни
 )
 from app.schemas.token import TokenResponse  # Ответ с JWT токеном
 from app.services.employee_bot_auth import EmployeeAuthService
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # from backend.core.logger import get_logger
 # logger = get_logger(__name__)
@@ -32,7 +31,7 @@ router = APIRouter()  # Префикс /employee-bot/auth будет задан 
 
 
 @router.post(
-    "/request-otp",
+    "/request-otp/{bot_token}",
     response_model=EmployeeSummaryForOtpResponse,
     status_code=status.HTTP_200_OK,
     summary="Запросить OTP для входа сотрудника в бот",
@@ -64,7 +63,7 @@ async def employee_request_otp_endpoint(
 
 
 @router.post(
-    "/verify-otp",
+    "/verify-otp/{bot_token}",
     response_model=TokenResponse,  # В случае успеха возвращаем JWT токен
     summary="Верифицировать OTP и аутентифицировать сотрудника в боте",
     description="Сотрудник вводит полученный OTP. Бот (аутентифицированный по API-ключу) "

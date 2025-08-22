@@ -2,12 +2,11 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.models.account import Account
 from app.models.otp_code import OtpCode
 from app.schemas.otp_code import OtpCodeCreate
 from app.services.otp_code import OtpCodeService
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class TestOtpCodeServiceIntegration:

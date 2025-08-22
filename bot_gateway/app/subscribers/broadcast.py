@@ -1,6 +1,7 @@
 from aiogram import Bot
-from shared.schemas.schemas import BroadcastTask
 from app.broker import faststream_router
+
+from shared.schemas.schemas import BroadcastTask
 
 
 @faststream_router.subscriber("broadcast_tasks")

@@ -1,15 +1,14 @@
 import datetime
 from typing import TYPE_CHECKING, Optional
 
+from app.db.base import Base
+from app.enums import OtpPurposeEnum
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import (  # Используем JSONB для лучшей производительности с JSON
     JSONB,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Enum as SQLAlchemyEnum
-
-from app.db.base import Base
-from app.enums import OtpPurposeEnum
 
 if TYPE_CHECKING:
     from .account import Account

@@ -1,7 +1,6 @@
 from unittest.mock import Mock
 
 import pytest
-
 from app.models.account import Account as AccountModel
 from app.models.company import Company
 from app.schemas.backoffice_dashboard import DashboardResponse

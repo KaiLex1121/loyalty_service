@@ -1,12 +1,11 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.dao.base import BaseDAO
 from app.enums import OtpPurposeEnum
 from app.models.otp_code import OtpCode
 from app.schemas.otp_code import OtpCodeCreate, OtpCodeUpdate
+from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class OtpCodeDAO(BaseDAO[OtpCode, OtpCodeCreate, OtpCodeUpdate]):
