@@ -69,7 +69,9 @@ class EmployeeAuthService:
         # logger.info(f"Запрос OTP для сотрудника: тел. {work_phone_number}, компания ID {bot_company_id}")
 
         # 1. Найти EmployeeRole по рабочему номеру телефона и ID компании бота
-        print(f"Searching for employee with phone {work_phone_number} in company ID {bot_company_id}")
+        print(
+            f"Searching for employee with phone {work_phone_number} in company ID {bot_company_id}"
+        )
         employee_role = (
             await self.dao.employee_role.get_by_work_phone_and_company_id_with_account(
                 session, work_phone_number=work_phone_number, company_id=bot_company_id
@@ -130,7 +132,6 @@ class EmployeeAuthService:
         # logger.info(f"OTP успешно запрошен для EmployeeRole ID {employee_role.id} (Account ID {employee_role.account_id}).")
         return employee_role  # Возвращаем EmployeeRole, чтобы API мог вернуть какие-то данные, если нужно
 
-
     async def verify_otp_and_create_token(
         self,
         session: AsyncSession,
@@ -152,7 +153,8 @@ class EmployeeAuthService:
         )
         if not employee_role:
             raise EmployeeNotFoundInCompanyForLoginException(
-                work_phone_number=verify_data.work_phone_number, company_id=bot_company_id
+                work_phone_number=verify_data.work_phone_number,
+                company_id=bot_company_id,
             )
         if not employee_role.account:  # Должен быть загружен
             raise Exception(

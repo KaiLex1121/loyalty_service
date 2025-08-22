@@ -1,4 +1,3 @@
-from fastapi import APIRouter
 from app.api.v1.endpoints.admin import company_tariff_plans
 from app.api.v1.endpoints.external import (
     backoffice_auth,
@@ -17,10 +16,10 @@ from app.api.v1.endpoints.external import (
 )
 from app.api.v1.endpoints.internal import (
     internal_customers,
+    internal_employees,
     internal_telegram_bots,
-    internal_employees
 )
-
+from fastapi import APIRouter
 
 api_router_v1 = APIRouter()
 

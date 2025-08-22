@@ -29,7 +29,5 @@ class MainMenuKeyboards:
     )
 
     back_to_main_menu_keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [MainMenuButtons.to_main_menu]
-        ]
+        inline_keyboard=[[MainMenuButtons.to_main_menu]]
     )

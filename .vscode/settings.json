@@ -20,8 +20,9 @@
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.diagnosticMode": "openFilesOnly",
   "python.analysis.extraPaths": [
-      "./src",
-      "./lib"
+    "./src",
+    "./lib",
+    "./shared"
   ],
 
 }

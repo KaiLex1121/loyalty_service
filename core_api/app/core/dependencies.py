@@ -7,12 +7,10 @@ from app.core.security import (
     internal_api_key_header,
     oauth2_scheme_backoffice,
 )
-from shared.utils.security import verify_token
 from app.core.settings import AppSettings, get_settings
 from app.dao.holder import HolderDAO
 from app.db.session import create_pool
 from app.enums import UserAccessLevelEnum
-from shared.enums.telegram_bot_enums import BotTypeEnum
 from app.exceptions.common import (
     ForbiddenException,
     NotFoundException,
@@ -29,7 +27,6 @@ from app.models.promotions.promotion import Promotion
 from app.models.subscription import Subscription
 from app.models.telegram_bot import TelegramBot
 from app.models.user_role import UserRole
-from shared.schemas.schemas import TokenPayload
 from app.services.account import AccountService
 from app.services.backoffice_auth import AuthService
 from app.services.backoffice_dashboard import DashboardService
@@ -56,6 +53,10 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
+
+from shared.enums.telegram_bot_enums import BotTypeEnum
+from shared.schemas.schemas import TokenPayload
+from shared.utils.security import verify_token
 
 logger = get_logger(__name__)
 
@@ -121,12 +122,52 @@ async def get_backoffice_token_payload(
             headers={"WWW-Authenticate": oauth2_scheme_backoffice.scheme_name},
         )
 
-    token_data = verify_token(token=token, secret_key=settings.SECURITY.JWT_SECRET_KEY, algorithm=settings.SECURITY.ALGORITHM)
+    token_data = verify_token(
+        token=token,
+        secret_key=settings.SECURITY.JWT_SECRET_KEY,
+        algorithm=settings.SECURITY.ALGORITHM,
+    )
 
     if token_data is None:
         raise credentials_exception
 
     return token_data
+
+
+async def get_current_employee_role(
+    session: AsyncSession = Depends(get_session),
+    dao: HolderDAO = Depends(get_dao),
+    http_credentials: HTTPAuthorizationCredentials = Depends(http_bearer_employee),
+    settings: AppSettings = Depends(get_settings),
+) -> EmployeeRole:
+    """
+    Проверяет JWT-токен сотрудника и возвращает его модель EmployeeRole.
+    Используется для защиты внутренних эндпоинтов, вызываемых Bot Gateway.
+    """
+    if not http_credentials:
+        raise UnauthorizedException("Auth credentials are not provided")
+
+    token = http_credentials.credentials
+    payload = verify_token(
+        token=token,
+        secret_key=settings.SECURITY.JWT_SECRET_KEY,
+        algorithm=settings.SECURITY.ALGORITHM,
+    )
+    if not payload or "employee_bot_user" not in payload.scopes:
+        raise UnauthorizedException(
+            "Invalid or expired token, or missing required scope."
+        )
+
+    try:
+        employee_role_id = int(payload.sub)
+    except (ValueError, TypeError):
+        raise UnauthorizedException("Invalid token payload subject.")
+
+    employee = await dao.employee_role.get_by_id_with_details(session, employee_role_id)
+    if not employee or not employee.account or not employee.account.is_active:
+        raise UnauthorizedException("Employee not found or inactive.")
+
+    return employee
 
 
 async def get_employee_token_payload(
@@ -151,7 +192,11 @@ async def get_employee_token_payload(
             detail="Токен отсутствует",
             headers={"WWW-Authenticate": http_bearer_employee.scheme_name},
         )
-    token_data = verify_token(token=token, secret_key=settings.SECURITY.JWT_SECRET_KEY, algorithm=settings.SECURITY.ALGORITHM)
+    token_data = verify_token(
+        token=token,
+        secret_key=settings.SECURITY.JWT_SECRET_KEY,
+        algorithm=settings.SECURITY.ALGORITHM,
+    )
 
     if token_data is None:
         raise credentials_exception

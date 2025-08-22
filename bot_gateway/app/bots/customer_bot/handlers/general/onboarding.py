@@ -1,4 +1,5 @@
 from typing import Union
+
 from aiogram import F, Router, types
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -6,10 +7,10 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from app.api_client import CoreApiClient
 from app.bots.customer_bot.keyboards.main_menu import MainMenuKeyboards
-
 from app.bots.customer_bot.keyboards.onboarding import OnboardingKeyboards
 from app.bots.customer_bot.states.general import OnboardingDialogStates
 from app.bots.shared.filters.bot_type_filter import BotTypeFilter
+
 from shared.enums.telegram_bot_enums import BotTypeEnum
 
 router = Router()
@@ -17,18 +18,19 @@ router.message.filter(BotTypeFilter(bot_type=BotTypeEnum.CUSTOMER))
 router.callback_query.filter(BotTypeFilter(bot_type=BotTypeEnum.CUSTOMER))
 
 
-
 @router.message(CommandStart())
 @router.callback_query(F.data == "return_to_start")
 async def handle_pressing_start(
-    event: Union[Message, CallbackQuery], company_id: int, company_name: str, state: FSMContext, api_client: CoreApiClient
+    event: Union[Message, CallbackQuery],
+    company_id: int,
+    company_name: str,
+    state: FSMContext,
+    api_client: CoreApiClient,
 ):
     telegram_id = event.from_user.id
 
     # 1. Проверяем, зарегистрирован ли уже пользователь
-    customer_profile = await api_client.get_customer_profile(
-        telegram_id, company_id
-    )
+    customer_profile = await api_client.get_customer_profile(telegram_id, company_id)
 
     if isinstance(event, Message):
         if customer_profile:
@@ -84,7 +86,12 @@ async def handle_pressing_decline_personal_data_consent(
 
 
 @router.message(F.contact, StateFilter(OnboardingDialogStates.WAITING_FOR_THE_NUMBER))
-async def handle_pressing_share_contact(message: types.Message, company_id: int, state: FSMContext, api_client: CoreApiClient):
+async def handle_pressing_share_contact(
+    message: types.Message,
+    company_id: int,
+    state: FSMContext,
+    api_client: CoreApiClient,
+):
     """
     Хендлер, который срабатывает, когда пользователь делится своим контактом.
     """

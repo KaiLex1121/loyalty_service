@@ -6,8 +6,8 @@ from aiogram.types import CallbackQuery, Message
 from app.bots.customer_bot.keyboards.main_menu import MainMenuKeyboards
 from app.bots.customer_bot.states.general import MainDialogStates
 
-
 router = Router()
+
 
 @router.message()
 async def message_echo(message: Message, state: FSMContext):

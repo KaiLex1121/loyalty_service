@@ -71,6 +71,7 @@ def create_access_token(
     )
     return encoded_jwt
 
+
 def generate_otp(settings: AppSettings) -> str:
     settings.SECURITY.OTP_LENGTH
     # return "".join(secrets.choice("0123456789") for _ in range(length))

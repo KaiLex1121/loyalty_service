@@ -2,9 +2,10 @@ import enum
 from typing import TYPE_CHECKING
 
 from app.db.base import Base
-from shared.enums.telegram_bot_enums import BotTypeEnum
 from sqlalchemy import Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from shared.enums.telegram_bot_enums import BotTypeEnum
 
 if TYPE_CHECKING:
     from app.models.company import Company

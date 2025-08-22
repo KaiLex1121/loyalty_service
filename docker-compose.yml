@@ -3,42 +3,41 @@ version: '3.8'
 services:
   core_api:
     build:
-      context: . # <-- ИЗМЕНЕНИЕ: Контекст теперь - корень проекта
-      dockerfile: core_api/Dockerfile # <-- НОВОЕ: Явно указываем путь к Dockerfile
+      context: .
+      dockerfile: core_api/Dockerfile
     image: "loyalty_core_api:latest"
     ports:
       - "8000:8000"
     volumes:
       - ./core_api:/app_root
-      - ./shared:/app_root/shared
+      - ./shared:/shared   # монтируем пакет shared в режиме разработки
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     env_file: .env
     restart: on-failure
     depends_on:
       pg_database:
-        condition: service_started # Для БД достаточно этого
+        condition: service_started
       rabbitmq:
-        condition: service_healthy # <-- ИЗМЕНЕНИЕ: Ждем, пока RabbitMQ станет "здоров"
+        condition: service_healthy
 
   bot_gateway:
     build:
-      context: . # <-- ИЗМЕНЕНИЕ: Контекст теперь - корень проекта
-      dockerfile: bot_gateway/Dockerfile # <-- НОВОЕ: Явно указываем путь к Dockerfile
-
+      context: .
+      dockerfile: bot_gateway/Dockerfile
     image: "loyalty_bot_gateway:latest"
     ports:
       - "8001:8001"
     volumes:
-      - ./bot_gateway/app:/app/app
-      - ./shared:/shared # Монтируем общие схемы
+      - ./bot_gateway/app:/app_root/app
+      - ./shared:/shared   # монтируем пакет shared в режиме разработки
     command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
     env_file: .env
     restart: on-failure
     depends_on:
       pg_database:
-        condition: service_started # Для БД достаточно этого
+        condition: service_started
       rabbitmq:
-        condition: service_healthy # <-- ИЗМЕНЕНИЕ: Ждем, пока RabbitMQ станет "здоров"
+        condition: service_healthy
 
   rabbitmq:
     image: rabbitmq:3.12-management
@@ -61,14 +60,25 @@ services:
     restart: always
     volumes:
       - pg_data:/var/lib/postgresql/data
-    command: "postgres -c max_connections=150
-            -c shared_buffers=512MB -c effective_cache_size=1536MB
-            -c maintenance_work_mem=128MB -c checkpoint_completion_target=0.9 -c wal_buffers=16MB
-            -c default_statistics_target=100 -c random_page_cost=1.1 -c effective_io_concurrency=200
-            -c work_mem=3495kB -c min_wal_size=1GB -c max_wal_size=4GB -c max_worker_processes=2
-            -c max_parallel_workers_per_gather=1 -c max_parallel_workers=2 -c max_parallel_maintenance_workers=1"
+    command: >
+      postgres -c max_connections=150
+               -c shared_buffers=512MB
+               -c effective_cache_size=1536MB
+               -c maintenance_work_mem=128MB
+               -c checkpoint_completion_target=0.9
+               -c wal_buffers=16MB
+               -c default_statistics_target=100
+               -c random_page_cost=1.1
+               -c effective_io_concurrency=200
+               -c work_mem=3495kB
+               -c min_wal_size=1GB
+               -c max_wal_size=4GB
+               -c max_worker_processes=2
+               -c max_parallel_workers_per_gather=1
+               -c max_parallel_workers=2
+               -c max_parallel_maintenance_workers=1
     env_file:
-      - '.env'
+      - ".env"
 
   redis_database:
     image: redis:7
@@ -77,23 +87,6 @@ services:
       - ".env"
     volumes:
       - redis_data:/data
-
-
-  # pg_database_test:
-  #   image: postgres:16
-  #   ports:
-  #     - "5433:5432"
-  #   restart: always
-  #   tmpfs:
-  #         - /var/lib/postgresql/data  # БД в памяти для скорости
-  #   command: "postgres -c max_connections=150
-  #           -c shared_buffers=512MB -c effective_cache_size=1536MB
-  #           -c maintenance_work_mem=128MB -c checkpoint_completion_target=0.9 -c wal_buffers=16MB
-  #           -c default_statistics_target=100 -c random_page_cost=1.1 -c effective_io_concurrency=200
-  #           -c work_mem=3495kB -c min_wal_size=1GB -c max_wal_size=4GB -c max_worker_processes=2
-  #           -c max_parallel_workers_per_gather=1 -c max_parallel_workers=2 -c max_parallel_maintenance_workers=1"
-  #   env_file:
-  #     - '.env.test'
 
 volumes:
   rabbitmq_data:

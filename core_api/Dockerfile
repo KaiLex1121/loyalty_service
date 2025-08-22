@@ -1,17 +1,18 @@
 FROM python:3.12-slim
 
-# Создаем корневую директорию для нашего приложения
 WORKDIR /app_root
-
-# Устанавливаем переменную окружения PYTHONPATH.
-# Это скажет Python: "Когда ищешь модули, загляни еще и в /app_root"
 ENV PYTHONPATH=/app_root
 
-# Копируем requirements.txt в корень, чтобы не инвалидировать кэш
+# 1. Устанавливаем зависимости сервиса
 COPY core_api/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем код приложения в корень /app_root
-COPY core_api /app_root
-# Копируем общие схемы
-COPY shared /app_root/shared
+# 2. Копируем и устанавливаем shared
+COPY shared /shared
+RUN pip install -e /shared
+
+# 3. Копируем код сервиса
+COPY core_api/app /app_root/app
+
+# 4. Запускаем uvicorn по умолчанию
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

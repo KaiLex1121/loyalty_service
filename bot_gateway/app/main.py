@@ -3,19 +3,18 @@ import logging
 from contextlib import asynccontextmanager
 
 from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import Update
 from app.api_client import CoreApiClient
+from app.bots.customer_bot.handlers import setup_customer_bot_handlers
+from app.bots.employee_bot.handlers import setup_employee_bot_handlers
+from app.bots.shared.middlewares import setup_shared_middlewares
 from app.broker import faststream_router
 from app.cache_client import CacheClient
 from app.core.settings import settings
 from fastapi import Depends, FastAPI, HTTPException, Request
-from app.bots.employee_bot.handlers import setup_employee_bot_handlers
-from shared.schemas.schemas import BotInfo
-from app.core.settings import settings
-from aiogram.fsm.storage.redis import RedisStorage
-from app.bots.customer_bot.handlers import setup_customer_bot_handlers
-from app.bots.shared.middlewares import setup_shared_middlewares
 
+from shared.schemas.schemas import BotInfo
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -30,7 +29,9 @@ def create_dispatcher() -> Dispatcher:
 
     setup_customer_bot_handlers(dp)
     setup_employee_bot_handlers(dp)
-    setup_shared_middlewares(dp, cache_client=_cache_client, api_client=_core_api_client)
+    setup_shared_middlewares(
+        dp, cache_client=_cache_client, api_client=_core_api_client
+    )
 
     return dp
 
@@ -87,6 +88,7 @@ def create_app():
 
 app = create_app()
 dp = create_dispatcher()
+
 
 # --- 4. HTTP маршруты ---
 @app.post("/telegram/bot{token}")

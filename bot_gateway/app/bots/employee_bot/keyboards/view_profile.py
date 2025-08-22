@@ -1,4 +1,5 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from app.bots.employee_bot.keyboards.main_menu import MainMenuButtons
 
 
 class ViewProfileButtons:
@@ -13,13 +14,14 @@ class ViewProfileButtons:
         text="В главное меню", callback_data="to_main_menu"
     )
 
+    logout = InlineKeyboardButton(text="Выйти из профиля", callback_data="logout")
+
 
 class ViewProfileKeyboards:
 
     view_profile_keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [ViewProfileButtons.show_balance],
-            [ViewProfileButtons.show_operations],
+            [ViewProfileButtons.logout],
             [ViewProfileButtons.to_main_menu],
         ]
     )

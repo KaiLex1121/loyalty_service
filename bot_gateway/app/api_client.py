@@ -43,7 +43,9 @@ class CoreApiClient:
                 )
             except httpx.RequestError as e:
                 # Ошибка сети (не удалось подключиться, таймаут). Тоже сбой.
-                raise pybreaker.CircuitBreakerError(f"Network error during API call: {e}")
+                raise pybreaker.CircuitBreakerError(
+                    f"Network error during API call: {e}"
+                )
 
     async def _get(self, path: str, **kwargs):
         """Вспомогательная обертка для GET-запросов."""
@@ -91,7 +93,9 @@ class CoreApiClient:
 
     async def get_active_promotions(self, company_id: int):
         """Получает активные акции для компании."""
-        return await self._get("/internal/customers/promotions", params={"company_id": company_id})
+        return await self._get(
+            "/internal/customers/promotions", params={"company_id": company_id}
+        )
 
     async def request_employee_otp(self, phone_number: str, company_id: int):
         """Запрашивает OTP для входа сотрудника."""
@@ -102,7 +106,9 @@ class CoreApiClient:
             json=payload,
         )
 
-    async def verify_employee_otp(self, phone_number: str, otp_code: str, company_id: int):
+    async def verify_employee_otp(
+        self, phone_number: str, otp_code: str, company_id: int
+    ):
         """Проверяет OTP и получает JWT для сотрудника."""
         payload = {"work_phone_number": phone_number, "otp_code": otp_code}
         return await self._post(

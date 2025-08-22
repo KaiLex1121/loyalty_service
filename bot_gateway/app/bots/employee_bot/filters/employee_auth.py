@@ -1,9 +1,10 @@
-from aiogram.filters import BaseFilter
-from aiogram.types import Message
 from typing import Union
-from aiogram.fsm.context import FSMContext
 
+from aiogram.filters import BaseFilter
+from aiogram.fsm.context import FSMContext
+from aiogram.types import Message
 from app.bots.employee_bot.states.general import EmployeeAuthStates
+
 from shared.enums.telegram_bot_enums import BotTypeEnum
 
 

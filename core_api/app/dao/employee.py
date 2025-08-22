@@ -194,13 +194,12 @@ class EmployeeRoleDAO(BaseDAO[EmployeeRole, EmployeeCreate, EmployeeUpdate]):
             .where(
                 self.model.work_phone_number == phone_number,
                 self.model.company_id == company_id,
-                self.model.deleted_at.is_(None)
+                self.model.deleted_at.is_(None),
             )
-            .options(selectinload(self.model.account)) # Загружаем связанный Account
+            .options(selectinload(self.model.account))  # Загружаем связанный Account
         )
         result = await session.execute(stmt)
         return result.scalars().first()
-
 
     async def get_by_id_with_details_including_deleted(
         self, session: AsyncSession, *, employee_role_id: int

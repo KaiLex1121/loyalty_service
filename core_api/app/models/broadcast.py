@@ -1,10 +1,11 @@
 import enum
 
 from app.db.base import Base
-from shared.enums.telegram_bot_enums import BroadcastStatusEnum
 from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy import ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column
+
+from shared.enums.telegram_bot_enums import BroadcastStatusEnum
 
 
 class Broadcast(Base):

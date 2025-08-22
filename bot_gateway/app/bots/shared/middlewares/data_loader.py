@@ -2,13 +2,11 @@ from typing import Any, Awaitable, Callable
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
-from app.cache_client import CacheClient
 from app.api_client import CoreApiClient
+from app.cache_client import CacheClient
 
 
 class LoadDataMiddleware(BaseMiddleware):
-
-
 
     def __init__(self, cache_client: CacheClient, api_client: CoreApiClient) -> None:
         self.cache = cache_client

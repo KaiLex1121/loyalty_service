@@ -51,12 +51,12 @@ class SecuritySettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="SECURITY_")
 
+
 class AppSettings(BaseSettings):
     API: ApiSettings
     REDIS: RedisSettings
     RABBITMQ: RabbitMQSettings
     SECURITY: SecuritySettings
-
 
     model_config = SettingsConfigDict(
         env_file=".env.test" if os.getenv("TEST_MODE") == "true" else ".env",

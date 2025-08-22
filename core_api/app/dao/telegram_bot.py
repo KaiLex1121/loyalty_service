@@ -1,7 +1,6 @@
 from typing import List, Optional
 
 from app.dao.base import BaseDAO
-from shared.enums.telegram_bot_enums import BotTypeEnum
 from app.models.telegram_bot import TelegramBot
 from app.schemas.company_telegram_bot import (  # Эти схемы Pydantic нужно будет создать
     TelegramBotCreateInternal,
@@ -10,6 +9,8 @@ from app.schemas.company_telegram_bot import (  # Эти схемы Pydantic н�
 from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+
+from shared.enums.telegram_bot_enums import BotTypeEnum
 
 
 class TelegramBotDAO(

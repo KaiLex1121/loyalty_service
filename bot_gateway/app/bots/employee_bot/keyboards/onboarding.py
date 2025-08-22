@@ -1,13 +1,19 @@
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
+from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
+)
 
 
 class OnboardingButtons:
 
-    share_contact = KeyboardButton(
-        text="Поделиться контактом", request_contact=True
+    share_contact = KeyboardButton(text="Поделиться контактом", request_contact=True)
+
+    return_to_start = InlineKeyboardButton(
+        text="Вернуться в начало", callback_data="return_to_start"
     )
 
-    return_to_start = InlineKeyboardButton(text="Вернуться в начало", callback_data="return_to_start")
 
 class OnboardingKeyboards:
 

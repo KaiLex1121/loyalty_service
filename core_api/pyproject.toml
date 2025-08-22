@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "core-api"
+version = "0.1.0"
+description = "Core API service"
+authors = ["Your Name <you@example.com>"]
+packages = [{ include = "app" }]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "0.115.14"
+sqlalchemy = "2.0.41"
+alembic = "1.16.2"
+redis = "6.2.0"
+asyncpg = "0.30.0"
+shared = { path = "../shared", develop = true }
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0"
+pytest-asyncio = "^1.0"
+black = "^25.0"
+isort = "^6.0"
+flake8 = "^7.0"
+mypy = "^1.15"

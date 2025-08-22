@@ -2,8 +2,9 @@ from datetime import datetime
 from typing import Any
 
 from app.enums import OtpPurposeEnum
-from shared.enums.telegram_bot_enums import BotTypeEnum
 from pydantic import BaseModel, Field
+
+from shared.enums.telegram_bot_enums import BotTypeEnum
 
 
 class TelegramBotBase(BaseModel):

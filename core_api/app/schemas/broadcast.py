@@ -1,7 +1,8 @@
 from datetime import datetime
 
-from shared.enums.telegram_bot_enums import BroadcastStatusEnum
 from pydantic import BaseModel, Field
+
+from shared.enums.telegram_bot_enums import BroadcastStatusEnum
 
 
 class BroadcastCreateInternal(BaseModel):
