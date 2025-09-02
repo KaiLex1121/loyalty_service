@@ -139,11 +139,12 @@ async def get_current_employee_role(
     dao: HolderDAO = Depends(get_dao),
     http_credentials: HTTPAuthorizationCredentials = Depends(http_bearer_employee),
     settings: AppSettings = Depends(get_settings),
-) -> EmployeeRole:
+) -> tuple[EmployeeRole, TokenPayload]:
     """
     Проверяет JWT-токен сотрудника и возвращает его модель EmployeeRole.
     Используется для защиты внутренних эндпоинтов, вызываемых Bot Gateway.
     """
+    print('Checking employee role...')
     if not http_credentials:
         raise UnauthorizedException("Auth credentials are not provided")
 
@@ -153,7 +154,7 @@ async def get_current_employee_role(
         secret_key=settings.SECURITY.JWT_SECRET_KEY,
         algorithm=settings.SECURITY.ALGORITHM,
     )
-    if not payload or "employee_bot_user" not in payload.scopes:
+    if not payload:
         raise UnauthorizedException(
             "Invalid or expired token, or missing required scope."
         )
@@ -167,7 +168,7 @@ async def get_current_employee_role(
     if not employee or not employee.account or not employee.account.is_active:
         raise UnauthorizedException("Employee not found or inactive.")
 
-    return employee
+    return employee, payload
 
 
 async def get_employee_token_payload(

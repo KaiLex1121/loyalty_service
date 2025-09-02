@@ -12,3 +12,4 @@ class MainDialogStates(StatesGroup):
 class OnboardingDialogStates(StatesGroup):
     WAITING_FOR_THE_NUMBER = State()
     WAITING_FOR_ACCEPTANCE = State()
+    WAITING_FOR_OUTLET_SELECTION = State()

@@ -40,3 +40,4 @@ class TokenPayload(BaseModel):
         None  # Для клиентского токена, чтобы знать контекст компании
     )
     account_id: Optional[int] = None  # Для клиентского токена, ID связанного Account
+    outlet_id: Optional[int] = None  # Для работника, ID связанного Outlet

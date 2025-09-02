@@ -4,7 +4,6 @@ from aiogram.types import CallbackQuery
 from app.api_client import CoreApiClient
 from app.bots.customer_bot.keyboards.main_menu import MainMenuKeyboards
 from app.bots.customer_bot.text.formatters.general import format_transaction_history
-from app.bots.employee_bot.filters.employee_auth import EmployeeAuthFilter
 from app.bots.employee_bot.keyboards.onboarding import OnboardingKeyboards
 from app.bots.employee_bot.states.general import OnboardingDialogStates
 from app.bots.shared.filters.bot_type_filter import BotTypeFilter

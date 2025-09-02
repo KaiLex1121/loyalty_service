@@ -44,13 +44,13 @@ async def handle_pressing_start(
             # Сценарий Б: Новый пользователь
             await event.answer(
                 text=f"Добро пожаловать в программу лояльности «{company_name}»!\n\n"
-                "Мы заботимся о вашей приватности, поэтому вы можете ознакомиться с политикой конфиденциальности по ссылке: <ссылка на политику конфиденциальности>.",
+                "Мы заботимся о вашей приватности, поэтому вы можете ознакомиться с политикой конфиденциальности по ссылке: политика приватности.",
                 reply_markup=OnboardingKeyboards.next_step_keyboard,
             )
     else:
         await event.message.edit_text(
             text=f"Добро пожаловать в программу лояльности «{company_name}»!\n\n"
-            "Мы заботимся о вашей приватности, поэтому вы можете ознакомиться с политикой конфиденциальности по ссылке: <ссылка на политику конфиденциальности>.",
+            "Мы заботимся о вашей приватности, поэтому вы можете ознакомиться с политикой конфиденциальности по ссылке: политика приватности.",
             reply_markup=OnboardingKeyboards.next_step_keyboard,
         )
 
@@ -67,6 +67,7 @@ async def handle_pressing_next_step(callback: CallbackQuery, state: FSMContext):
 async def handle_pressing_accept_personal_data_consent(
     callback: CallbackQuery, state: FSMContext
 ):
+    await callback.message.delete()
     await callback.message.answer(
         text="Спасибо. Теперь, пожалуйста, поделитесь своим номером телефона.",
         reply_markup=OnboardingKeyboards.share_contact_keyboard,

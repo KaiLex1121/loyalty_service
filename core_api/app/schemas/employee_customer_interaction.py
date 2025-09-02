@@ -9,6 +9,9 @@ from pydantic import BaseModel, Field, field_validator
 class CustomerSearchByPhoneRequest(BaseModel):
     customer_phone_number: RussianPhoneNumber
 
+class AccrualRequestInternal(BaseModel):
+    customer_role_id: int
+    purchase_amount: decimal.Decimal = Field(..., gt=0, description="Сумма покупки, на которую начисляется кэшбэк")
 
 class AccrueCashbackRequest(CustomerSearchByPhoneRequest):
     purchase_amount: decimal.Decimal = Field(

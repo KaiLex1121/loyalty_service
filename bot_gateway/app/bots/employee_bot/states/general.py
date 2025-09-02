@@ -8,7 +8,10 @@ class MainDialogStates(StatesGroup):
 class OnboardingDialogStates(StatesGroup):
     WAITING_FOR_PHONE = State()
     WAITING_FOR_PHONE_CONFIRMATION = State()
+    WAITING_FOR_OUTLET_SELECTION = State()
 
 
-class EmployeeAuthStates(StatesGroup):
-    AUTHENTICATED_EMPLOYEE = State()
+class EmployeeActionsStates(StatesGroup): # <-- НОВАЯ ГРУППА СОСТОЯНИЙ
+    WAITING_FOR_CUSTOMER_PHONE = State()
+    WAITING_FOR_ACCRUAL_AMOUNT = State()
+    WAITING_FOR_SPENDING_AMOUNT = State()

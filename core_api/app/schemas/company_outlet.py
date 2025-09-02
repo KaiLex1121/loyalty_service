@@ -16,7 +16,7 @@ class OutletBase(BaseModel):
     name: str = Field(
         min_length=3, max_length=100, description="Название торговой точки"
     )
-    address: str = Field(
+    address: Optional[str] = Field(
         min_length=3, max_length=255, description="Адрес торговой точки"
     )
 

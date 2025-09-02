@@ -45,3 +45,18 @@ def format_promotions(promotions: list[dict]) -> list[str]:
         promo_messages.append(message)
 
     return promo_messages
+
+
+
+def format_customer_profile_for_employee(customer: dict) -> str:
+    """Форматирует профиль клиента для отображения сотруднику."""
+    full_name = customer.get("account", {}).get("full_name") or "Имя не указано"
+    phone_number = customer.get("account", {}).get("phone_number")
+
+    text = (
+        f"👤 <b>Профиль клиента</b>\n\n"
+        f"<b>ФИО:</b> {full_name}\n"
+        f"<b>Телефон:</b> {phone_number}\n"
+        f"<b>Баланс:</b> {customer['cashback_balance']} баллов"
+    )
+    return text

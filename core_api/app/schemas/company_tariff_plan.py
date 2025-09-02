@@ -16,9 +16,9 @@ class TariffPlanBase(BaseModel):
     currency: CurrencyEnum = CurrencyEnum.RUB
     billing_period: PaymentCycleEnum = PaymentCycleEnum.MONTHLY
 
-    max_outlets: Optional[int] = Field(default=1, ge=1, le=1)
-    max_employees: Optional[int] = Field(default=3, ge=3, le=3)
-    max_active_promotions: Optional[int] = Field(default=5, ge=5, le=5)
+    max_outlets: Optional[int] = Field(default=1, ge=1)
+    max_employees: Optional[int] = Field(default=3, ge=3)
+    max_active_promotions: Optional[int] = Field(default=5, ge=5)
     features: Optional[List[str]] = Field(default_factory=list)
 
     status: TariffStatusEnum = TariffStatusEnum.ACTIVE

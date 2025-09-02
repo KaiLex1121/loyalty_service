@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import Update
+from aiohttp import request
 from app.api_client import CoreApiClient
 from app.bots.customer_bot.handlers import setup_customer_bot_handlers
 from app.bots.employee_bot.handlers import setup_employee_bot_handlers
@@ -13,6 +14,8 @@ from app.broker import faststream_router
 from app.cache_client import CacheClient
 from app.core.settings import settings
 from fastapi import Depends, FastAPI, HTTPException, Request
+from aiogram.enums import ParseMode
+from aiogram.client.default import DefaultBotProperties
 
 from shared.schemas.schemas import BotInfo
 
@@ -24,7 +27,7 @@ _core_api_client = CoreApiClient()
 
 
 def create_dispatcher() -> Dispatcher:
-    fsm_storage = RedisStorage.from_url(settings.REDIS.REDIS_URI)
+    fsm_storage = RedisStorage(_cache_client.redis)
     dp = Dispatcher(storage=fsm_storage)
 
     setup_customer_bot_handlers(dp)
@@ -42,6 +45,7 @@ async def lifespan(app: FastAPI):
     # Инициализация клиентов
     app.state.api_client = _core_api_client
     app.state.cache_client = _cache_client
+    app.state.bots = {}
 
     try:
         active_bots_data = await app.state.api_client.get_active_bots()
@@ -55,6 +59,11 @@ async def lifespan(app: FastAPI):
             )
 
             await bot.set_webhook(webhook_url, drop_pending_updates=True)
+            app.state.bots[bot_info.token] = Bot(
+                token=bot_info.token,
+                default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+            )
+
             await bot.session.close()
 
     except Exception as e:
@@ -62,6 +71,7 @@ async def lifespan(app: FastAPI):
 
     yield
     await app.state.cache_client.close()
+    await app.state.api_client.close()
 
 
 # --- 2. Зависимости для FastAPI и FastStream ---
@@ -102,7 +112,13 @@ async def telegram_webhook(
             status_code=404, detail="Bot not registered or cache expired"
         )
     update_data = await request.json()
-    bot = Bot(token=token)
+    if token not in request.app.state.bots:
+        new_bot = Bot(
+            token=token,
+            default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+        )
+        request.app.state.bots[token] = new_bot
+    bot = request.app.state.bots[token]
     update = Update.model_validate(update_data, context={"bot": bot})
 
     try:

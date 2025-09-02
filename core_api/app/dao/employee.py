@@ -86,7 +86,6 @@ class EmployeeRoleDAO(BaseDAO[EmployeeRole, EmployeeCreate, EmployeeUpdate]):
     async def get_by_id_with_details(
         self,
         session: AsyncSession,
-        *,
         employee_role_id: int,
         include_deleted: bool = False,
     ) -> Optional[EmployeeRole]:
@@ -196,7 +195,10 @@ class EmployeeRoleDAO(BaseDAO[EmployeeRole, EmployeeCreate, EmployeeUpdate]):
                 self.model.company_id == company_id,
                 self.model.deleted_at.is_(None),
             )
-            .options(selectinload(self.model.account))  # Загружаем связанный Account
+            .options(
+                selectinload(self.model.account),  # Загружаем связанный Account
+                selectinload(self.model.assigned_outlets),  # Загружаем связанные торговые точки
+            )
         )
         result = await session.execute(stmt)
         return result.scalars().first()

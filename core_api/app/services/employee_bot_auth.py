@@ -1,5 +1,5 @@
 # backend/services/employee_auth.py
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 from app.core.security import (
     create_access_token,
@@ -24,6 +24,7 @@ from app.exceptions.services.employee_auth import (
 from app.models.account import Account  # Нужен для AccountService и для типа
 from app.models.employee_role import EmployeeRole
 from app.schemas.employee_bot_auth import (  # Схема для верификации OTP сотрудника
+    EmployeeAuthResponse,
     EmployeeOtpVerify,
 )
 from app.schemas.otp_code import OtpCodeCreate
@@ -37,6 +38,10 @@ from app.services.otp_sending import (  # Или ваш реальный сер�
 )
 from asyncpg import InternalServerError
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.exceptions.common import ForbiddenException, UnauthorizedException
+from app.exceptions.services import employee
+from app.schemas.company_outlet import OutletResponseForEmployee
 
 # from backend.core.logger import get_logger
 # logger = get_logger(__name__)
@@ -54,6 +59,16 @@ class EmployeeAuthService:
         self.otp_sending_service = otp_sending_service
         self.settings = settings
         self.dao = dao
+
+    def _create_employee_token(self, employee_id: int, outlet_id: int) -> str:
+        """Вспомогательный метод для создания JWT."""
+        token_data = {
+            "sub": str(employee_id),
+            "outlet_id": outlet_id # <-- ВКЛЮЧАЕМ ID ТОЧКИ В ТОКЕН
+        }
+        scopes = ["employee_bot_user"]
+        return create_access_token(data=token_data, settings=self.settings, scopes=scopes)
+
 
     async def request_otp_for_employee_login(
         self,
@@ -132,12 +147,12 @@ class EmployeeAuthService:
         # logger.info(f"OTP успешно запрошен для EmployeeRole ID {employee_role.id} (Account ID {employee_role.account_id}).")
         return employee_role  # Возвращаем EmployeeRole, чтобы API мог вернуть какие-то данные, если нужно
 
-    async def verify_otp_and_create_token(
+    async def verify_employee_otp(
         self,
         session: AsyncSession,
         verify_data: EmployeeOtpVerify,  # Содержит work_phone_number и otp_code
         bot_company_id: int,  # ID компании, к которой привязан бот сотрудников
-    ) -> TokenResponse:
+    ) -> dict:
         """
         Проверяет OTP сотрудника и в случае успеха выдает JWT токен.
         """
@@ -145,9 +160,9 @@ class EmployeeAuthService:
 
         # 1. Найти EmployeeRole (и связанный Account)
         employee_role = (
-            await self.dao.employee_role.get_by_work_phone_and_company_id_with_account(
+            await self.dao.employee_role.find_by_work_phone_and_company_id(
                 session,
-                work_phone_number=verify_data.work_phone_number,
+                phone_number=verify_data.work_phone_number,
                 company_id=bot_company_id,
             )
         )
@@ -163,7 +178,7 @@ class EmployeeAuthService:
         if not employee_role.account.is_active:
             raise EmployeeAccountInactiveException(account_id=employee_role.account.id)
 
-        # 2. Проверка OTP (используем методы из OtpCodeService, как в вашем AuthService)
+        # 2. Проверка OTP
         active_otp_code_model = await self.dao.otp_code.get_active_otp_by_account_and_purpose(
             session,
             account_id=employee_role.account_id,
@@ -191,23 +206,37 @@ class EmployeeAuthService:
             session, dao=self.dao, otp_obj=active_otp_code_model
         )
 
-        # 3. Генерация JWT токена
-        # Субъектом токена будет employee_role.id
-        # В claims можно добавить company_id и account_id для удобства
-        token_payload_data = {
-            "sub": str(employee_role.id),
-            "account_id": employee_role.account_id,
-            "company_id": employee_role.company_id,
-        }
+        # 3. Генерация JWT токена или возвращение списка точек
+        outlets = employee_role.assigned_outlets
+        if len(outlets) == 1:
+            # Сценарий А: Одна точка, сразу создаем токен
+            token = self._create_employee_token(employee_role.id, outlets[0].id)
+            return {"access_token": token}
+        elif len(outlets) > 1:
+            # Сценарий Б: Несколько точек, возвращаем список
+            return {
+                "outlets": [OutletResponseForEmployee(id=outlet.id, name=outlet.name, address=outlet.address) for outlet in outlets]
+            }
+        else:
+            # Нет привязанных точек - входить некуда
+            raise UnauthorizedException("Employee is not assigned to any outlet.")
 
-        jwt_scopes = [
-            "employee.workspace:bot"
-        ]  # Скоуп для сотрудника, работающего в боте
-        # Можно добавить доп. скоупы на основе employee_role.position, если есть разные уровни доступа у сотрудников
-
-        access_token = create_access_token(
-            data=token_payload_data, settings=self.settings, scopes=jwt_scopes
+    async def select_outlet_and_create_token(
+        self, session: AsyncSession, phone_number: str, outlet_id: int, company_id: int
+    ) -> EmployeeAuthResponse:
+        """
+        Проверяет, что сотрудник имеет доступ к выбранной точке, и создает токен.
+        """
+        employee = await self.dao.employee_role.find_by_work_phone_and_company_id(
+            session, phone_number, company_id
         )
+        if not employee:
+            raise UnauthorizedException("Invalid credentials.")
 
-        # logger.info(f"Сотрудник EmployeeRole ID {employee_role.id} успешно аутентифицирован. Токен выдан.")
-        return TokenResponse(access_token=access_token, token_type="bearer")
+        # Проверяем, что выбранный outlet_id действительно принадлежит сотруднику
+        if outlet_id not in [outlet.id for outlet in employee.assigned_outlets]:
+            raise ForbiddenException("Employee does not have access to this outlet.")
+
+        token = self._create_employee_token(employee.id, outlet_id)
+
+        return EmployeeAuthResponse(access_token=token)

@@ -4,11 +4,11 @@ from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from app.api_client import CoreApiClient
-from app.bots.employee_bot.filters.employee_auth import EmployeeAuthFilter
 from app.bots.employee_bot.keyboards.main_menu import MainMenuKeyboards
 from app.bots.employee_bot.keyboards.onboarding import OnboardingKeyboards
 from app.bots.employee_bot.keyboards.view_profile import ViewProfileKeyboards
 from app.bots.employee_bot.states.general import (
+    EmployeeActionsStates,
     MainDialogStates,
     OnboardingDialogStates,
 )
@@ -43,10 +43,16 @@ async def handle_show_profile(
     company_id: int,
     api_client: CoreApiClient,
 ):
-    profile = await api_client.get_customer_profile(callback.from_user.id, company_id)
-    if profile:
+    customer_profile = await api_client.get_customer_profile(callback.from_user.id, company_id)
+
+    if customer_profile:
+        data = await state.get_data()
+        current_outlet = data.get("current_outlet")
+        current_number = data.get("phone_number")
+        text = f"Ваш профиль:\n\nНомер телефона: {current_number}\nТорговая точка: {current_outlet.get('name')}"
+
         await callback.message.edit_text(
-            f"Ваш профиль:", reply_markup=ViewProfileKeyboards.view_profile_keyboard
+            text=text, reply_markup=ViewProfileKeyboards.view_profile_keyboard
         )
     else:
         await callback.message.edit_text(
@@ -59,4 +65,4 @@ async def handle_find_customer(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer(
         "Введите номер телефона клиента",
     )
-    await state.set_state(OnboardingDialogStates.WAITING_FOR_PHONE)
+    await state.set_state(EmployeeActionsStates.WAITING_FOR_CUSTOMER_PHONE)

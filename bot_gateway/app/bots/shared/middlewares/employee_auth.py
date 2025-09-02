@@ -1,11 +1,15 @@
 from typing import Any, Awaitable, Callable, Dict
 
 from aiogram import BaseMiddleware
-from aiogram.types import CallbackQuery, Message, TelegramObject
+from aiogram.types import (
+    Update,
+    Message,
+    CallbackQuery,
+    TelegramObject,
+)
 from app.bots.employee_bot.keyboards.onboarding import OnboardingKeyboards
 from app.bots.employee_bot.states.general import OnboardingDialogStates
 from app.core.settings import settings
-
 from shared.utils.security import verify_token
 
 
@@ -19,9 +23,12 @@ class AuthMiddleware(BaseMiddleware):
     async def __call__(
         self,
         handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-        event: TelegramObject,
+        event: Update,
         data: Dict[str, Any],
     ) -> Any:
+        bot_type = data.get("bot_type")
+        if bot_type != "employee":
+            return await handler(event, data)
 
         user = data.get("event_from_user")
         if not user:
@@ -37,25 +44,26 @@ class AuthMiddleware(BaseMiddleware):
         # --- Сценарий 1: Пользователь не авторизован (нет токена) ---
         if not jwt_token:
             current_state = await state.get_state()
-            is_allowed_unauthenticated_action = False
-            is_start_command = event.message.text == "/start"
+            is_start_command = False
             is_in_auth_flow = current_state in [
                 OnboardingDialogStates.WAITING_FOR_PHONE_CONFIRMATION,
+                OnboardingDialogStates.WAITING_FOR_OUTLET_SELECTION,
             ]
-            is_contact_sharing = event.message.contact is not None
+            is_contact_sharing = False
+
+            if isinstance(event, Update) and event.message:
+                is_start_command = event.message.text == "/start"
+                is_contact_sharing = event.message.contact is not None
 
             is_allowed_unauthenticated_action = (
                 is_start_command or is_in_auth_flow or is_contact_sharing
             )
-            # Если действие не разрешено, блокируем его.
+
             if not is_allowed_unauthenticated_action:
                 await state.set_state(OnboardingDialogStates.WAITING_FOR_PHONE)
-                await event.message.answer(
-                    "Для входа, пожалуйста, подтвердите ваш рабочий номер телефона.",
-                    reply_markup=OnboardingKeyboards.share_contact_keyboard,
-                )
+                await self._send_auth_request(event)
                 return
-            # Если действие разрешено (это /start или контакт), просто пропускаем дальше.
+
             return await handler(event, data)
 
         # --- Сценарий 2: Токен есть, проверяем его валидность ---
@@ -66,13 +74,9 @@ class AuthMiddleware(BaseMiddleware):
         )
 
         if not payload:
-            # Токен невалиден или просрочен
-
             await state.set_state(OnboardingDialogStates.WAITING_FOR_PHONE)
-            await event.message.answer(
-                "Для входа, пожалуйста, подтвердите ваш рабочий номер телефона.",
-                reply_markup=OnboardingKeyboards.share_contact_keyboard,
-            )
+            await state.update_data(jwt_token=None)
+            await self._send_auth_request(event)
             return
 
         # --- Сценарий 3: Успешная авторизация ---
@@ -80,3 +84,20 @@ class AuthMiddleware(BaseMiddleware):
         data["token_payload"] = payload
 
         return await handler(event, data)
+
+    async def _send_auth_request(self, event: Update):
+        """
+        Унифицированная отправка сообщения пользователю в зависимости от типа апдейта.
+        """
+        text = "Для входа, пожалуйста, подтвердите ваш рабочий номер телефона."
+
+        if event.message:  # обычное сообщение
+            await event.message.answer(text, reply_markup=OnboardingKeyboards.share_contact_keyboard)
+
+        elif event.callback_query:  # колбэк-кнопка
+            cq: CallbackQuery = event.callback_query
+            if cq.message:
+                await cq.message.answer(text, reply_markup=OnboardingKeyboards.share_contact_keyboard)
+            else:
+                # редкий случай: callback без message (inline-кнопки в другом чате)
+                await cq.answer(text, show_alert=True)
