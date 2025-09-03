@@ -3,14 +3,14 @@ from typing import Optional
 
 from app.enums import OtpPurposeEnum  # Используем существующий или дополняем
 from app.models.otp_code import OtpCode
+from app.schemas.company_outlet import OutletResponseForEmployee
 from app.schemas.token import TokenResponse
-from app.utils.validators import (  # Используем вашу схему ответа с токеном
+from pydantic import BaseModel, Field, constr
+
+from shared.utils.validators import (  # Используем вашу схему ответа с токеном
     OTPCode,
     RussianPhoneNumber,
 )
-from pydantic import BaseModel, Field, constr
-
-from app.schemas.company_outlet import OutletResponseForEmployee
 
 
 # --- Схемы для OTP аутентификации сотрудника ---
@@ -22,9 +22,11 @@ class EmployeeOtpVerify(BaseModel):
     work_phone_number: RussianPhoneNumber
     otp_code: OTPCode
 
+
 class EmployeeOutletSelectRequest(BaseModel):
-    phone_number: str # Для идентификации сессии
+    phone_number: str  # Для идентификации сессии
     outlet_id: int
+
 
 class EmployeeAuthResponse(BaseModel):
     access_token: str

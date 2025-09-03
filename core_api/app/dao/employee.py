@@ -97,6 +97,7 @@ class EmployeeRoleDAO(BaseDAO[EmployeeRole, EmployeeCreate, EmployeeUpdate]):
             .options(
                 selectinload(self.model.account),
                 selectinload(self.model.assigned_outlets),
+                selectinload(self.model.company),
             )
             .filter(self.model.id == employee_role_id)
         )
@@ -197,7 +198,9 @@ class EmployeeRoleDAO(BaseDAO[EmployeeRole, EmployeeCreate, EmployeeUpdate]):
             )
             .options(
                 selectinload(self.model.account),  # Загружаем связанный Account
-                selectinload(self.model.assigned_outlets),  # Загружаем связанные торговые точки
+                selectinload(
+                    self.model.assigned_outlets
+                ),  # Загружаем связанные торговые точки
             )
         )
         result = await session.execute(stmt)

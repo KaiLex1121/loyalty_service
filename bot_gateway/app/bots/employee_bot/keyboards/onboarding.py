@@ -1,3 +1,5 @@
+from typing import Dict, List
+
 from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -5,7 +7,7 @@ from aiogram.types import (
     ReplyKeyboardMarkup,
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from typing import List, Dict
+
 
 class OnboardingButtons:
 
@@ -33,6 +35,8 @@ class OnboardingKeyboards:
         builder = InlineKeyboardBuilder()
         for outlet in outlets:
             # В callback_data будем передавать префикс и ID точки
-            builder.button(text=outlet['name'], callback_data=f"select_outlet:{outlet['id']}")
-        builder.adjust(1) # По одной кнопке в ряд
+            builder.button(
+                text=outlet["name"], callback_data=f"select_outlet:{outlet['id']}"
+            )
+        builder.adjust(1)  # По одной кнопке в ряд
         return builder.as_markup()

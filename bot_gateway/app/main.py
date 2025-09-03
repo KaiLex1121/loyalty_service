@@ -3,6 +3,8 @@ import logging
 from contextlib import asynccontextmanager
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import Update
 from aiohttp import request
@@ -14,8 +16,6 @@ from app.broker import faststream_router
 from app.cache_client import CacheClient
 from app.core.settings import settings
 from fastapi import Depends, FastAPI, HTTPException, Request
-from aiogram.enums import ParseMode
-from aiogram.client.default import DefaultBotProperties
 
 from shared.schemas.schemas import BotInfo
 
@@ -61,7 +61,7 @@ async def lifespan(app: FastAPI):
             await bot.set_webhook(webhook_url, drop_pending_updates=True)
             app.state.bots[bot_info.token] = Bot(
                 token=bot_info.token,
-                default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+                default=DefaultBotProperties(parse_mode=ParseMode.HTML),
             )
 
             await bot.session.close()
@@ -114,8 +114,7 @@ async def telegram_webhook(
     update_data = await request.json()
     if token not in request.app.state.bots:
         new_bot = Bot(
-            token=token,
-            default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+            token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML)
         )
         request.app.state.bots[token] = new_bot
     bot = request.app.state.bots[token]

@@ -1,12 +1,18 @@
 from typing import Union
+
+# ... импорты ...
 from app.core.dependencies import (
     get_current_employee_role,
     get_dao,
     get_employee_auth_service,
+    get_employee_customer_interaction_service,
     get_session,
     verify_internal_api_key,
 )
 from app.dao.holder import HolderDAO
+from app.exceptions.common import ForbiddenException, NotFoundException
+from app.models.employee_role import EmployeeRole
+from app.schemas.customer_bot_auth import CustomerProfileResponse
 from app.schemas.employee_bot_auth import (
     EmployeeAuthChooseOutletResponse,
     EmployeeAuthResponse,
@@ -14,23 +20,21 @@ from app.schemas.employee_bot_auth import (
     EmployeeOtpVerify,
     EmployeeOutletSelectRequest,
 )
+from app.schemas.employee_customer_interaction import (
+    AccrualRequestInternal,
+    AccrueCashbackRequest,
+)
+from app.schemas.transaction import TransactionResponse
 from app.services.employee_bot_auth import EmployeeAuthService
+from app.services.employee_customer_interaction import (
+    EmployeeCustomerInteractionService,
+)
 from app.services.otp_code import OtpCodeService
 from app.services.otp_sending import MockOTPSendingService
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.exceptions.common import ForbiddenException, NotFoundException
-from app.models.employee_role import EmployeeRole
-from app.schemas.customer_bot_auth import CustomerProfileResponse
-# ... импорты ...
-from app.core.dependencies import get_current_employee_role, get_employee_customer_interaction_service
-from app.models.employee_role import EmployeeRole
-from app.schemas.employee_customer_interaction import AccrualRequestInternal, AccrueCashbackRequest
-from app.schemas.transaction import TransactionResponse
-from app.services.employee_customer_interaction import EmployeeCustomerInteractionService
 from shared.schemas.schemas import TokenPayload
-
 
 router = APIRouter(dependencies=[Depends(verify_internal_api_key)])
 
@@ -52,7 +56,7 @@ async def request_employee_otp(
 @router.post(
     "/auth/verify-otp",
     response_model=Union[EmployeeAuthResponse, EmployeeAuthChooseOutletResponse],
-    summary="Verify OTP and get JWT or outlet list"
+    summary="Verify OTP and get JWT or outlet list",
 )
 async def verify_employee_otp(
     verify_data: EmployeeOtpVerify,
@@ -60,15 +64,14 @@ async def verify_employee_otp(
     session: AsyncSession = Depends(get_session),
     service: EmployeeAuthService = Depends(get_employee_auth_service),
 ):
-    result = await service.verify_employee_otp(
-        session, verify_data, company_id
-    )
+    result = await service.verify_employee_otp(session, verify_data, company_id)
     return result
+
 
 @router.post(
     "/auth/select-outlet",
     response_model=EmployeeAuthResponse,
-    summary="Select outlet and get final JWT"
+    summary="Select outlet and get final JWT",
 )
 async def select_employee_outlet(
     select_data: EmployeeOutletSelectRequest,
@@ -81,16 +84,21 @@ async def select_employee_outlet(
     )
     return access_token
 
+
 @router.get(
     "/find-customer",
     response_model=CustomerProfileResponse,
-    summary="Find a customer by phone number within the employee's company"
+    summary="Find a customer by phone number within the employee's company",
 )
 async def find_customer_by_phone(
     phone_number: str = Query(..., description="Phone number of the customer to find"),
-    employee_data: tuple[EmployeeRole, TokenPayload] = Depends(get_current_employee_role), # <-- ЗАЩИТА
+    employee_data: tuple[EmployeeRole, TokenPayload] = Depends(
+        get_current_employee_role
+    ),  # <-- ЗАЩИТА
     session: AsyncSession = Depends(get_session),
-    service: EmployeeCustomerInteractionService = Depends(get_employee_customer_interaction_service)
+    service: EmployeeCustomerInteractionService = Depends(
+        get_employee_customer_interaction_service
+    ),
 ):
     """
     Ищет профиль клиента по номеру телефона.
@@ -107,13 +115,17 @@ async def find_customer_by_phone(
 @router.post(
     "/operations/accrue-cashback",
     response_model=TransactionResponse,
-    summary="Accrue cashback for a customer"
+    summary="Accrue cashback for a customer",
 )
 async def accrue_cashback(
     accrual_data: AccrualRequestInternal,
-    employee_data: tuple[EmployeeRole, TokenPayload] = Depends(get_current_employee_role),
+    employee_data: tuple[EmployeeRole, TokenPayload] = Depends(
+        get_current_employee_role
+    ),
     session: AsyncSession = Depends(get_session),
-    service: EmployeeCustomerInteractionService = Depends(get_employee_customer_interaction_service),
+    service: EmployeeCustomerInteractionService = Depends(
+        get_employee_customer_interaction_service
+    ),
 ):
     """
     Выполняет начисление кэшбэка клиенту от имени сотрудника.
@@ -123,13 +135,15 @@ async def accrue_cashback(
     # Извлекаем outlet_id из токена сотрудника
     outlet_id = token_payload.outlet_id
     if not outlet_id:
-        raise ForbiddenException("Operation cannot be performed: outlet ID is missing from token.")
+        raise ForbiddenException(
+            "Operation cannot be performed: outlet ID is missing from token."
+        )
 
     transaction = await service.accrue_cashback_for_customer(
         session=session,
         acting_employee_role=current_employee,
         customer_role_id=accrual_data.customer_role_id,
         purchase_amount=accrual_data.purchase_amount,
-        outlet_id=outlet_id
+        outlet_id=outlet_id,
     )
     return transaction

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 import httpx
 import pybreaker
 from app.core.settings import settings
@@ -60,7 +62,11 @@ class CoreApiClient:
         )
 
     async def onboard_customer(
-        self, telegram_id: int, phone_number: str, company_id: int, full_name: str | None
+        self,
+        telegram_id: int,
+        phone_number: str,
+        company_id: int,
+        full_name: str | None,
     ):
         payload = {
             "telegram_user_id": telegram_id,
@@ -89,7 +95,9 @@ class CoreApiClient:
             json=payload,
         )
 
-    async def verify_employee_otp(self, phone_number: str, otp_code: str, company_id: int):
+    async def verify_employee_otp(
+        self, phone_number: str, otp_code: str, company_id: int
+    ):
         payload = {"work_phone_number": phone_number, "otp_code": otp_code}
         return await self._post(
             "/internal/employees/auth/verify-otp",
@@ -104,6 +112,26 @@ class CoreApiClient:
             params={"phone_number": phone_number},
         )
 
-    async def select_employee_outlet(self, phone_number: str, outlet_id: int, company_id: int):
+    async def select_employee_outlet(
+        self, phone_number: str, outlet_id: int, company_id: int
+    ):
         payload = {"phone_number": phone_number, "outlet_id": outlet_id}
-        return await self._post("/internal/employees/auth/select-outlet", params={"company_id": company_id}, json=payload)
+        return await self._post(
+            "/internal/employees/auth/select-outlet",
+            params={"company_id": company_id},
+            json=payload,
+        )
+
+    async def accrue_cashback(
+        self, employee_jwt: str, customer_role_id: int, amount: Decimal
+    ):
+        """
+        Выполняет начисление кэшбэка клиенту от имени сотрудника.
+        """
+        payload = {"customer_role_id": customer_role_id, "purchase_amount": str(amount)}
+        request_headers = {"Authorization": f"Bearer {employee_jwt}"}
+        return await self._post(
+            "/internal/employees/operations/accrue-cashback",
+            headers=request_headers,
+            json=payload,
+        )

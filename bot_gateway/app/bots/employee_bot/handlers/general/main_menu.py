@@ -8,9 +8,8 @@ from app.bots.employee_bot.keyboards.main_menu import MainMenuKeyboards
 from app.bots.employee_bot.keyboards.onboarding import OnboardingKeyboards
 from app.bots.employee_bot.keyboards.view_profile import ViewProfileKeyboards
 from app.bots.employee_bot.states.general import (
-    EmployeeActionsStates,
+    CustomerFindingStates,
     MainDialogStates,
-    OnboardingDialogStates,
 )
 from app.bots.shared.filters.bot_type_filter import BotTypeFilter
 
@@ -38,26 +37,16 @@ async def render_main_menu(callback: CallbackQuery, bot: Bot, state: FSMContext)
 @router.callback_query(F.data == "show_profile")
 async def handle_show_profile(
     callback: CallbackQuery,
-    bot: Bot,
     state: FSMContext,
-    company_id: int,
-    api_client: CoreApiClient,
 ):
-    customer_profile = await api_client.get_customer_profile(callback.from_user.id, company_id)
+    data = await state.get_data()
+    current_outlet = data.get("current_outlet")
+    current_number = data.get("phone_number")
+    text = f"Ваш профиль:\n\nНомер телефона: {current_number}\nТорговая точка: {current_outlet.get('name')}"
 
-    if customer_profile:
-        data = await state.get_data()
-        current_outlet = data.get("current_outlet")
-        current_number = data.get("phone_number")
-        text = f"Ваш профиль:\n\nНомер телефона: {current_number}\nТорговая точка: {current_outlet.get('name')}"
-
-        await callback.message.edit_text(
-            text=text, reply_markup=ViewProfileKeyboards.view_profile_keyboard
-        )
-    else:
-        await callback.message.edit_text(
-            "Не удалось получить ваш профиль. Попробуйте перезапустить бота командой /start."
-        )
+    await callback.message.edit_text(
+        text=text, reply_markup=ViewProfileKeyboards.view_profile_keyboard
+    )
 
 
 @router.callback_query(F.data == "find_customer")
@@ -65,4 +54,4 @@ async def handle_find_customer(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer(
         "Введите номер телефона клиента",
     )
-    await state.set_state(EmployeeActionsStates.WAITING_FOR_CUSTOMER_PHONE)
+    await state.set_state(CustomerFindingStates.WAITING_FOR_CUSTOMER_PHONE)

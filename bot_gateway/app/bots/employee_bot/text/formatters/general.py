@@ -47,7 +47,6 @@ def format_promotions(promotions: list[dict]) -> list[str]:
     return promo_messages
 
 
-
 def format_customer_profile_for_employee(customer: dict) -> str:
     """Форматирует профиль клиента для отображения сотруднику."""
     full_name = customer.get("account", {}).get("full_name") or "Имя не указано"

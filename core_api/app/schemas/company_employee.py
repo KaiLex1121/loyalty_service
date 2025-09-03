@@ -5,8 +5,9 @@ from app.schemas.account import AccountResponseForEmployee
 from app.schemas.company_outlet import (  # Предполагаем, что есть такая базовая схема
     OutletResponseForEmployee,
 )
-from app.utils.validators import RussianPhoneNumber
 from pydantic import BaseModel, EmailStr, Field
+
+from shared.utils.validators import RussianPhoneNumber
 
 
 class EmployeeRoleBase(BaseModel):

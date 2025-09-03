@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import Optional
 
-from app.utils.validators import RussianPhoneNumber
 from pydantic import BaseModel, EmailStr
+
+from shared.utils.validators import RussianPhoneNumber
 
 
 class AccountBase(BaseModel):

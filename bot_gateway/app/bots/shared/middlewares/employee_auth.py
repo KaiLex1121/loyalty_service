@@ -2,14 +2,15 @@ from typing import Any, Awaitable, Callable, Dict
 
 from aiogram import BaseMiddleware
 from aiogram.types import (
-    Update,
-    Message,
     CallbackQuery,
+    Message,
     TelegramObject,
+    Update,
 )
 from app.bots.employee_bot.keyboards.onboarding import OnboardingKeyboards
 from app.bots.employee_bot.states.general import OnboardingDialogStates
 from app.core.settings import settings
+
 from shared.utils.security import verify_token
 
 
@@ -92,12 +93,16 @@ class AuthMiddleware(BaseMiddleware):
         text = "Для входа, пожалуйста, подтвердите ваш рабочий номер телефона."
 
         if event.message:  # обычное сообщение
-            await event.message.answer(text, reply_markup=OnboardingKeyboards.share_contact_keyboard)
+            await event.message.answer(
+                text, reply_markup=OnboardingKeyboards.share_contact_keyboard
+            )
 
         elif event.callback_query:  # колбэк-кнопка
             cq: CallbackQuery = event.callback_query
             if cq.message:
-                await cq.message.answer(text, reply_markup=OnboardingKeyboards.share_contact_keyboard)
+                await cq.message.answer(
+                    text, reply_markup=OnboardingKeyboards.share_contact_keyboard
+                )
             else:
                 # редкий случай: callback без message (inline-кнопки в другом чате)
                 await cq.answer(text, show_alert=True)

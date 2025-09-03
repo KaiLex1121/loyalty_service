@@ -11,6 +11,8 @@ from app.core.security import (
 from app.core.settings import AppSettings
 from app.dao.holder import HolderDAO
 from app.enums import OtpPurposeEnum  # Убедитесь, что EMPLOYEE_BOT_LOGIN там есть
+from app.exceptions.common import ForbiddenException, UnauthorizedException
+from app.exceptions.services import employee
 
 # Кастомные исключения (создайте их, если еще нет, по аналогии с другими)
 from app.exceptions.services.employee_auth import (
@@ -23,6 +25,7 @@ from app.exceptions.services.employee_auth import (
 )
 from app.models.account import Account  # Нужен для AccountService и для типа
 from app.models.employee_role import EmployeeRole
+from app.schemas.company_outlet import OutletResponseForEmployee
 from app.schemas.employee_bot_auth import (  # Схема для верификации OTP сотрудника
     EmployeeAuthResponse,
     EmployeeOtpVerify,
@@ -38,10 +41,6 @@ from app.services.otp_sending import (  # Или ваш реальный сер�
 )
 from asyncpg import InternalServerError
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.exceptions.common import ForbiddenException, UnauthorizedException
-from app.exceptions.services import employee
-from app.schemas.company_outlet import OutletResponseForEmployee
 
 # from backend.core.logger import get_logger
 # logger = get_logger(__name__)
@@ -64,11 +63,12 @@ class EmployeeAuthService:
         """Вспомогательный метод для создания JWT."""
         token_data = {
             "sub": str(employee_id),
-            "outlet_id": outlet_id # <-- ВКЛЮЧАЕМ ID ТОЧКИ В ТОКЕН
+            "outlet_id": outlet_id,  # <-- ВКЛЮЧАЕМ ID ТОЧКИ В ТОКЕН
         }
         scopes = ["employee_bot_user"]
-        return create_access_token(data=token_data, settings=self.settings, scopes=scopes)
-
+        return create_access_token(
+            data=token_data, settings=self.settings, scopes=scopes
+        )
 
     async def request_otp_for_employee_login(
         self,
@@ -159,12 +159,10 @@ class EmployeeAuthService:
         # logger.info(f"Попытка верификации OTP для сотрудника: тел. {verify_data.work_phone_number}, компания ID {bot_company_id}")
 
         # 1. Найти EmployeeRole (и связанный Account)
-        employee_role = (
-            await self.dao.employee_role.find_by_work_phone_and_company_id(
-                session,
-                phone_number=verify_data.work_phone_number,
-                company_id=bot_company_id,
-            )
+        employee_role = await self.dao.employee_role.find_by_work_phone_and_company_id(
+            session,
+            phone_number=verify_data.work_phone_number,
+            company_id=bot_company_id,
         )
         if not employee_role:
             raise EmployeeNotFoundInCompanyForLoginException(
@@ -215,7 +213,12 @@ class EmployeeAuthService:
         elif len(outlets) > 1:
             # Сценарий Б: Несколько точек, возвращаем список
             return {
-                "outlets": [OutletResponseForEmployee(id=outlet.id, name=outlet.name, address=outlet.address) for outlet in outlets]
+                "outlets": [
+                    OutletResponseForEmployee(
+                        id=outlet.id, name=outlet.name, address=outlet.address
+                    )
+                    for outlet in outlets
+                ]
             }
         else:
             # Нет привязанных точек - входить некуда

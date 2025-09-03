@@ -2,8 +2,9 @@ import re
 from typing import Any
 
 from app.enums import OtpPurposeEnum
-from app.utils.validators import OTPCode, RussianPhoneNumber
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+from shared.utils.validators import OTPCode, RussianPhoneNumber
 
 
 class PhoneNumberRequest(BaseModel):

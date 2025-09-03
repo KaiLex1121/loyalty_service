@@ -144,7 +144,7 @@ async def get_current_employee_role(
     Проверяет JWT-токен сотрудника и возвращает его модель EmployeeRole.
     Используется для защиты внутренних эндпоинтов, вызываемых Bot Gateway.
     """
-    print('Checking employee role...')
+    print("Checking employee role...")
     if not http_credentials:
         raise UnauthorizedException("Auth credentials are not provided")
 

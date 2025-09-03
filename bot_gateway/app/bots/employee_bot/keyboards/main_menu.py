@@ -5,7 +5,9 @@ class MainMenuButtons:
 
     show_profile = InlineKeyboardButton(text="Профиль", callback_data="show_profile")
 
-    find_customer = InlineKeyboardButton(text="Найти клиента", callback_data="find_customer")
+    find_customer = InlineKeyboardButton(
+        text="Найти клиента", callback_data="find_customer"
+    )
 
     to_main_menu = InlineKeyboardButton(
         text="В главное меню", callback_data="to_main_menu"

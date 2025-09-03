@@ -14,7 +14,11 @@ from app.dao.holder import HolderDAO
 # Кастомные исключения
 from app.enums.auth_enums import OtpPurposeEnum
 from app.enums.loyalty_enums import TransactionStatusEnum, TransactionTypeEnum
-from app.exceptions.common import BadRequestException, ForbiddenException, NotFoundException
+from app.exceptions.common import (
+    BadRequestException,
+    ForbiddenException,
+    NotFoundException,
+)
 from app.exceptions.services.account import AccountInactiveException
 from app.exceptions.services.backoffice_auth import (
     InvalidOTPException,
@@ -122,28 +126,36 @@ class EmployeeCustomerInteractionService:
         session: AsyncSession,
         acting_employee_role: EmployeeRole,
         purchase_amount: decimal.Decimal,
-        customer_role_id: int, # <-- ИЗМЕНЕНИЕ: принимаем ID, а не номер телефона
-        outlet_id: int, # <-- ИЗМЕНЕНИЕ: делаем outlet_id обязательным
+        customer_role_id: int,  # <-- ИЗМЕНЕНИЕ: принимаем ID, а не номер телефона
+        outlet_id: int,  # <-- ИЗМЕНЕНИЕ: делаем outlet_id обязательным
     ) -> Transaction:
         """
         Выполняет начисление кэшбэка клиенту от имени сотрудника.
         """
         # 1. Получаем профиль клиента по ID
-        target_customer_role = await self.dao.customer_role.get_active_by_id_with_account(
-            session, id_=customer_role_id
+        target_customer_role = (
+            await self.dao.customer_role.get_active_by_id_with_account(
+                session, id_=customer_role_id
+            )
         )
         if not target_customer_role:
-            raise NotFoundException(f"Active customer profile with ID {customer_role_id} not found.")
+            raise NotFoundException(
+                f"Active customer profile with ID {customer_role_id} not found."
+            )
 
         # 2. Проверяем, что сотрудник и клиент из одной компании
         if acting_employee_role.company_id != target_customer_role.company_id:
-            raise ForbiddenException("Employee and customer do not belong to the same company.")
+            raise ForbiddenException(
+                "Employee and customer do not belong to the same company."
+            )
 
         # 3. Проверяем, что торговая точка принадлежит компании сотрудника
         #    (эта проверка может быть избыточной, если outlet_id берется из токена, но так надежнее)
         outlet = await self.dao.outlet.get_active(session, id_=outlet_id)
         if not outlet or outlet.company_id != acting_employee_role.company_id:
-            raise ForbiddenException(f"Outlet with ID {outlet_id} not found or does not belong to the company.")
+            raise ForbiddenException(
+                f"Outlet with ID {outlet_id} not found or does not belong to the company."
+            )
 
         # 4. Вызываем сервис расчета кэшбэка (эта часть не меняется)
         transaction, _promo_usage = (
@@ -163,7 +175,6 @@ class EmployeeCustomerInteractionService:
             )
 
         return transaction
-
 
     async def request_spend_otp(
         self,

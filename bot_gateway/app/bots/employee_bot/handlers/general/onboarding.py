@@ -62,7 +62,9 @@ async def handle_no_contact(message: Message):
 
 
 @router.message(StateFilter(OnboardingDialogStates.WAITING_FOR_PHONE_CONFIRMATION))
-async def handle_otp(message: Message, state: FSMContext, company_id: int, api_client: CoreApiClient):
+async def handle_otp(
+    message: Message, state: FSMContext, company_id: int, api_client: CoreApiClient
+):
     data = await state.get_data()
     phone_number = data.get("phone_number")
     otp_code = message.text
@@ -77,45 +79,66 @@ async def handle_otp(message: Message, state: FSMContext, company_id: int, api_c
         # Сценарий А: Токен получен сразу
         await state.update_data(jwt_token=response["access_token"])
         await state.set_state(None)
-        await message.answer("Аутентификация пройдена!", reply_markup=MainMenuKeyboards.main_window_keyboard)
+        await message.answer(
+            "Аутентификация пройдена!",
+            reply_markup=MainMenuKeyboards.main_window_keyboard,
+        )
 
     elif response.get("outlets"):
         # Сценарий Б: Нужно выбрать точку
         await state.update_data(outlets=response["outlets"])
         await state.set_state(OnboardingDialogStates.WAITING_FOR_OUTLET_SELECTION)
-        keyboard = OnboardingKeyboards.get_outlet_selection_keyboard(response["outlets"])
-        await message.answer("Почти готово! Выберите торговую точку, в которой вы работаете:", reply_markup=keyboard)
+        keyboard = OnboardingKeyboards.get_outlet_selection_keyboard(
+            response["outlets"]
+        )
+        await message.answer(
+            "Почти готово! Выберите торговую точку, в которой вы работаете:",
+            reply_markup=keyboard,
+        )
 
     else:
         await message.answer("Произошла ошибка. Пожалуйста, начните заново с /start")
         await state.clear()
 
+
 # НОВЫЙ ХЕНДЛЕР для обработки нажатия на инлайн-кнопку
-@router.callback_query(StateFilter(OnboardingDialogStates.WAITING_FOR_OUTLET_SELECTION), F.data.startswith("select_outlet:"))
-async def handle_outlet_selection(callback: CallbackQuery, state: FSMContext, company_id: int, api_client: CoreApiClient):
+@router.callback_query(
+    StateFilter(OnboardingDialogStates.WAITING_FOR_OUTLET_SELECTION),
+    F.data.startswith("select_outlet:"),
+)
+async def handle_outlet_selection(
+    callback: CallbackQuery,
+    state: FSMContext,
+    company_id: int,
+    api_client: CoreApiClient,
+):
     outlet_id = int(callback.data.split(":")[1])
     data = await state.get_data()
     phone_number = data.get("phone_number")
     outlets = data.get("outlets")
-    current_outlet = next((o for o in outlets if o.get('id') == outlet_id), None)
+    current_outlet = next((o for o in outlets if o.get("id") == outlet_id), None)
     await state.update_data(current_outlet=current_outlet)
     if not phone_number:
-        await callback.message.edit_text("Произошла ошибка сессии. Начните заново с /start")
+        await callback.message.edit_text(
+            "Произошла ошибка сессии. Начните заново с /start"
+        )
         await state.clear()
         return
 
-    response = await api_client.select_employee_outlet(phone_number, outlet_id, company_id)
+    response = await api_client.select_employee_outlet(
+        phone_number, outlet_id, company_id
+    )
 
     if response and response.get("access_token"):
         await state.update_data(jwt_token=response["access_token"])
         await state.set_state(None)
-        await callback.message.delete() # Удаляем сообщение с кнопками
+        await callback.message.delete()  # Удаляем сообщение с кнопками
         await callback.message.answer(
             "Вход выполнен успешно!",
-            reply_markup=MainMenuKeyboards.main_window_keyboard
+            reply_markup=MainMenuKeyboards.main_window_keyboard,
         )
     else:
         await callback.message.edit_text("Не удалось войти. Попробуйте снова с /start")
         await state.clear()
 
-    await callback.answer() # Закрываем "часики" на кнопке
+    await callback.answer()  # Закрываем "часики" на кнопке

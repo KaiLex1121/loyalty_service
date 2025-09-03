@@ -26,7 +26,7 @@ class CustomerFindingKeyboards:
         inline_keyboard=[
             [
                 CustomerFindingButtons.accrue_cashback,
-                CustomerFindingButtons.spend_cashback
+                CustomerFindingButtons.spend_cashback,
             ],
             [CustomerFindingButtons.transaction_history],
             [CustomerFindingButtons.to_main_menu],

@@ -7,26 +7,10 @@ from pydantic import AfterValidator, Field
 def validate_russian_phone(phone: Any) -> str:
     """
     Валидация российского номера телефона с проверкой кодов операторов.
-
-    Поддерживаемые форматы:
-    - +79123456789
-    - 89123456789
-    - 79123456789
-    - +7 (912) 345-67-89
-    - 8 (912) 345-67-89
-    - 7 (912) 345-67-89
-
-    Args:
-        phone: Номер телефона в любом формате
-
-    Returns:
-        Нормализованный номер в формате +7XXXXXXXXXX
-
-    Raises:
-        ValueError: Если номер телефона имеет неверный формат или неизвестный код оператора
+    Приводит номер к формату +7XXXXXXXXXX.
     """
     if not isinstance(phone, str):
-        raise ValueError("Номер телефона должен быть строкой")
+        raise ValueError("Номер телефона должен быть строкой.")
 
     # Убираем все пробелы, скобки, дефисы
     cleaned = re.sub(r"[\s\(\)\-]", "", phone)
@@ -34,8 +18,7 @@ def validate_russian_phone(phone: Any) -> str:
     # Проверяем базовый формат
     if not re.match(r"^[\+]?[78]\d{10}$", cleaned):
         raise ValueError(
-            "Неверный формат российского номера телефона. "
-            "Ожидается формат: +7XXXXXXXXXX, 8XXXXXXXXXX или 7XXXXXXXXXX"
+            "Неверный формат номера. Ожидается 11 цифр, например, +79123456789 или 89123456789."
         )
 
     # Нормализуем номер - приводим к формату +7XXXXXXXXXX
@@ -46,14 +29,13 @@ def validate_russian_phone(phone: Any) -> str:
     elif cleaned.startswith("7"):
         normalized = "+" + cleaned
     else:
-        raise ValueError("Номер должен начинаться с +7, 8 или 7")
+        # Эта ветка почти недостижима из-за regex выше, но для надежности оставим
+        raise ValueError("Номер должен начинаться с +7, 8 или 7.")
 
     # Дополнительная проверка кодов мобильных операторов
-    mobile_code = normalized[2:5]  # Берем XXX из +7XXX
+    mobile_code = normalized[2:5]
 
-    # Основные коды российских мобильных операторов
     valid_mobile_codes = {
-        # МТС
         "910",
         "911",
         "912",
@@ -74,7 +56,6 @@ def validate_russian_phone(phone: Any) -> str:
         "987",
         "988",
         "989",
-        # Мегафон
         "920",
         "921",
         "922",
@@ -94,7 +75,6 @@ def validate_russian_phone(phone: Any) -> str:
         "937",
         "938",
         "939",
-        # Билайн
         "903",
         "905",
         "906",
@@ -108,7 +88,6 @@ def validate_russian_phone(phone: Any) -> str:
         "957",
         "958",
         "959",
-        # Теле2
         "900",
         "901",
         "902",
@@ -124,9 +103,7 @@ def validate_russian_phone(phone: Any) -> str:
         "997",
         "998",
         "999",
-        # Йота
         "907",
-        # MVNO и другие
         "960",
         "961",
         "962",
@@ -150,7 +127,7 @@ def validate_russian_phone(phone: Any) -> str:
     }
 
     if mobile_code not in valid_mobile_codes:
-        raise ValueError(f"Неизвестный код оператора: {mobile_code}")
+        raise ValueError(f"Неизвестный или неверный код оператора: {mobile_code}.")
 
     return normalized
 
